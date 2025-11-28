@@ -18,6 +18,40 @@
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
+
+@media screen and (max-width: 996px) {
+  .main-wrapper {
+    padding: 0 10px; /* Adjust padding for smaller screens */
+  }
+  .navbar__title {
+    display: none; /* Hide title on very small screens if it causes overflow */
+  }
+  .navbar__item {
+    padding: 0 8px; /* Adjust navbar item padding */
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .hero__title {
+    font-size: 2.5rem; /* Smaller hero title on tablets */
+  }
+  .hero__subtitle {
+    font-size: 1rem; /* Smaller hero subtitle on tablets */
+  }
+}
+
+@media screen and (max-width: 320px) {
+  body {
+    overflow-x: hidden; /* Prevent horizontal scrolling on smallest screens */
+  }
+  .container {
+    padding: 0 5px; /* Minimal padding for very small screens */
+  }
+  .navbar {
+    padding: 0 5px; /* Adjust navbar padding for very small screens */
+  }
+}
+
 [data-theme='dark'] {
   --ifm-color-primary: #25c2a0;
   --ifm-color-primary-dark: #21af90;

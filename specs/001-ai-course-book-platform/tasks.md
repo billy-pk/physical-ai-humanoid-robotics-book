@@ -24,7 +24,7 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create repository directory structure with frontend/, backend/, .github/, and shared/ folders
+- [X] T001 Create repository directory structure with frontend/, backend/, .github/, and shared/ folders
 - [ ] T002 Initialize frontend with Docusaurus in frontend/ directory
 - [ ] T003 [P] Initialize backend with Python 3.12 and uv in backend/ directory
 - [ ] T004 [P] Configure frontend dependencies: Docusaurus, React, TypeScript, ESLint, Prettier in frontend/package.json
@@ -47,8 +47,8 @@
 
 - [ ] T011 Setup Neon Postgres database and obtain connection credentials
 - [ ] T012 Setup Qdrant Cloud collection "book_embeddings" with 3072-dim vectors, cosine distance
-- [ ] T013 [P] Create Alembic migrations framework in backend/alembic/
-- [ ] T014 [P] Create initial database migration for chat_sessions, chat_messages, api_metrics tables in backend/alembic/versions/001_initial_schema.py
+- [X] T013 [P] Create Alembic migrations framework in backend/alembic/
+- [X] T014 [P] Create initial database migration for chat_sessions, chat_messages, api_metrics tables in backend/alembic/versions/001_initial_schema.py
 - [ ] T015 [P] Create backend/src/core/config.py for environment variables using Pydantic BaseSettings
 - [ ] T016 [P] Create backend/src/core/logging.py for structured logging with structlog
 - [ ] T017 [P] Create backend/src/core/monitoring.py for metrics tracking (request count, error rate, status codes)
@@ -82,7 +82,7 @@
 - [ ] T032 [US1] Add dark mode theme configuration in frontend/docusaurus.config.js
 - [ ] T033 [US1] Create homepage in frontend/src/pages/index.tsx with navigation to documentation
 - [ ] T034 [US1] Optimize page load performance: configure build settings for <1.5s load time
-- [ ] T035 [US1] Test internal navigation links between chapters
+- [X] T035 [US1] Test internal navigation links between chapters
 - [ ] T036 [US1] Verify all required chapter sections: learning outcomes, explanations, diagrams, examples, exercises
 
 **Checkpoint**: Documentation site is fully functional, navigable, mobile-responsive, and can be deployed to GitHub Pages
