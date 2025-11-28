@@ -84,6 +84,29 @@
 
 ### Functional Requirements
 
+### Book Creation Requirements (Refer to Constitution I)
+
+- **BC-001**: All chapters MUST be created via `/sp.specify` templates.
+- **BC-002**: Each chapter MUST include learning outcomes, core explanations, illustrations/diagrams, real-world examples, and exercises or assessments.
+- **BC-003**: Writing style MUST be beginner-friendly, step-by-step, real-world robotics oriented, and maintain consistent tone, terminology, and formatting.
+- **BC-004**: All chapters MUST be internally linked to a glossary, module reference guides, and weekly breakdowns.
+
+### RAG Chatbot Requirements (Refer to Constitution VII)
+
+- **RAG-C-001**: The chatbot MUST answer only using the book content (no hallucinations).
+- **RAG-C-002**: The chatbot MUST support highlight-restricted RAG (user-selected text only).
+- **RAG-C-003**: The chatbot MUST provide citations to book sections.
+- **RAG-T-001**: The chatbot MUST use OpenAI `text-embedding-3-large` (or better) for embeddings.
+- **RAG-T-002**: The chatbot MUST use Qdrant Cloud for the vector database.
+- **RAG-T-003**: The chatbot MUST use Neon Serverless Postgres for the runtime metadata DB.
+- **RAG-T-004**: The chatbot MUST use OpenAI ChatKit or Agents SDK for the chat agent.
+- **RAG-T-005**: A caching layer is encouraged to reduce token cost.
+- **RAG-P-001**: Query latency MUST be < 1.5 seconds.
+- **RAG-P-002**: Embedding cost MUST be minimized with chunk deduplication.
+- **RAG-P-003**: Streaming responses MUST be supported.
+
+### Functional Requirements
+
 - **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
 - **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]

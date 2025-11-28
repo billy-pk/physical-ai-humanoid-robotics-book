@@ -148,9 +148,16 @@ Examples of foundational tasks (adjust based on your project):
 
 ## Phase N: Polish & Cross-Cutting Concerns
 
-**Purpose**: Improvements that affect multiple user stories
+**Purpose**: Improvements that affect multiple user stories, ensuring constitution compliance
 
-- [ ] TXXX [P] Documentation updates in docs/
+- [ ] TXXX [P] Run linting and formatting checks (refer to Constitution II)
+- [ ] TXXX Ensure 70% backend test coverage (refer to Constitution III)
+- [ ] TXXX Perform RAG evaluation tests (Precision@k, Context recall) if applicable (refer to Constitution III)
+- [ ] TXXX Verify Docusaurus build and deployment readiness (refer to Constitution V)
+- [ ] TXXX Verify FastAPI build and deployment readiness (refer to Constitution V)
+- [ ] TXXX Perform version bump and Git commit for chapter release (refer to Constitution IV)
+- [ ] TXXX Create Git tag and trigger Render redeploy for backend changes (refer to Constitution IV)
+- [ ] TXXX Documentation updates in docs/
 - [ ] TXXX Code cleanup and refactoring
 - [ ] TXXX Performance optimization across all stories
 - [ ] TXXX [P] Additional unit tests (if requested) in tests/unit/

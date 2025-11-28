@@ -31,7 +31,10 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] **Code Quality**: Adherence to Python (Ruff), JS/TS (ESLint + Prettier), TypeScript usage, structured JSON errors, exception wrappers, structured logging, UI source transparency, and secret management (refer to Constitution II).
+- [ ] **Testing Standards**: Compliance with Backend (Pytest, 70% coverage), Frontend (Jest + React Testing Library), and RAG Evaluation (Precision@k, Context recall) requirements (refer to Constitution III).
+- [ ] **Versioning & Release**: Alignment with chapter versioning, Git commits, and backend release tagging/redeployment (refer to Constitution IV).
+- [ ] **Deployment**: Consistency with GitHub Pages (frontend) and Render (backend) deployment strategies (refer to Constitution V).
 
 ## Project Structure
 
