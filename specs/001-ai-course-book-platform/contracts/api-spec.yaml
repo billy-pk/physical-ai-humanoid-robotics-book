@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: AI-Course-Book Platform API
+  description: |
+    Backend API for the AI-Course-Book Platform providing RAG chatbot functionality.
+
+    **Features**:
+    - Chat endpoint for conversational Q&A about book content
+    - Health check for service monitoring
+    - Metrics endpoint for observability
+
+    **Authentication**: None (public API with rate limiting)
+
+    **Base URL**: https://ai-course-book-backend.onrender.com (Render deployment)
+  version: 1.0.0
+  contact:
+    name: AI-Course-Book Platform
+  license:
+    name: MIT
+
+servers:
+  - url: https://ai-course-book-backend.onrender.com
+    description: Production server (Render)
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: chat
+    description: Chat/RAG endpoints for conversational AI
+  - name: health
+    description: Service health and status endpoints
+  - name: metrics
+    description: Observability and monitoring endpoints
+
+paths:
+  /api/chat:
+    post:
+      tags:
+        - chat
+      summary: Send chat message and get AI response
+      description: |
+        Submit a question about book content and receive an AI-generated answer
+        with citations to source material.
+
+        **Rate Limit**: 10 requests per minute per IP address
+
+        **Features**:
+        - General book questions
+        - Highlight-restricted RAG (answer based on selected text only)
+        - Streaming responses supported
+        - Automatic citation generation
+      operationId: sendChatMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              generalQuestion:
+                summary: General question about book content
+                value:
+                  query: "What is Physical AI?"
+                  session_id: null
+                  highlighted_context: null
+              highlightedQuestion:
+                summary: Question about highlighted text
+                value:
+                  query: "Explain this concept in simpler terms"
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+                  highlighted_context: "Embodied intelligence refers to the integration of physical form and cognitive processes."
+      responses:
+        '200':
+          description: Successful response with AI-generated answer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                successfulResponse:
+                  summary: Successful chat response
+                  value:
+                    session_id: "550e8400-e29b-41d4-a716-446655440000"
+                    message_id: "660e8400-e29b-41d4-a716-446655440001"
+                    response: "Physical AI refers to artificial intelligence systems that interact with the physical world through robotic embodiment. These systems combine perception, reasoning, and actuation to perform tasks in real-world environments."
+                    citations:
+                      - chunk_id: "770e8400-e29b-41d4-a716-446655440002"
+                        chapter_title: "Introduction to Physical AI"
+                        section: "What is Physical AI?"
+                        relevance_score: 0.95
+                        source_url: "/docs/intro#what-is-physical-ai"
+                    created_at: "2025-11-28T10:30:00Z"
+        '400':
+          description: Invalid request (missing query, malformed data)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingQuery:
+                  summary: Missing query field
+                  value:
+                    error: "validation_error"
+                    message: "Query field is required"
+                    request_id: "req_abc123"
+                    timestamp: "2025-11-28T10:30:00Z"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimitExceeded:
+                  summary: Too many requests
+                  value:
+                    error: "rate_limit_exceeded"
+                    message: "Rate limit exceeded. Maximum 10 requests per minute."
+                    request_id: "req_abc124"
+                    timestamp: "2025-11-28T10:30:00Z"
+        '503':
+          description: Service temporarily unavailable (database down)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serviceUnavailable:
+                  summary: Qdrant unavailable
+                  value:
+                    error: "service_unavailable"
+                    message: "Chat is temporarily unavailable, please try again later"
+                    request_id: "req_abc125"
+                    timestamp: "2025-11-28T10:30:00Z"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check endpoint
+      description: |
+        Returns the current health status of the service and its dependencies.
+
+        Used by Render for health checks and uptime monitoring.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: All systems operational
+                  value:
+                    status: "healthy"
+                    timestamp: "2025-11-28T10:30:00Z"
+                    dependencies:
+                      qdrant: "healthy"
+                      postgres: "healthy"
+                      openai: "healthy"
+                    version: "1.0.0"
+        '503':
+          description: Service is unhealthy (dependency failure)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                unhealthy:
+                  summary: Qdrant connection failed
+                  value:
+                    status: "unhealthy"
+                    timestamp: "2025-11-28T10:30:00Z"
+                    dependencies:
+                      qdrant: "unhealthy"
+                      postgres: "healthy"
+                      openai: "healthy"
+                    version: "1.0.0"
+
+  /metrics:
+    get:
+      tags:
+        - metrics
+      summary: Get observability metrics
+      description: |
+        Returns basic observability metrics for monitoring.
+
+        **Metrics included**:
+        - Total request count
+        - Error rate (percentage)
+        - Status code distribution
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+              examples:
+                metricsSnapshot:
+                  summary: Current metrics
+                  value:
+                    total_requests: 1523
+                    error_rate: 0.02
+                    status_code_distribution:
+                      "200": 1450
+                      "400": 15
+                      "429": 20
+                      "500": 8
+                      "503": 30
+                    uptime_seconds: 86400
+                    timestamp: "2025-11-28T10:30:00Z"
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: User's question about book content
+          minLength: 1
+          maxLength: 2000
+          example: "What is Physical AI?"
+        session_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional session ID for conversation continuity
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        highlighted_context:
+          type: string
+          nullable: true
+          description: User-selected text from documentation (for highlight-restricted RAG)
+          maxLength: 5000
+          example: "Embodied intelligence refers to the integration of physical form and cognitive processes."
+
+    ChatResponse:
+      type: object
+      required:
+        - session_id
+        - message_id
+        - response
+        - citations
+        - created_at
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Session identifier for this conversation
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        message_id:
+          type: string
+          format: uuid
+          description: Unique identifier for this message
+          example: "660e8400-e29b-41d4-a716-446655440001"
+        response:
+          type: string
+          description: AI-generated answer to the user's question
+          example: "Physical AI refers to artificial intelligence systems that interact with the physical world through robotic embodiment."
+        citations:
+          type: array
+          description: Source references for the response
+          items:
+            $ref: '#/components/schemas/Citation'
+        created_at:
+          type: string
+          format: date-time
+          description: Response timestamp
+          example: "2025-11-28T10:30:00Z"
+
+    Citation:
+      type: object
+      required:
+        - chunk_id
+        - chapter_title
+        - relevance_score
+        - source_url
+      properties:
+        chunk_id:
+          type: string
+          format: uuid
+          description: Embedding chunk identifier
+          example: "770e8400-e29b-41d4-a716-446655440002"
+        chapter_title:
+          type: string
+          description: Title of the source chapter
+          example: "Introduction to Physical AI"
+        section:
+          type: string
+          nullable: true
+          description: Section title within chapter
+          example: "What is Physical AI?"
+        relevance_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Similarity score from vector search
+          example: 0.95
+        source_url:
+          type: string
+          description: Link to documentation source
+          example: "/docs/intro#what-is-physical-ai"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - request_id
+        - timestamp
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - validation_error
+            - rate_limit_exceeded
+            - service_unavailable
+            - internal_error
+            - out_of_scope_content
+          example: "validation_error"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Query field is required"
+        request_id:
+          type: string
+          description: Unique request identifier for tracing
+          example: "req_abc123"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2025-11-28T10:30:00Z"
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+        - dependencies
+        - version
+      properties:
+        status:
+          type: string
+          enum:
+            - healthy
+            - unhealthy
+          description: Overall service health status
+          example: "healthy"
+        timestamp:
+          type: string
+          format: date-time
+          description: Health check timestamp
+          example: "2025-11-28T10:30:00Z"
+        dependencies:
+          type: object
+          description: Health status of external dependencies
+          properties:
+            qdrant:
+              type: string
+              enum:
+                - healthy
+                - unhealthy
+              example: "healthy"
+            postgres:
+              type: string
+              enum:
+                - healthy
+                - unhealthy
+              example: "healthy"
+            openai:
+              type: string
+              enum:
+                - healthy
+                - unhealthy
+              example: "healthy"
+        version:
+          type: string
+          description: API version
+          example: "1.0.0"
+
+    MetricsResponse:
+      type: object
+      required:
+        - total_requests
+        - error_rate
+        - status_code_distribution
+        - timestamp
+      properties:
+        total_requests:
+          type: integer
+          description: Total number of requests processed
+          example: 1523
+        error_rate:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Percentage of failed requests (4xx/5xx)
+          example: 0.02
+        status_code_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+          description: Count of requests by HTTP status code
+          example:
+            "200": 1450
+            "400": 15
+            "429": 20
+            "500": 8
+            "503": 30
+        uptime_seconds:
+          type: integer
+          description: Service uptime in seconds since last restart
+          example: 86400
+        timestamp:
+          type: string
+          format: date-time
+          description: Metrics snapshot timestamp
+          example: "2025-11-28T10:30:00Z"
+
+  securitySchemes: {}
+
+security: []
