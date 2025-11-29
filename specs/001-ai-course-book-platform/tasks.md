@@ -25,15 +25,15 @@
 **Purpose**: Project initialization and basic structure
 
 - [X] T001 Create repository directory structure with frontend/, backend/, .github/, and shared/ folders
-- [ ] T002 Initialize frontend with Docusaurus in frontend/ directory
-- [ ] T003 [P] Initialize backend with Python 3.12 and uv in backend/ directory
-- [ ] T004 [P] Configure frontend dependencies: Docusaurus, React, TypeScript, ESLint, Prettier in frontend/package.json
-- [ ] T005 [P] Configure backend dependencies using uv: FastAPI, OpenAI SDK, Qdrant client, psycopg in backend/pyproject.toml
-- [ ] T006 [P] Setup ruff linting configuration in backend/pyproject.toml
+- [X] T002 Initialize frontend with Docusaurus in frontend/ directory
+- [X] T003 [P] Initialize backend with Python 3.12 and uv in backend/ directory
+- [X] T004 [P] Configure frontend dependencies: Docusaurus, React, TypeScript, ESLint, Prettier in frontend/package.json
+- [X] T005 [P] Configure backend dependencies using uv: FastAPI, OpenAI SDK, Qdrant client, psycopg in backend/pyproject.toml
+- [X] T006 [P] Setup ruff linting configuration in backend/pyproject.toml
 - [ ] T007 [P] Setup ESLint and Prettier configuration in frontend/.eslintrc.js and frontend/.prettierrc
 - [ ] T008 [P] Create .env.example file in backend/ with all required environment variables
-- [ ] T009 [P] Setup .gitignore for Python, Node.js, and environment files
-- [ ] T010 Create README.md files in both frontend/ and backend/ directories
+- [X] T009 [P] Setup .gitignore for Python, Node.js, and environment files
+- [X] T010 Create README.md files in both frontend/ and backend/ directories
 
 **Checkpoint**: Basic project structure in place - ready for foundational setup
 
@@ -45,23 +45,23 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T011 Setup Neon Postgres database and obtain connection credentials
-- [ ] T012 Setup Qdrant Cloud collection "book_embeddings" with 3072-dim vectors, cosine distance
+- [X] T011 Setup Neon Postgres database and obtain connection credentials
+- [X] T012 Setup Qdrant Cloud collection "book_embeddings" with 3072-dim vectors, cosine distance
 - [X] T013 [P] Create Alembic migrations framework in backend/alembic/
 - [X] T014 [P] Create initial database migration for chat_sessions, chat_messages, api_metrics tables in backend/alembic/versions/001_initial_schema.py
-- [ ] T015 [P] Create backend/src/core/config.py for environment variables using Pydantic BaseSettings
-- [ ] T016 [P] Create backend/src/core/logging.py for structured logging with structlog
-- [ ] T017 [P] Create backend/src/core/monitoring.py for metrics tracking (request count, error rate, status codes)
-- [ ] T018 [P] Create backend/src/models/errors.py with ErrorResponse model and structured error types
-- [ ] T019 [P] Create backend/src/models/chat.py with ChatSession and ChatMessage Pydantic models
-- [ ] T020 [P] Create backend/src/models/embeddings.py with EmbeddingChunk and VectorSearchResult models
-- [ ] T021 Create backend/src/main.py with FastAPI app initialization, CORS middleware, and lifespan handlers
+- [X] T015 [P] Create backend/src/core/config.py for environment variables using Pydantic BaseSettings
+- [X] T016 [P] Create backend/src/core/logging.py for structured logging with structlog
+- [X] T017 [P] Create backend/src/core/monitoring.py for metrics tracking (request count, error rate, status codes)
+- [X] T018 [P] Create backend/src/models/errors.py with ErrorResponse model and structured error types
+- [X] T019 [P] Create backend/src/models/chat.py with ChatSession and ChatMessage Pydantic models
+- [X] T020 [P] Create backend/src/models/embeddings.py with EmbeddingChunk and VectorSearchResult models
+- [X] T021 Create backend/src/main.py with FastAPI app initialization, CORS middleware, and lifespan handlers
 - [ ] T022 [P] Implement CORS middleware in backend/src/api/middleware/cors.py allowing GitHub Pages domain
 - [ ] T023 [P] Implement rate limiting middleware in backend/src/api/middleware/rate_limiter.py (10 req/min per IP)
 - [ ] T024 [P] Implement error handling middleware in backend/src/api/middleware/error_handler.py with structured JSON responses
-- [ ] T025 [P] Create frontend/docusaurus.config.js with site configuration, GitHub Pages baseUrl, and navbar
-- [ ] T026 [P] Create frontend/sidebars.js for documentation navigation structure
-- [ ] T027 [P] Create frontend/src/css/custom.css for theme styling and dark mode support
+- [X] T025 [P] Create frontend/docusaurus.config.js with site configuration, GitHub Pages baseUrl, and navbar
+- [X] T026 [P] Create frontend/sidebars.js for documentation navigation structure
+- [X] T027 [P] Create frontend/src/css/custom.css for theme styling and dark mode support
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -75,15 +75,15 @@
 
 ### Implementation for User Story 1
 
-- [ ] T028 [US1] Create frontend/docs/intro.md with introduction chapter structure (learning outcomes, explanations, examples)
-- [ ] T029 [P] [US1] Create sample chapter structure in frontend/docs/ with placeholder content
-- [ ] T030 [P] [US1] Configure Docusaurus sidebar in frontend/sidebars.js to organize chapters by modules
-- [ ] T031 [US1] Implement mobile-responsive CSS in frontend/src/css/custom.css (down to 320px width)
-- [ ] T032 [US1] Add dark mode theme configuration in frontend/docusaurus.config.js
+- [X] T028 [US1] Create frontend/docs/intro.md with introduction chapter structure (learning outcomes, explanations, examples)
+- [X] T029 [P] [US1] Create sample chapter structure in frontend/docs/ with placeholder content
+- [X] T030 [P] [US1] Configure Docusaurus sidebar in frontend/sidebars.js to organize chapters by modules
+- [X] T031 [US1] Implement mobile-responsive CSS in frontend/src/css/custom.css (down to 320px width)
+- [X] T032 [US1] Add dark mode theme configuration in frontend/docusaurus.config.js
 - [ ] T033 [US1] Create homepage in frontend/src/pages/index.tsx with navigation to documentation
 - [ ] T034 [US1] Optimize page load performance: configure build settings for <1.5s load time
 - [X] T035 [US1] Test internal navigation links between chapters
-- [ ] T036 [US1] Verify all required chapter sections: learning outcomes, explanations, diagrams, examples, exercises
+- [X] T036 [US1] Verify all required chapter sections: learning outcomes, explanations, diagrams, examples, exercises
 
 **Checkpoint**: Documentation site is fully functional, navigable, mobile-responsive, and can be deployed to GitHub Pages
 
@@ -97,32 +97,32 @@
 
 ### Implementation for User Story 2
 
-- [ ] T037 [P] [US2] Create backend/src/services/vectordb/qdrant_client.py with Qdrant connection and search operations
-- [ ] T038 [P] [US2] Create backend/src/services/embeddings/openai_embeddings.py for generating query embeddings
+- [X] T037 [P] [US2] Create backend/src/services/vectordb/qdrant_client.py with Qdrant connection and search operations
+- [X] T038 [P] [US2] Create backend/src/services/embeddings/openai_embeddings.py for generating query embeddings
 - [ ] T039 [P] [US2] Create backend/src/services/chat/session_manager.py for managing chat sessions in Postgres
-- [ ] T040 [US2] Create backend/src/services/rag/retrieval.py for vector similarity search and context retrieval
-- [ ] T041 [US2] Create backend/src/services/rag/generation.py using OpenAI Agents SDK for response generation
-- [ ] T042 [US2] Create backend/src/api/routes/chat.py with POST /api/chat endpoint implementing RAG flow
-- [ ] T043 [P] [US2] Create backend/src/api/routes/health.py with GET /health endpoint for dependency health checks
+- [X] T040 [US2] Create backend/src/services/rag/retrieval.py for vector similarity search and context retrieval
+- [X] T041 [US2] Create backend/src/services/rag/generation.py using OpenAI Agents SDK for response generation
+- [X] T042 [US2] Create backend/src/api/routes/chat.py with POST /api/chat endpoint implementing RAG flow
+- [X] T043 [P] [US2] Create backend/src/api/routes/health.py with GET /health endpoint for dependency health checks
 - [ ] T044 [P] [US2] Create backend/src/api/routes/metrics.py with GET /metrics endpoint for observability
-- [ ] T045 [US2] Implement highlighted context RAG in backend/src/services/rag/retrieval.py (RAG-C-002)
-- [ ] T046 [US2] Implement citation generation in backend/src/services/rag/generation.py with source URLs
-- [ ] T047 [US2] Implement out-of-scope error handling returning "I cannot answer questions outside the documentation"
+- [X] T045 [US2] Implement highlighted context RAG in backend/src/services/rag/retrieval.py (RAG-C-002)
+- [X] T046 [US2] Implement citation generation in backend/src/services/rag/generation.py with source URLs
+- [X] T047 [US2] Implement out-of-scope error handling returning "I cannot answer questions outside the documentation"
 - [ ] T048 [US2] Implement Qdrant unavailability handling returning "Chat is temporarily unavailable, please try again later"
 - [ ] T049 [US2] Implement streaming response support in backend/src/api/routes/chat.py using StreamingResponse
-- [ ] T050 [P] [US2] Create frontend/src/components/ChatWidget/ChatWidget.tsx with expandable widget UI
-- [ ] T051 [P] [US2] Create frontend/src/components/ChatWidget/ChatWidget.module.css for widget styling (bottom-right, clean UI)
-- [ ] T052 [US2] Integrate ChatWidget with backend API: POST /api/chat with query and highlighted_context
-- [ ] T053 [US2] Implement chat message display with citations in ChatWidget component
-- [ ] T054 [US2] Implement highlight-to-ask feature: capture selected text and send as highlighted_context
-- [ ] T055 [US2] Create frontend/src/theme/Root.tsx to embed ChatWidget on all documentation pages
-- [ ] T056 [US2] Configure API base URL with environment detection (localhost vs production backend)
-- [ ] T057 [US2] Ensure chat widget does not block page rendering (async loading)
-- [ ] T058 [US2] Create backend/scripts/ingest_content.py to embed documentation chapters into Qdrant
-- [ ] T059 [US2] Implement content chunking strategy (500-800 tokens, 100 overlap) in ingestion script
+- [X] T050 [P] [US2] Create frontend/src/components/ChatWidget/ChatWidget.tsx with expandable widget UI
+- [X] T051 [P] [US2] Create frontend/src/components/ChatWidget/ChatWidget.module.css for widget styling (bottom-right, clean UI)
+- [X] T052 [US2] Integrate ChatWidget with backend API: POST /api/chat with query and highlighted_context
+- [X] T053 [US2] Implement chat message display with citations in ChatWidget component
+- [X] T054 [US2] Implement highlight-to-ask feature: capture selected text and send as highlighted_context
+- [X] T055 [US2] Create frontend/src/theme/Root.tsx to embed ChatWidget on all documentation pages
+- [X] T056 [US2] Configure API base URL with environment detection (localhost vs production backend)
+- [X] T057 [US2] Ensure chat widget does not block page rendering (async loading)
+- [X] T058 [US2] Create backend/scripts/ingest_content.py to embed documentation chapters into Qdrant
+- [X] T059 [US2] Implement content chunking strategy (500-800 tokens, 100 overlap) in ingestion script
 - [ ] T060 [US2] Implement chunk deduplication using SHA-256 content hashing in ingestion script
-- [ ] T061 [US2] Run content ingestion for initial documentation chapters
-- [ ] T062 [US2] Verify end-to-end flow: ask question → retrieve context → generate response → display citations
+- [X] T061 [US2] Run content ingestion for initial documentation chapters
+- [X] T062 [US2] Verify end-to-end flow: ask question → retrieve context → generate response → display citations
 
 **Checkpoint**: Chatbot is fully functional with RAG, citations, highlight-to-ask, graceful error handling, and content ingestion complete
 

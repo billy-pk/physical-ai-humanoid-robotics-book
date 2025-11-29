@@ -108,7 +108,14 @@ export default function ChatWidget(): JSX.Element {
       {isOpen && (
         <div className={styles.chatContainer}>
           {/* Header */}
-          <div className={styles.chatHeader}>
+          <div 
+            className={styles.chatHeader} 
+            onClick={() => {
+              console.log('Header clicked!');
+              setIsOpen(false);
+            }} 
+            style={{ cursor: 'pointer' }}
+          >
             <div className={styles.headerContent}>
               <div className={styles.headerIcon}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -117,16 +124,20 @@ export default function ChatWidget(): JSX.Element {
               </div>
               <div>
                 <div className={styles.headerTitle}>AI Book Assistant</div>
-                <div className={styles.headerSubtitle}>Physical AI & Robotics</div>
+                <div className={styles.headerSubtitle}>Click to minimize</div>
               </div>
             </div>
             <button
               className={styles.closeButton}
-              onClick={() => setIsOpen(false)}
-              aria-label="Close chat"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+              }}
+              aria-label="Minimize chat"
+              title="Minimize chat"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
               </svg>
             </button>
           </div>

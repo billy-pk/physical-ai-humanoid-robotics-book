@@ -45,14 +45,25 @@ async def search_book_content(query: str, limit: int = 5) -> str:
             limit=limit
         )
 
+        # Expand very short queries for better embedding quality
+        search_query = query
+        if len(query.strip()) < 10:
+            # For acronyms and very short queries, add context
+            search_query = f"What is {query}? {query} definition and explanation in robotics"
+            logger.info(
+                "Expanded short query for better search",
+                original=query,
+                expanded=search_query[:100]
+            )
+
         # Generate embedding for the query
-        query_vector = await generate_embeddings(query)
+        query_vector = await generate_embeddings(search_query)
 
         # Search Qdrant for relevant chunks (sync function)
         search_results = _search_qdrant(
             query_vector=query_vector,
             limit=limit,
-            score_threshold=0.5  # Lower threshold for better recall
+            score_threshold=0.4  # Lowered from 0.5 to improve recall for technical content
         )
 
         if not search_results:
@@ -100,12 +111,13 @@ rag_agent = Agent(
 
 Your responsibilities:
 1. When a student asks a question, ALWAYS use the search_book_content tool to find relevant information
-2. Answer questions based ONLY on the content retrieved by the search tool
-3. Cite specific sections/chapters when providing answers (e.g., "According to the section on...")
-4. If the search tool returns no relevant content, politely explain that the question is outside the book's scope
-5. Be educational, encouraging, and clear in your explanations
-6. Use examples from the retrieved context when available
-7. Break down complex concepts into understandable parts
+2. For acronyms (like ROS, SLAM, IMU, LIDAR), try searching with both the acronym and expanded terms if initial search yields limited results
+3. Answer questions based ONLY on the content retrieved by the search tool
+4. Cite specific sections/chapters when providing answers (e.g., "According to Chapter 1.4 on...")
+5. If the search tool returns no relevant content, politely explain that the question is outside the book's scope
+6. Be educational, encouraging, and clear in your explanations
+7. Use examples from the retrieved context when available
+8. Break down complex concepts into understandable parts
 
 Guidelines:
 - ALWAYS use the search_book_content tool before answering - never answer from general knowledge
