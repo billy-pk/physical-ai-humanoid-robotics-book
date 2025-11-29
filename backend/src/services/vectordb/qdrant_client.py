@@ -1,8 +1,8 @@
 from qdrant_client import QdrantClient, models
-from backend.src.core.config import settings
-from backend.src.models.embeddings import VectorSearchResult
+from ...core.config import settings
+from ...models.embeddings import VectorSearchResult
 from typing import List, Optional
-from backend.src.core.logging import logger
+from ...core.logging import logger
 
 
 def get_qdrant_client() -> QdrantClient:

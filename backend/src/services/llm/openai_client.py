@@ -1,6 +1,6 @@
 from openai import AsyncOpenAI
-from backend.src.core.config import settings
-from backend.src.core.logging import logger
+from ...core.config import settings
+from ...core.logging import logger
 from typing import List, Optional
 
 

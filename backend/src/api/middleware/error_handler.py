@@ -2,8 +2,8 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
-from backend.src.core.logging import logger
-from backend.src.models.errors import ErrorResponse
+from ...core.logging import logger
+from ...models.errors import ErrorResponse
 
 class ErrorHandlingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self,

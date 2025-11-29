@@ -3,10 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.src.core.config import settings
-from backend.src.core.logging import configure_logging, logger
-from backend.src.core.monitoring import metrics
-from backend.src.api.routes import chat
+from .core.config import settings
+from .core.logging import configure_logging, logger
+from .core.monitoring import metrics
+from .api.routes import chat
 
 # Configure structured logging at application startup
 configure_logging()

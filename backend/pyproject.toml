@@ -8,9 +8,12 @@ dependencies = [
     "alembic>=1.17.2",
     "fastapi>=0.122.0",
     "openai-agents>=0.6.1",
+    "psycopg2-binary>=2.9.11",
     "psycopg[binary]>=3.2.13",
+    "pydantic-settings>=2.12.0",
     "qdrant-client>=1.16.1",
     "ruff>=0.14.6",
+    "sqlalchemy>=2.0.44",
     "structlog>=25.5.0",
     "uvicorn>=0.38.0",
 ]

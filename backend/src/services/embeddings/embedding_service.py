@@ -3,10 +3,10 @@ import uuid
 from typing import List, Optional
 from datetime import datetime
 
-from backend.src.core.logging import logger
-from backend.src.services.llm.openai_client import generate_embeddings
-from backend.src.services.vectordb.qdrant_client import upsert_embeddings
-from backend.src.models.embeddings import EmbeddingChunk
+from ...core.logging import logger
+from ..llm.openai_client import generate_embeddings
+from ..vectordb.qdrant_client import upsert_embeddings
+from ...models.embeddings import EmbeddingChunk
 
 
 def compute_content_hash(content: str) -> str:

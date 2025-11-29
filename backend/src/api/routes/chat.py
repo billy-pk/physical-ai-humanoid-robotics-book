@@ -4,11 +4,12 @@ from typing import List, Optional
 import uuid
 from datetime import datetime
 
-from backend.src.core.logging import logger
-from backend.src.models.chat import ChatMessage, ChatSession, MessageRole, Citation
-from backend.src.models.errors import ErrorResponse
-from backend.src.services.llm.openai_client import generate_embeddings, generate_rag_response
-from backend.src.services.vectordb.qdrant_client import search_book_embeddings
+from ...core.logging import logger
+from ...models.chat import ChatMessage, ChatSession, MessageRole, Citation
+from ...models.errors import ErrorResponse
+from ...services.llm.openai_client import generate_embeddings
+from ...services.vectordb.qdrant_client import search_book_embeddings
+from ...services.rag.rag_agent import generate_rag_response_with_agent, handle_out_of_scope_query
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -39,7 +40,7 @@ async def chat(request: ChatRequest):
     1. Generate embedding for user query
     2. Search Qdrant for relevant book chunks
     3. Optionally incorporate highlighted context
-    4. Generate response using OpenAI with retrieved context
+    4. Generate response using OpenAI Agent (via Agents SDK) with retrieved context
     5. Extract citations from retrieved chunks
     6. Return response with citations
 
@@ -75,16 +76,17 @@ async def chat(request: ChatRequest):
 
         if not search_results:
             logger.warning("No relevant content found", session_id=str(session_id))
+            out_of_scope_response = await handle_out_of_scope_query(request.query)
             return ChatResponse(
                 session_id=session_id,
                 message=ChatMessage(
                     session_id=session_id,
                     role=MessageRole.ASSISTANT,
-                    content="I don't have enough information in the book content to answer that question. Could you rephrase or ask about a topic covered in the documentation?",
+                    content=out_of_scope_response,
                     citations=[]
                 ),
                 citations=[],
-                answer="I don't have enough information in the book content to answer that question."
+                answer=out_of_scope_response
             )
 
         # Step 3: Prepare context chunks
@@ -95,12 +97,11 @@ async def chat(request: ChatRequest):
             context_chunks.insert(0, f"[User highlighted text]: {request.highlighted_context}")
             logger.info("Added highlighted context", session_id=str(session_id))
 
-        # Step 4: Generate RAG response
-        answer, tokens_used = await generate_rag_response(
+        # Step 4: Generate RAG response using OpenAI Agent
+        answer, tokens_used = await generate_rag_response_with_agent(
             user_query=request.query,
             context_chunks=context_chunks,
-            chat_history=None,  # TODO: Retrieve from database in future
-            model="gpt-4o-mini"
+            chat_history=None  # TODO: Retrieve from database in future
         )
 
         # Step 5: Create citations from search results
