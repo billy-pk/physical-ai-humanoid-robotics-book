@@ -1,0 +1,24 @@
+{
+  "id": "intro",
+  "title": "Introduction to Physical AI and Humanoid Robotics",
+  "description": "Welcome to the comprehensive guide on Physical AI and Humanoid Robotics! This book will take you on a journey from foundational concepts to cutting-edge applications in one of the most exciting fields at the intersection of artificial intelligence, robotics, and human-machine interaction.",
+  "source": "@site/docs/intro.md",
+  "sourceDirName": ".",
+  "slug": "/intro",
+  "permalink": "/physical-ai-humanoid-robotics-book/docs/intro",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/billy-pk/physical-ai-humanoid-robotics-book/tree/main/frontend/docs/intro.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "Introduction to Physical AI and Humanoid Robotics"
+  },
+  "sidebar": "defaultSidebar",
+  "next": {
+    "title": "1.1 Fundamentals of Artificial Intelligence",
+    "permalink": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-1"
+  }
+}

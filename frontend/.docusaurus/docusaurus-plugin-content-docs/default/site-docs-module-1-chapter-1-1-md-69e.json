@@ -1,0 +1,28 @@
+{
+  "id": "module-1/chapter-1-1",
+  "title": "1.1 Fundamentals of Artificial Intelligence",
+  "description": "Before diving into Physical AI and humanoid robotics, we must build a solid foundation in artificial intelligence itself. This chapter explores core AI concepts, learning paradigms, and the evolution from narrow to general intelligence—all essential for understanding how AI powers physical systems.",
+  "source": "@site/docs/module-1/chapter-1-1.md",
+  "sourceDirName": "module-1",
+  "slug": "/module-1/chapter-1-1",
+  "permalink": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-1",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/billy-pk/physical-ai-humanoid-robotics-book/tree/main/frontend/docs/module-1/chapter-1-1.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "1.1 Fundamentals of Artificial Intelligence"
+  },
+  "sidebar": "defaultSidebar",
+  "previous": {
+    "title": "Introduction to Physical AI and Humanoid Robotics",
+    "permalink": "/physical-ai-humanoid-robotics-book/docs/intro"
+  },
+  "next": {
+    "title": "1.2 Robotics Fundamentals",
+    "permalink": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-2"
+  }
+}

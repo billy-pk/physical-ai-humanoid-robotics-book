@@ -1,0 +1,28 @@
+{
+  "id": "module-2/chapter-2-1",
+  "title": "2.1 Computer Vision Fundamentals",
+  "description": "Computer vision enables robots to extract meaningful information from images. This chapter covers essential image processing techniques and classical computer vision algorithms used in robotics.",
+  "source": "@site/docs/module-2/chapter-2-1.md",
+  "sourceDirName": "module-2",
+  "slug": "/module-2/chapter-2-1",
+  "permalink": "/physical-ai-humanoid-robotics-book/docs/module-2/chapter-2-1",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/billy-pk/physical-ai-humanoid-robotics-book/tree/main/frontend/docs/module-2/chapter-2-1.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "2.1 Computer Vision Fundamentals"
+  },
+  "sidebar": "defaultSidebar",
+  "previous": {
+    "title": "Module 2 Introduction",
+    "permalink": "/physical-ai-humanoid-robotics-book/docs/module-2/intro"
+  },
+  "next": {
+    "title": "2.2 Deep Learning for Vision",
+    "permalink": "/physical-ai-humanoid-robotics-book/docs/module-2/chapter-2-2"
+  }
+}

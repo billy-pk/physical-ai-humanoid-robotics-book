@@ -1,0 +1,28 @@
+{
+  "id": "module-1/chapter-1-3",
+  "title": "1.3 Sensors and Actuators",
+  "description": "Robots need eyes to see, ears to hear, and muscles to move. This chapter explores the sensors that enable robots to perceive their environment and the actuators that allow them to act upon it. These are the interface between the digital brain (AI) and the physical world.",
+  "source": "@site/docs/module-1/chapter-1-3.md",
+  "sourceDirName": "module-1",
+  "slug": "/module-1/chapter-1-3",
+  "permalink": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-3",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/billy-pk/physical-ai-humanoid-robotics-book/tree/main/frontend/docs/module-1/chapter-1-3.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "1.3 Sensors and Actuators"
+  },
+  "sidebar": "defaultSidebar",
+  "previous": {
+    "title": "1.2 Robotics Fundamentals",
+    "permalink": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-2"
+  },
+  "next": {
+    "title": "1.4 ROS and Simulation",
+    "permalink": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-4"
+  }
+}

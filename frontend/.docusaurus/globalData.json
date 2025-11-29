@@ -1,0 +1,110 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/physical-ai-humanoid-robotics-book/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/physical-ai-humanoid-robotics-book/docs",
+          "mainDocId": "intro",
+          "docs": [
+            {
+              "id": "intro",
+              "path": "/physical-ai-humanoid-robotics-book/docs/intro",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "module-1/chapter-1-1",
+              "path": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-1",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "module-1/chapter-1-2",
+              "path": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-2",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "module-1/chapter-1-3",
+              "path": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-3",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "module-1/chapter-1-4",
+              "path": "/physical-ai-humanoid-robotics-book/docs/module-1/chapter-1-4",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "module-2/chapter-2-1",
+              "path": "/physical-ai-humanoid-robotics-book/docs/module-2/chapter-2-1",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "module-2/chapter-2-2",
+              "path": "/physical-ai-humanoid-robotics-book/docs/module-2/chapter-2-2",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "module-2/chapter-2-3",
+              "path": "/physical-ai-humanoid-robotics-book/docs/module-2/chapter-2-3",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "module-2/chapter-2-4",
+              "path": "/physical-ai-humanoid-robotics-book/docs/module-2/chapter-2-4",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "module-2/intro",
+              "path": "/physical-ai-humanoid-robotics-book/docs/module-2/intro",
+              "sidebar": "defaultSidebar"
+            },
+            {
+              "id": "tutorial-basics/congratulations",
+              "path": "/physical-ai-humanoid-robotics-book/docs/tutorial-basics/congratulations"
+            },
+            {
+              "id": "tutorial-basics/create-a-blog-post",
+              "path": "/physical-ai-humanoid-robotics-book/docs/tutorial-basics/create-a-blog-post"
+            },
+            {
+              "id": "tutorial-basics/create-a-document",
+              "path": "/physical-ai-humanoid-robotics-book/docs/tutorial-basics/create-a-document"
+            },
+            {
+              "id": "tutorial-basics/create-a-page",
+              "path": "/physical-ai-humanoid-robotics-book/docs/tutorial-basics/create-a-page"
+            },
+            {
+              "id": "tutorial-basics/deploy-your-site",
+              "path": "/physical-ai-humanoid-robotics-book/docs/tutorial-basics/deploy-your-site"
+            },
+            {
+              "id": "tutorial-basics/markdown-features",
+              "path": "/physical-ai-humanoid-robotics-book/docs/tutorial-basics/markdown-features"
+            },
+            {
+              "id": "tutorial-extras/manage-docs-versions",
+              "path": "/physical-ai-humanoid-robotics-book/docs/tutorial-extras/manage-docs-versions"
+            },
+            {
+              "id": "tutorial-extras/translate-your-site",
+              "path": "/physical-ai-humanoid-robotics-book/docs/tutorial-extras/translate-your-site"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "defaultSidebar": {
+              "link": {
+                "path": "/physical-ai-humanoid-robotics-book/docs/intro",
+                "label": "intro"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

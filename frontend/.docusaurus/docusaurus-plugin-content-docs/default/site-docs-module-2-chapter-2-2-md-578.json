@@ -1,0 +1,28 @@
+{
+  "id": "module-2/chapter-2-2",
+  "title": "2.2 Deep Learning for Vision",
+  "description": "Deep learning transformed computer vision, enabling robots to recognize objects with human-level accuracy. This chapter covers Convolutional Neural Networks (CNNs) and modern object detection for robotics.",
+  "source": "@site/docs/module-2/chapter-2-2.md",
+  "sourceDirName": "module-2",
+  "slug": "/module-2/chapter-2-2",
+  "permalink": "/physical-ai-humanoid-robotics-book/docs/module-2/chapter-2-2",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/billy-pk/physical-ai-humanoid-robotics-book/tree/main/frontend/docs/module-2/chapter-2-2.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "2.2 Deep Learning for Vision"
+  },
+  "sidebar": "defaultSidebar",
+  "previous": {
+    "title": "2.1 Computer Vision Fundamentals",
+    "permalink": "/physical-ai-humanoid-robotics-book/docs/module-2/chapter-2-1"
+  },
+  "next": {
+    "title": "2.3 3D Vision and Depth Perception",
+    "permalink": "/physical-ai-humanoid-robotics-book/docs/module-2/chapter-2-3"
+  }
+}
