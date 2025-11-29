@@ -7,9 +7,7 @@ from datetime import datetime
 from ...core.logging import logger
 from ...models.chat import ChatMessage, ChatSession, MessageRole, Citation
 from ...models.errors import ErrorResponse
-from ...services.llm.openai_client import generate_embeddings
-from ...services.vectordb.qdrant_client import search_book_embeddings
-from ...services.rag.rag_agent import generate_rag_response_with_agent, handle_out_of_scope_query
+from ...services.rag.rag_agent import ask_question
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -37,12 +35,16 @@ async def chat(request: ChatRequest):
     Handle chat interactions with RAG (Retrieval Augmented Generation).
 
     Flow:
-    1. Generate embedding for user query
-    2. Search Qdrant for relevant book chunks
-    3. Optionally incorporate highlighted context
-    4. Generate response using OpenAI Agent (via Agents SDK) with retrieved context
-    5. Extract citations from retrieved chunks
-    6. Return response with citations
+    1. Pass user query to RAG agent
+    2. Agent automatically uses its search_book_content tool to find relevant information
+    3. Agent generates response based on retrieved content with citations
+    4. Return response to user
+
+    The agent handles all RAG logic internally including:
+    - Vector search via the search_book_content tool
+    - Context retrieval from Qdrant
+    - Grounded response generation
+    - Citation of sources
 
     Args:
         request: ChatRequest containing query and optional context
@@ -64,80 +66,42 @@ async def chat(request: ChatRequest):
             has_highlight=request.highlighted_context is not None
         )
 
-        # Step 1: Generate query embedding
-        query_embedding = await generate_embeddings(request.query)
-
-        # Step 2: Search for relevant chunks
-        search_results = await search_book_embeddings(
-            query_vector=query_embedding,
-            limit=5,
-            score_threshold=0.7
-        )
-
-        if not search_results:
-            logger.warning("No relevant content found", session_id=str(session_id))
-            out_of_scope_response = await handle_out_of_scope_query(request.query)
-            return ChatResponse(
-                session_id=session_id,
-                message=ChatMessage(
-                    session_id=session_id,
-                    role=MessageRole.ASSISTANT,
-                    content=out_of_scope_response,
-                    citations=[]
-                ),
-                citations=[],
-                answer=out_of_scope_response
-            )
-
-        # Step 3: Prepare context chunks
-        context_chunks = [result.content for result in search_results]
-
-        # Add highlighted context if provided (higher priority)
+        # Optionally prepend highlighted context to the query
+        query = request.query
         if request.highlighted_context:
-            context_chunks.insert(0, f"[User highlighted text]: {request.highlighted_context}")
-            logger.info("Added highlighted context", session_id=str(session_id))
+            query = (
+                f"Context from the page I'm reading:\n\n{request.highlighted_context}\n\n"
+                f"My question: {request.query}"
+            )
+            logger.info("Added highlighted context to query", session_id=str(session_id))
 
-        # Step 4: Generate RAG response using OpenAI Agent
-        answer, tokens_used = await generate_rag_response_with_agent(
-            user_query=request.query,
-            context_chunks=context_chunks,
+        # Ask the RAG agent - it will use its search tool internally
+        answer, tokens_used = await ask_question(
+            user_query=query,
             chat_history=None  # TODO: Retrieve from database in future
         )
 
-        # Step 5: Create citations from search results
-        citations = [
-            Citation(
-                chunk_id=result.chunk_id,
-                chapter_title=result.chapter_title,
-                section=result.section_title,
-                relevance_score=result.score,
-                source_url=result.source_url or "#"
-            )
-            for result in search_results
-        ]
-
-        # Step 6: Create chat message
+        # Create chat message (citations are embedded in agent's response text)
         message = ChatMessage(
             session_id=session_id,
             role=MessageRole.ASSISTANT,
             content=answer,
-            citations=citations,
+            citations=[],  # Agent cites sources in its response text
             highlighted_context=request.highlighted_context,
             tokens_used=tokens_used
         )
 
         logger.info(
-            "Chat response generated",
+            "Chat response generated via agent",
             session_id=str(session_id),
             tokens=tokens_used,
-            citations_count=len(citations),
-            relevance_scores=[c.relevance_score for c in citations]
+            response_length=len(answer)
         )
 
         return ChatResponse(
             session_id=session_id,
             message=message,
-            citations=citations,
+            citations=[],  # Citations are in the response text
             answer=answer
         )
 

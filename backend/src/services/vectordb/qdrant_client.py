@@ -19,13 +19,15 @@ def get_qdrant_client() -> QdrantClient:
     return client
 
 
-async def search_book_embeddings(
+def search_book_embeddings(
     query_vector: List[float],
     limit: int = 5,
     score_threshold: float = 0.7,
 ) -> List[VectorSearchResult]:
     """
     Search for similar book content chunks using vector similarity.
+
+    Note: This function is synchronous since QdrantClient is synchronous.
 
     Args:
         query_vector: Embedding vector of the user's query (3072 dimensions)
@@ -38,22 +40,23 @@ async def search_book_embeddings(
     client = get_qdrant_client()
 
     try:
-        search_result = client.search(
+        # Use query_points for vector search (newer Qdrant API)
+        search_result = client.query_points(
             collection_name="book_embeddings",
-            query_vector=query_vector,
+            query=query_vector,
             limit=limit,
             score_threshold=score_threshold,
             with_payload=True,
         )
 
         results = []
-        for hit in search_result:
-            payload = hit.payload or {}
+        for point in search_result.points:
+            payload = point.payload or {}
             results.append(
                 VectorSearchResult(
-                    chunk_id=str(hit.id),
+                    chunk_id=str(point.id),
                     content=payload.get("content", ""),
-                    score=hit.score,
+                    score=point.score,
                     chapter_title=payload.get("chapter_title", ""),
                     section_title=payload.get("section_title"),
                     source_url=payload.get("source_url", ""),
