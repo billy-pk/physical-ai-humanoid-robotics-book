@@ -15,14 +15,15 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: 'https://your-github-username.github.io',
+  url: 'https://billy-pk.github.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/physical-ai-humanoid-robotics-book/', // This should be your repository name
+  trailingSlash: false,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'your-github-username', // Usually your GitHub org/user name.
+  organizationName: 'billy-pk', // Usually your GitHub org/user name.
   projectName: 'physical-ai-humanoid-robotics-book', // Usually your repo name.
 
   onBrokenLinks: 'throw',
@@ -44,7 +45,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/billy-pk/physical-ai-humanoid-robotics-book/tree/main/frontend/',
         },
         blog: false, // Disable blog functionality
         theme: {
@@ -74,7 +75,7 @@ const config: Config = {
           label: 'Read Book',
         },
         {
-          href: 'https://github.com/your-github-username/physical-ai-humanoid-robotics-book',
+          href: 'https://github.com/billy-pk/physical-ai-humanoid-robotics-book',
           label: 'GitHub',
           position: 'right',
         },
@@ -105,7 +106,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub Repository',
-              href: 'https://github.com/your-github-username/physical-ai-humanoid-robotics-book',
+              href: 'https://github.com/billy-pk/physical-ai-humanoid-robotics-book',
             },
           ],
         },
