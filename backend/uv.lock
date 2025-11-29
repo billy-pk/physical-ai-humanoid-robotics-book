@@ -73,6 +73,7 @@ dependencies = [
     { name = "qdrant-client" },
     { name = "ruff" },
     { name = "structlog" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
@@ -84,6 +85,7 @@ requires-dist = [
     { name = "qdrant-client", specifier = ">=1.16.1" },
     { name = "ruff", specifier = ">=0.14.6" },
     { name = "structlog", specifier = ">=25.5.0" },
+    { name = "uvicorn", specifier = ">=0.38.0" },
 ]
 
 [[package]]

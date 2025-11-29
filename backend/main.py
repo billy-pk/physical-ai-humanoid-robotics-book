@@ -1,6 +1,20 @@
-def main():
-    print("Hello from backend!")
+"""
+Entry point for the AI-Course-Book Backend FastAPI application.
 
+Run with:
+    python backend/main.py
+
+Or with uvicorn directly:
+    uvicorn backend.src.main:app --reload --host 0.0.0.0 --port 8000
+"""
+
+import uvicorn
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run(
+        "backend.src.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )
