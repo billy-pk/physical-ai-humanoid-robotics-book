@@ -184,3 +184,99 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Additional styles for UserBackgroundQuestionnaire */
+.container {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--ifm-background-surface-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.checkboxLabel,
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+  user-select: none;
+}
+
+.checkboxLabel:hover,
+.radioLabel:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.subSection {
+  margin-top: 1rem;
+  padding-left: 1.5rem;
+  border-left: 3px solid var(--ifm-color-primary);
+}
+
+.submitError {
+  padding: 1rem;
+  background: var(--ifm-color-danger-lightest);
+  color: var(--ifm-color-danger-darkest);
+  border: 1px solid var(--ifm-color-danger-light);
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.submitButton {
+  padding: 0.75rem 2rem;
+  background: var(--ifm-color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: var(--ifm-color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.submitButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.skipButton {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.skipButton:hover:not(:disabled) {
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-400);
+}
+
+.skipButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

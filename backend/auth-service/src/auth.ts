@@ -39,5 +39,19 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // Update session every 24 hours
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // Cache for 5 minutes
+    },
+  },
+
+  // Cookie configuration for cross-port compatibility in development
+  advanced: {
+    cookieOptions: {
+      sameSite: "lax", // Allow cookies across ports on localhost
+      httpOnly: true,
+      secure: false, // Set to true in production with HTTPS
+      path: "/",
+    },
   },
 });
