@@ -24,6 +24,10 @@ export default function ChatWidget(): React.JSX.Element {
     scrollToBottom();
   }, [messages]);
 
+  const clearChat = () => {
+    setMessages([]);
+  };
+
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -123,15 +127,15 @@ export default function ChatWidget(): React.JSX.Element {
       {isOpen && (
         <div className={styles.chatContainer}>
           {/* Header */}
-          <div 
-            className={styles.chatHeader} 
-            onClick={() => {
-              console.log('Header clicked!');
-              setIsOpen(false);
-            }} 
-            style={{ cursor: 'pointer' }}
-          >
-            <div className={styles.headerContent}>
+          <div className={styles.chatHeader}>
+            <div 
+              className={styles.headerContent}
+              onClick={() => {
+                console.log('Header clicked!');
+                setIsOpen(false);
+              }}
+              style={{ cursor: 'pointer', flex: 1 }}
+            >
               <div className={styles.headerIcon}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5ZM12 19.2C9.5 19.2 7.29 17.92 6 15.98C6.03 13.99 10 12.9 12 12.9C13.99 12.9 17.97 13.99 18 15.98C16.71 17.92 14.5 19.2 12 19.2Z"/>
@@ -142,19 +146,33 @@ export default function ChatWidget(): React.JSX.Element {
                 <div className={styles.headerSubtitle}>Click to minimize</div>
               </div>
             </div>
-            <button
-              className={styles.closeButton}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsOpen(false);
-              }}
-              aria-label="Minimize chat"
-              title="Minimize chat"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
-              </svg>
-            </button>
+            <div className={styles.headerActions}>
+              {messages.length > 0 && (
+                <button
+                  className={styles.clearButton}
+                  onClick={clearChat}
+                  aria-label="Clear chat"
+                  title="Clear chat history"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                  </svg>
+                </button>
+              )}
+              <button
+                className={styles.closeButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                }}
+                aria-label="Minimize chat"
+                title="Minimize chat"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
