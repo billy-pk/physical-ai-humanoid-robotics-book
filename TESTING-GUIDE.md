@@ -623,6 +623,53 @@ curl -X POST http://localhost:8000/api/auth/profile/background \
 
 ---
 
+---
+
+## 🤖 RAG Chatbot / Vector Database Testing
+
+### Update Vector Database
+
+When book content changes, update embeddings:
+
+```bash
+cd backend
+uv run python ingest_content.py
+```
+
+**Expected**: 
+- Processes all `frontend/docs/module-*` files
+- Creates ~150-250 chunks per module
+- Takes 5-10 minutes for full update
+
+### Verify Vector Database
+
+```bash
+cd backend
+uv run python -c "from src.services.vectordb.qdrant_client import get_qdrant_client; client = get_qdrant_client(); info = client.get_collection('book_embeddings'); print(f'Vectors: {info.points_count}, Status: {info.status}')"
+```
+
+**Expected**: Shows total vector count and "green" status
+
+### Test RAG Search
+
+**Via API**:
+```bash
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What is ROS 2?"}'
+```
+
+**Expected**: JSON response with answer and citations from book content
+
+**Via Browser**:
+1. Open chat widget at http://localhost:3000/physical-ai-humanoid-robotics-book/
+2. Ask: "What is ROS 2?"
+3. **Expected**: Response with information from Module 1 content
+
+For detailed vector database management, see `VECTOR-DB-GUIDE.md`
+
+---
+
 ## Need Help?
 
 If tests fail:
@@ -631,3 +678,4 @@ If tests fail:
 3. Check database connectivity
 4. Verify CORS configuration
 5. Check browser console for frontend errors
+6. For RAG issues, see `VECTOR-DB-GUIDE.md`

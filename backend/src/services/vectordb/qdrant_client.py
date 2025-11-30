@@ -104,31 +104,54 @@ async def create_book_embeddings_collection():
 
 async def upsert_embeddings(
     chunks: List[dict],
+    batch_size: int = 50,
 ) -> None:
     """
-    Insert or update embedding chunks in Qdrant.
+    Insert or update embedding chunks in Qdrant in batches.
 
     Args:
         chunks: List of dictionaries with 'id', 'vector', and 'payload' keys
+        batch_size: Number of chunks to upload per batch (default: 50)
     """
     client = get_qdrant_client()
 
     try:
-        points = [
-            models.PointStruct(
-                id=chunk["id"],
-                vector=chunk["vector"],
-                payload=chunk["payload"]
-            )
-            for chunk in chunks
-        ]
-
-        client.upsert(
-            collection_name="book_embeddings",
-            points=points
+        total_chunks = len(chunks)
+        total_batches = (total_chunks + batch_size - 1) // batch_size
+        
+        logger.info(
+            "Uploading embeddings in batches",
+            total_chunks=total_chunks,
+            batch_size=batch_size,
+            total_batches=total_batches
         )
+        
+        for i in range(0, total_chunks, batch_size):
+            batch = chunks[i:i + batch_size]
+            batch_num = (i // batch_size) + 1
+            
+            points = [
+                models.PointStruct(
+                    id=chunk["id"],
+                    vector=chunk["vector"],
+                    payload=chunk["payload"]
+                )
+                for chunk in batch
+            ]
 
-        logger.info("Upserted embeddings", count=len(chunks))
+            client.upsert(
+                collection_name="book_embeddings",
+                points=points
+            )
+
+            logger.info(
+                "Batch uploaded",
+                batch=f"{batch_num}/{total_batches}",
+                chunks_in_batch=len(batch),
+                total_uploaded=min(i + batch_size, total_chunks)
+            )
+
+        logger.info("Successfully upserted all embeddings", total_count=total_chunks)
     except Exception as e:
         logger.error("Failed to upsert embeddings", error=str(e))
         raise
