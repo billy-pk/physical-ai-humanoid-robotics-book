@@ -1,0 +1,186 @@
+.questionnaire {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--ifm-background-surface-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.header h2 {
+  margin-bottom: 0.5rem;
+  color: var(--ifm-heading-color);
+}
+
+.header p {
+  color: var(--ifm-color-emphasis-700);
+  font-size: 1rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-weight: 600;
+  color: var(--ifm-heading-color);
+  font-size: 1rem;
+}
+
+.required {
+  color: var(--ifm-color-danger);
+}
+
+.helpText {
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-600);
+  margin: 0;
+}
+
+.checkboxGroup,
+.radioGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.checkbox,
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.checkbox:hover,
+.radio:hover {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.checkbox input[type="checkbox"],
+.radio input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox span,
+.radio span {
+  user-select: none;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.input:focus,
+.textarea:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 3px rgba(var(--ifm-color-primary-rgb), 0.1);
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.charCount {
+  font-size: 0.875rem;
+  color: var(--ifm-color-emphasis-600);
+  text-align: right;
+  margin-top: 0.25rem;
+}
+
+.fieldError {
+  color: var(--ifm-color-danger);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.error {
+  padding: 0.75rem;
+  background: var(--ifm-color-danger);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.success {
+  padding: 0.75rem;
+  background: var(--ifm-color-success);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.buttonPrimary,
+.buttonSecondary {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.buttonPrimary {
+  background: var(--ifm-color-primary);
+  color: white;
+}
+
+.buttonPrimary:hover:not(:disabled) {
+  background: var(--ifm-color-primary-dark);
+}
+
+.buttonSecondary {
+  background: transparent;
+  color: var(--ifm-color-emphasis-700);
+  border: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.buttonSecondary:hover:not(:disabled) {
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-400);
+}
+
+.buttonPrimary:disabled,
+.buttonSecondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

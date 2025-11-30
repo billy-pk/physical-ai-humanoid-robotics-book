@@ -1,365 +1,548 @@
 ---
 sidebar_position: 5
-title: 2.4 Visual SLAM Basics
+title: 2.4 URDF/SDF Robot Description
 ---
 
-# Chapter 2.4: Visual SLAM Basics
+# Chapter 2.4: URDF/SDF Robot Description
 
-How does a robot know where it is? How does it build a map of an unknown environment? **SLAM (Simultaneous Localization and Mapping)** solves both problems at once using cameras.
+URDF (Unified Robot Description Format) and SDF (Simulation Description Format) define robot structure, joints, links, sensors, and visual properties. This chapter covers converting URDF to SDF, optimizing models for Gazebo, and best practices for humanoid robot descriptions.
 
 ## Learning Outcomes
 
-- **Understand** the SLAM problem and why it's challenging
-- **Explain** visual odometry and visual SLAM concepts
-- **Apply** ORB-SLAM for camera-based localization
-- **Recognize** when to use visual vs. LIDAR SLAM
+By the end of this chapter, you will be able to:
 
-## The SLAM Problem
+- **Convert** URDF models to SDF format for Gazebo
+- **Optimize** robot models for simulation performance
+- **Define** collision geometries separate from visual geometries
+- **Add** sensors and actuators to robot descriptions
+- **Debug** model loading and visualization issues
 
-**SLAM**: Simultaneously estimate:
-1. **Robot's pose** (position + orientation) over time
-2. **Map** of the environment
+## Prerequisites
 
-**The chicken-and-egg problem**:
-- To localize, you need a map
-- To build a map, you need to know your position
+- **URDF modeling** experience (Module 1, Chapter 1.3)
+- **Gazebo Classic 11** installed (Chapter 2.1)
+- **ROS 2 Humble** configured
+- **Understanding** of XML syntax
 
-SLAM solves both together!
+## Part 1: URDF vs. SDF
 
----
+### Format Comparison
 
-## Visual Odometry (VO)
+| Aspect | URDF | SDF |
+|--------|------|-----|
+| **Purpose** | Robot description (ROS) | Simulation description (Gazebo) |
+| **Scope** | Single robot | World + robots + physics |
+| **Sensors** | Limited support | Full sensor modeling |
+| **Physics** | Basic | Advanced (friction, collisions) |
+| **Plugins** | Via `<gazebo>` tags | Native support |
 
-**Visual Odometry** = estimating robot motion from camera images.
+**When to use each**:
+- **URDF**: ROS 2 packages, RViz2 visualization, robot_state_publisher
+- **SDF**: Gazebo simulation, complex physics, sensor plugins
 
-### How It Works
+**Best practice**: Start with URDF (ROS 2 compatibility), convert to SDF for Gazebo.
 
-1. **Extract features** from consecutive frames (ORB, SIFT)
-2. **Match features** between frames
-3. **Estimate camera motion** from feature correspondences
-4. **Integrate motion** to get trajectory
+### Conversion Process
 
-### Example with OpenCV
+**URDF → SDF conversion**:
+1. Gazebo automatically converts URDF to SDF on load
+2. Manual conversion: `gz sdf -k model.urdf > model.sdf`
+3. SDF provides more features (advanced physics, sensors)
+
+## Part 2: Hands-On Tutorial
+
+### Project: Optimize Humanoid Model for Gazebo
+
+**Goal**: Convert URDF to SDF, optimize collision geometries, and improve simulation performance.
+
+**Tools**: Gazebo Classic 11, `gz sdf` tool, URDF
+
+### Step 1: Convert URDF to SDF
+
+**Install SDF tools**:
+```bash
+sudo apt install libsdformat-dev gz-sim
+```
+
+**Convert URDF to SDF**:
+```bash
+cd ~/gazebo_ws/src/gazebo_worlds/models/simple_humanoid
+
+# Convert URDF to SDF
+gz sdf -k model.urdf > model.sdf
+
+# View SDF file
+cat model.sdf
+```
+
+**Key differences in SDF**:
+- **`<model>`** instead of `<robot>`
+- **`<link>`** structure similar but with more physics options
+- **`<joint>`** includes damping and friction
+- **`<sensor>`** defined directly (not via Gazebo tags)
+
+### Step 2: Optimize Collision Geometries
+
+**Problem**: Complex visual meshes slow down collision detection.
+
+**Solution**: Use simple collision geometries (boxes, spheres, cylinders).
+
+**Original URDF** (complex visual):
+```xml
+<link name="torso">
+  <visual name="torso_visual">
+    <geometry>
+      <mesh filename="package://my_robot/meshes/torso.dae"/>
+    </geometry>
+  </visual>
+  <collision name="torso_collision">
+    <geometry>
+      <mesh filename="package://my_robot/meshes/torso.dae"/>  <!-- Slow! -->
+    </geometry>
+  </collision>
+</link>
+```
+
+**Optimized URDF** (simple collision):
+```xml
+<link name="torso">
+  <visual name="torso_visual">
+    <geometry>
+      <mesh filename="package://my_robot/meshes/torso.dae"/>  <!-- Detailed visual -->
+    </geometry>
+  </visual>
+  <collision name="torso_collision">
+    <geometry>
+      <box size="0.3 0.2 0.4"/>  <!-- Simple box for collision -->
+    </geometry>
+    <pose>0 0 0 0 0 0</pose>  <!-- Match visual center -->
+  </collision>
+</link>
+```
+
+**Performance improvement**: 10 to 100x faster collision detection!
+
+### Step 3: Add Inertial Properties
+
+**Complete inertial definition** (for accurate physics):
+
+```xml
+<link name="thigh">
+  <inertial>
+    <mass>2.0</mass>
+    <pose>0 0 -0.15 0 0 0</pose>  <!-- Center of mass offset -->
+    <inertia>
+      <!-- For cylinder: Ixx = Iyy = (1/12)*m*(3*r² + h²) -->
+      <!-- For cylinder: Izz = (1/2)*m*r² -->
+      <ixx>0.02</ixx>   <!-- Rotation about X-axis -->
+      <iyy>0.02</iyy>   <!-- Rotation about Y-axis -->
+      <izz>0.001</izz>  <!-- Rotation about Z-axis (smaller for long cylinder) -->
+      <ixy>0.0</ixy>    <!-- Cross terms (0 for symmetric objects) -->
+      <ixz>0.0</ixz>
+      <iyz>0.0</iyz>
+    </inertia>
+  </inertial>
+</link>
+```
+
+**Inertia formulas** (common shapes):
+
+| Shape | Ixx, Iyy | Izz |
+|-------|----------|-----|
+| **Box** (a×b×c) | (1/12)*m*(b²+c²) | (1/12)*m*(a²+b²) |
+| **Cylinder** (r, h) | (1/12)*m*(3*r²+h²) | (1/2)*m*r² |
+| **Sphere** (r) | (2/5)*m*r² | (2/5)*m*r² |
+
+### Step 4: Define Joint Limits and Dynamics
+
+**Complete joint definition**:
+
+```xml
+<joint name="left_knee" type="revolute">
+  <parent link="left_thigh"/>
+  <child link="left_shank"/>
+  <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+  <axis xyz="0 1 0"/>
+  
+  <!-- Joint limits -->
+  <limit lower="0" upper="3.14159" effort="100" velocity="10"/>
+  
+  <!-- Joint dynamics (damping, friction) -->
+  <dynamics damping="1.0" friction="0.1"/>
+  
+  <!-- Safety limits (soft stops) -->
+  <safety_controller soft_lower_limit="0.1" soft_upper_limit="3.0" k_position="100" k_velocity="10"/>
+</joint>
+```
+
+**Key parameters**:
+- **`lower/upper`**: Hard limits (radians)
+- **`effort`**: Maximum torque (N⋅m)
+- **`velocity`**: Maximum angular velocity (rad/s)
+- **`damping`**: Resistance to motion (reduces oscillation)
+- **`friction`**: Static friction in joint
+
+### Step 5: Add Material Properties
+
+**Define materials** (for visual appearance):
+
+```xml
+<!-- Define material -->
+<material name="blue_plastic">
+  <color rgba="0 0.5 1 1"/>  <!-- RGBA: Red, Green, Blue, Alpha -->
+</material>
+
+<!-- Use material in visual -->
+<link name="torso">
+  <visual name="torso_visual">
+    <geometry>
+      <box size="0.3 0.2 0.4"/>
+    </geometry>
+    <material name="blue_plastic"/>
+  </visual>
+</link>
+```
+
+**Common materials**:
+- **Metal**: `rgba="0.7 0.7 0.7 1"` (gray)
+- **Plastic**: `rgba="0.2 0.2 0.8 1"` (blue)
+- **Rubber**: `rgba="0.1 0.1 0.1 1"` (black)
+
+### Step 6: Create Complete SDF Model
+
+**File**: `models/simple_humanoid/model.sdf`
+
+```xml
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="simple_humanoid">
+    
+    <!-- Base Link (Torso) -->
+    <link name="torso">
+      <pose>0 0 1.0 0 0 0</pose>  <!-- Initial pose -->
+      
+      <!-- Visual -->
+      <visual name="torso_visual">
+        <geometry>
+          <box>
+            <size>0.3 0.2 0.4</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <name>Gazebo/Blue</name>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+          </script>
+        </material>
+      </visual>
+      
+      <!-- Collision (optimized: simple box) -->
+      <collision name="torso_collision">
+        <geometry>
+          <box>
+            <size>0.3 0.2 0.4</size>
+          </box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1.0</mu>
+              <mu2>0.8</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      
+      <!-- Inertial -->
+      <inertial>
+        <mass>10.0</mass>
+        <pose>0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.2</ixx>
+          <iyy>0.15</iyy>
+          <izz>0.15</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <!-- Joints (same as URDF) -->
+    <joint name="left_hip" type="revolute">
+      <parent>torso</parent>
+      <child>left_thigh</child>
+      <pose>0.1 0 -0.2 0 0 0</pose>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1.57</lower>
+          <upper>1.57</upper>
+          <effort>100</effort>
+          <velocity>10</velocity>
+        </limit>
+        <dynamics>
+          <damping>1.0</damping>
+          <friction>0.1</friction>
+        </dynamics>
+      </axis>
+    </joint>
+
+    <!-- Add other links and joints (similar structure) -->
+    
+    <!-- Sensors (defined directly in SDF) -->
+    <link name="head">
+      <!-- ... head link definition ... -->
+      
+      <sensor name="camera" type="camera">
+        <camera>
+          <horizontal_fov>1.047</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>480</height>
+          </image>
+        </camera>
+        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/humanoid</namespace>
+          </ros>
+          <frame_name>head_camera_frame</frame_name>
+        </plugin>
+      </sensor>
+    </link>
+
+  </model>
+</sdf>
+```
+
+### Step 7: Spawn SDF Model in Gazebo
+
+**Launch file** (`launch/humanoid_sdf.launch.py`):
 
 ```python
-import cv2
-import numpy as np
+#!/usr/bin/env python3
+"""
+Launch humanoid SDF model in Gazebo
+ROS 2 Humble | Gazebo Classic 11
+"""
+from launch import LaunchDescription
+from launch.actions import ExecuteProcess
+from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+import os
 
-# Feature detector
-orb = cv2.ORB_create(nfeatures=2000)
+def generate_launch_description():
+    pkg_share = FindPackageShare('gazebo_worlds').find('gazebo_worlds')
+    world_path = os.path.join(pkg_share, 'worlds', 'humanoid_physics.world')
+    sdf_path = os.path.join(pkg_share, 'models', 'simple_humanoid', 'model.sdf')
 
-# Feature matcher
-bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
-
-# Initialize
-cap = cv2.VideoCapture('robot_trajectory.mp4')
-ret, prev_frame = cap.read()
-prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
-
-# Detect keypoints in first frame
-prev_kp, prev_des = orb.detectAndCompute(prev_gray, None)
-
-# Camera intrinsics (example values - get from calibration)
-K = np.array([[500, 0, 320],
-              [0, 500, 240],
-              [0, 0, 1]], dtype=np.float32)
-
-# Initialize pose
-pose = np.eye(4)  # 4x4 transformation matrix
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    # Detect features in current frame
-    curr_kp, curr_des = orb.detectAndCompute(gray, None)
-
-    # Match features
-    matches = bf.match(prev_des, curr_des)
-    matches = sorted(matches, key=lambda x: x.distance)
-
-    # Get matched keypoint coordinates
-    pts1 = np.float32([prev_kp[m.queryIdx].pt for m in matches[:100]])
-    pts2 = np.float32([curr_kp[m.trainIdx].pt for m in matches[:100]])
-
-    # Estimate essential matrix
-    E, mask = cv2.findEssentialMat(pts1, pts2, K, method=cv2.RANSAC,
-                                   prob=0.999, threshold=1.0)
-
-    # Recover pose (R, t)
-    _, R, t, mask = cv2.recoverPose(E, pts1, pts2, K)
-
-    # Update pose
-    T = np.eye(4)
-    T[:3, :3] = R
-    T[:3, 3] = t.squeeze()
-    pose = pose @ T
-
-    # Print current position
-    position = pose[:3, 3]
-    print(f"Position: x={position[0]:.2f}, y={position[1]:.2f}, z={position[2]:.2f}")
-
-    # Update for next iteration
-    prev_kp, prev_des = curr_kp, curr_des
-
-cap.release()
+    return LaunchDescription([
+        # Launch Gazebo
+        ExecuteProcess(
+            cmd=['gazebo', '--verbose', world_path],
+            output='screen'
+        ),
+        
+        # Spawn SDF model
+        Node(
+            package='gazebo_ros',
+            executable='spawn_entity.py',
+            arguments=['-entity', 'humanoid', '-file', sdf_path, '-x', '0', '-y', '0', '-z', '1.0'],
+            output='screen'
+        )
+    ])
 ```
 
-**Limitations of pure VO**:
-- ❌ Drift accumulates over time (no loop closure)
-- ❌ No map built
-- ❌ Can't re-localize if lost
-
-This is where full SLAM comes in!
-
----
-
-## Visual SLAM
-
-Visual SLAM extends VO by:
-- **Building a map** of 3D landmarks
-- **Loop closure detection** (recognize revisited places)
-- **Global optimization** (correct accumulated drift)
-
-### Popular Visual SLAM Systems
-
-| System | Type | Strengths | Use Case |
-|--------|------|-----------|----------|
-| **ORB-SLAM3** | Feature-based | Fast, accurate, robust | General robotics |
-| **LSD-SLAM** | Direct (no features) | Dense maps | Dense reconstruction |
-| **RTAB-Map** | RGB-D | Works with depth cameras | Indoor robots |
-| **SVO** | Semi-direct | Very fast | Drones, micro-robots |
-
----
-
-## ORB-SLAM3: The Gold Standard
-
-**ORB-SLAM3** is the most widely used visual SLAM system.
-
-### Key Features
-
-- ✅ Works with **monocular**, **stereo**, or **RGB-D** cameras
-- ✅ Real-time performance (30+ FPS)
-- ✅ Loop closure and global optimization
-- ✅ Re-localization (recover from tracking loss)
-- ✅ Multi-map support
-
-### Installation
-
+**Launch**:
 ```bash
-# Dependencies
-sudo apt install libopencv-dev libeigen3-dev libpangolin-dev
-
-# Clone and build
-git clone https://github.com/UZ-SLAMLab/ORB_SLAM3.git
-cd ORB_SLAM3
-chmod +x build.sh
-./build.sh
+ros2 launch gazebo_worlds humanoid_sdf.launch.py
 ```
 
-### Running ORB-SLAM3
+### Step 8: Debugging Model Issues
 
+#### Issue 1: Model Not Loading
+**Symptoms**: Gazebo shows error, model doesn't appear
+
+**Solutions**:
 ```bash
-# Monocular example (TUM dataset)
-./Examples/Monocular/mono_tum \
-    Vocabulary/ORBvoc.txt \
-    Examples/Monocular/TUM1.yaml \
-    /path/to/dataset
+# Check SDF validity
+gz sdf -k model.sdf
+
+# Check for XML syntax errors
+xmllint --noout model.sdf
+
+# Verify model path
+ls -la ~/.gazebo/models/simple_humanoid/
 ```
 
-**Outputs**:
-- Real-time 3D map visualization
-- Trajectory (camera poses over time)
-- Keyframe database
+#### Issue 2: Collision Detection Not Working
+**Symptoms**: Objects pass through each other
 
-### Using with ROS
+**Solutions**:
+```xml
+<!-- Ensure collision geometry defined -->
+<collision name="link_collision">
+  <geometry>
+    <box size="0.3 0.2 0.4"/>
+  </geometry>
+</collision>
 
+<!-- Check collision pose matches visual -->
+<pose>0 0 0 0 0 0</pose>
+```
+
+#### Issue 3: Robot Unstable (Falling Over)
+**Symptoms**: Robot tips over immediately
+
+**Solutions**:
+```xml
+<!-- Check center of mass -->
+<inertial>
+  <pose>0 0 0 0 0 0</pose>  <!-- Should be at geometric center -->
+</inertial>
+
+<!-- Increase base width (wider stance) -->
+<link name="foot">
+  <geometry>
+    <box size="0.2 0.1 0.02"/>  <!-- Wider foot = more stable -->
+  </geometry>
+</link>
+```
+
+#### Issue 4: Joints Not Moving
+**Symptoms**: Joints don't respond to commands
+
+**Solutions**:
+```xml
+<!-- Verify joint type -->
+<joint type="revolute">  <!-- Not 'fixed' -->
+
+<!-- Check joint limits -->
+<limit lower="-3.14" upper="3.14"/>
+
+<!-- Verify parent/child links exist -->
+<parent>torso</parent>
+<child>left_thigh</child>
+```
+
+## Part 3: Advanced Topics (Optional)
+
+### Model Database Integration
+
+**Add model to Gazebo database**:
 ```bash
-# Build ROS wrapper
-cd Examples/ROS/ORB_SLAM3
-mkdir build && cd build
-cmake .. -DROS_BUILD_TYPE=Release
-make
+# Copy model to user directory
+cp -r ~/gazebo_ws/src/gazebo_worlds/models/simple_humanoid ~/.gazebo/models/
 
-# Run
-rosrun ORB_SLAM3 Mono Vocabulary/ORBvoc.txt Examples/Monocular/TUM1.yaml
+# Verify
+gz model --list | grep humanoid
 ```
 
-Subscribe to camera topic:
-```bash
-rostopic echo /camera/image_raw
+**Use model in world file**:
+```xml
+<include>
+  <uri>model://simple_humanoid</uri>
+  <pose>0 0 1.0 0 0 0</pose>
+  <name>humanoid_1</name>
+</include>
 ```
 
----
+### Performance Optimization
 
-## Understanding SLAM Output
+**Tips for faster simulation**:
+1. **Simple collision geometries**: Boxes/spheres instead of meshes
+2. **Reduce sensor update rates**: 10 Hz instead of 30 Hz
+3. **Disable unnecessary visuals**: Use `<visual>` only when needed
+4. **Optimize physics timestep**: Larger timestep = faster (but less accurate)
 
-### 1. Trajectory
+## Integration with Capstone
 
-List of camera poses over time:
-```
-timestamp, x, y, z, qx, qy, qz, qw
-1678901234.5, 0.0, 0.0, 0.0, 0, 0, 0, 1
-1678901234.6, 0.05, 0.01, 0.02, 0.01, 0, 0, 0.999
-...
-```
+**How this chapter contributes** to the Week 13 autonomous humanoid:
 
-### 2. Map Points
+- **Model optimization**: Capstone humanoid will have optimized collision geometries for real-time simulation
+- **Sensor integration**: All sensors (camera, LiDAR, IMU) defined in SDF
+- **Joint control**: Proper joint limits and dynamics for walking and manipulation
+- **Performance**: Optimized model enables faster-than-real-time simulation for training
 
-3D landmarks (features) in the environment:
-```
-x, y, z
-1.23, 0.45, 2.10
-0.98, -0.12, 1.87
-...
-```
+Understanding URDF/SDF optimization now is essential for building the capstone robot model.
 
-### 3. Keyframes
+## Summary
 
-Subset of frames used for mapping (not every frame is kept).
+You learned:
+- ✅ Converted **URDF to SDF** format for Gazebo
+- ✅ Optimized **collision geometries** for performance
+- ✅ Defined **complete inertial properties** for accurate physics
+- ✅ Added **joint dynamics** (damping, friction) for stability
+- ✅ Debugged **model loading and visualization** issues
 
----
-
-## Visual-Inertial SLAM
-
-Combine camera with IMU for better performance.
-
-**Why add IMU?**
-- ✅ Provides scale (monocular SLAM has scale ambiguity)
-- ✅ Better performance in fast motion
-- ✅ Robust to visual degradation (blur, low texture)
-
-**Popular VI-SLAM systems**:
-- ORB-SLAM3 (supports IMU)
-- VINS-Mono
-- Kimera
-
-### Example: VINS-Mono with ROS
-
-```bash
-# Clone and build
-git clone https://github.com/HKUST-Aerial-Robotics/VINS-Mono.git
-cd VINS-Mono
-catkin_make
-
-# Run
-roslaunch vins_estimator euroc.launch
-roslaunch vins_estimator vins_rviz.launch
-
-# Play dataset
-rosbag play MH_01_easy.bag
-```
-
-**Visualization in RViz**:
-- Green line: Estimated trajectory
-- Red points: Map landmarks
-- Blue frustums: Keyframe poses
-
----
-
-## When to Use Visual SLAM vs. LIDAR SLAM
-
-| Factor | Visual SLAM | LIDAR SLAM |
-|--------|-------------|------------|
-| **Cost** | Low (camera ~$50) | High (LIDAR $500-$5000) |
-| **Indoor** | Good (if textured) | Excellent |
-| **Outdoor** | Excellent | Good |
-| **Lighting** | Sensitive | Unaffected |
-| **Speed** | Medium (30-60 Hz) | Fast (10-20 Hz) |
-| **Map density** | Sparse features | Dense 3D points |
-| **Best for** | Drones, wheeled robots | Autonomous vehicles |
-
-**Humanoid robots often use both**:
-- Visual SLAM for rich environment understanding
-- LIDAR for reliable obstacle avoidance
-
----
-
-## Practical Tips
-
-### 1. Camera Selection
-
-**For visual SLAM**:
-- **Global shutter** (not rolling shutter) — prevents motion distortion
-- **Wide FOV** (>90°) — tracks more features
-- **High frame rate** (60+ FPS) — better for fast motion
-
-### 2. Calibration is Critical
-
-Poor calibration → poor SLAM performance.
-
-Calibrate:
-- Intrinsic parameters (focal length, distortion)
-- Stereo baseline (for stereo cameras)
-- IMU-camera extrinsics (for VI-SLAM)
-
-Tools:
-- [Kalibr](https://github.com/ethz-asl/kalibr) (ROS-based)
-- OpenCV calibration
-
-### 3. Environment Matters
-
-**SLAM works best with**:
-- ✅ Rich visual features (posters, furniture, trees)
-- ✅ Good lighting
-- ✅ Moderate motion (not too fast)
-
-**SLAM struggles with**:
-- ❌ Blank walls
-- ❌ Repetitive patterns (tiles, bricks)
-- ❌ Motion blur
-- ❌ Reflective/transparent surfaces
+**Next steps**: In Chapter 2.5, you'll integrate Unity for photorealistic rendering and synthetic data generation.
 
 ---
 
 ## Exercises
 
-### 1. Visual Odometry Experiment
-Download the [TUM RGB-D dataset](https://vision.in.tum.de/data/datasets/rgbd-dataset). Implement simple visual odometry using ORB features. Plot the estimated trajectory vs. ground truth. What's the drift after 1 minute?
+### Exercise 1: URDF to SDF Conversion (Required)
 
-### 2. ORB-SLAM3 Installation
-Install ORB-SLAM3 and run it on a sample dataset. Observe:
-- How many map points are created?
-- How many keyframes?
-- Does loop closure occur?
-- What's the average tracking FPS?
+**Objective**: Convert Module 1 URDF model to optimized SDF.
 
-### 3. Visual vs. LIDAR Research
-Find a recent paper comparing visual SLAM and LIDAR SLAM. Summarize:
-- Which performed better indoors?
-- Which performed better outdoors?
-- What were the failure cases for each?
+**Tasks**:
+1. Take URDF from Module 1 (Chapter 1.3)
+2. Convert to SDF using `gz sdf`
+3. Optimize collision geometries (replace meshes with primitives)
+4. Add joint dynamics (damping, friction)
+5. Verify model loads correctly in Gazebo
 
-### 4. DIY Camera Trajectory
-Record a video walking around a room with your phone (keep it steady!). Process it with ORB-SLAM3 monocular mode. Can it reconstruct the room? Where does it fail?
+**Acceptance Criteria**:
+- [ ] SDF file valid (no errors)
+- [ ] All collision geometries optimized
+- [ ] Model spawns correctly in Gazebo
+- [ ] Physics simulation stable
+
+**Estimated Time**: 90 minutes
+
+### Exercise 2: Model Performance Comparison (Required)
+
+**Objective**: Measure simulation performance with different collision geometries.
+
+**Tasks**:
+1. Create two versions of same model:
+   - Version A: Mesh collision geometries
+   - Version B: Primitive collision geometries
+2. Measure simulation FPS for each
+3. Compare CPU usage
+4. Document performance improvement
+
+**Metrics**:
+- Simulation FPS
+- CPU usage (%)
+- Memory usage (MB)
+
+**Estimated Time**: 60 minutes
+
+### Exercise 3: Complex Humanoid Model (Challenge)
+
+**Objective**: Create detailed humanoid model with arms and hands.
+
+**Tasks**:
+1. Add arms (shoulder, elbow, wrist joints)
+2. Add hands (fingers with joints)
+3. Optimize all collision geometries
+4. Define proper inertial properties
+5. Test in Gazebo with physics
+
+**Requirements**:
+- 20+ joints total
+- All links have collision/inertial properties
+- Model stable in simulation
+
+**Estimated Time**: 180 minutes
 
 ---
 
-## Key Takeaways
+## Additional Resources
 
-✅ **SLAM** solves localization and mapping simultaneously
-✅ **Visual odometry** estimates motion from camera but drifts over time
-✅ **Visual SLAM** builds maps, detects loop closures, and corrects drift
-✅ **ORB-SLAM3** is the state-of-the-art for most robotics applications
-✅ **Visual-Inertial SLAM** (camera + IMU) is more robust
-✅ SLAM requires **calibrated cameras** and **feature-rich environments**
+- [URDF Specification](http://wiki.ros.org/urdf/XML) - URDF format reference
+- [SDFormat Specification](http://sdformat.org/) - SDF format reference
+- [Gazebo Model Database](https://app.gazebosim.org/) - Browse models
+- [Inertia Calculator](https://www.omnicalculator.com/physics/moment-of-inertia) - Calculate inertia values
 
 ---
 
-## Further Reading
-
-- [ORB-SLAM3 Paper](https://arxiv.org/abs/2007.11898) (Campos et al., 2021)
-- [Visual SLAM Tutorial](https://www.youtube.com/watch?v=U6vr3iNrwRA) (Cyrill Stachniss lectures)
-- *Introduction to Visual SLAM* by Xiang Gao (free book)
-- [OpenVSLAM](https://github.com/xdspacelab/openvslam) (alternative to ORB-SLAM)
-
----
-
-**Previous**: [← Chapter 2.3: 3D Vision and Depth](chapter-2-3.md)
-
----
-
-🎉 **Module 2 Complete!** You now understand computer vision from classical techniques to deep learning, 3D perception, and visual SLAM. Ready to make robots move intelligently in Module 3!
+**Next**: [Chapter 2.5: Unity Integration for Photorealistic Rendering →](chapter-2 to 5.md)

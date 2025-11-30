@@ -15,6 +15,12 @@
 - Q: What key metrics should be tracked for observability beyond latency? → A: Basic metrics only: request count, error rate, response status codes
 - Q: How should the system recover when Qdrant vector database is temporarily unavailable? → A: Graceful degradation - return user-friendly error message "Chat is temporarily unavailable, please try again later"
 
+### Session 2025-11-30
+
+- Q: Should user authentication be implemented? → A: Yes, implement signup and signin using Better Auth (https://www.better-auth.com/)
+- Q: What information should be collected during signup? → A: Collect user background questionnaire about software and hardware experience to enable content personalization
+- Q: Should authentication be required to use the chatbot? → A: No, authentication is optional. Authenticated users get personalized content and enhanced chatbot responses based on their background
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Read Documentation Content (Priority: P1)
@@ -103,16 +109,42 @@ Developers maintain code quality through automated linting and testing that runs
 
 ---
 
+### User Story 6 - User Authentication & Personalized Content (Priority: P2)
+
+Users can create accounts, sign in, and receive personalized content recommendations and chatbot responses based on their software and hardware background.
+
+**Why this priority**: Enhances user experience by providing personalized learning paths and context-aware chatbot assistance. Enables tracking user progress and preferences for future features.
+
+**Independent Test**: Can be tested by signing up with a new account, completing the background questionnaire, and verifying that content recommendations and chatbot responses adapt to the user's stated background.
+
+**Acceptance Scenarios**:
+
+1. **Given** a new user visits the documentation site, **When** they click "Sign Up", **Then** they see a signup form with email and password fields
+2. **Given** a user completes signup, **When** they submit the form, **Then** they are prompted to complete a background questionnaire about their software and hardware experience
+3. **Given** a user completes the questionnaire, **When** they submit it, **Then** they see personalized content recommendations based on their background
+4. **Given** an authenticated user asks a question via the chatbot, **When** they receive a response, **Then** the chatbot adapts its language and depth based on the user's experience level
+5. **Given** an authenticated user browses the documentation, **When** they view the sidebar, **Then** recommended modules and chapters are highlighted based on their background
+6. **Given** a user wants to sign in, **When** they enter their email and password, **Then** they are authenticated and their session is maintained
+7. **Given** an authenticated user, **When** they visit the site later, **Then** they remain signed in and see their personalized dashboard
+
+---
+
 ### Edge Cases
 
 - **Out-of-scope questions**: When the chatbot receives a question about content not in the documentation, it returns a generic error message: "I cannot answer questions outside the documentation"
 - **Qdrant database unavailability**: When Qdrant vector database is temporarily unavailable, the system gracefully degrades and returns the user-friendly error message: "Chat is temporarily unavailable, please try again later"
+- **Authentication service unavailability**: When Better Auth service is unavailable, authentication features degrade gracefully - anonymous users can still use the chatbot, authenticated users may lose session but can continue as anonymous
+- **User skips questionnaire**: If a user signs up but skips the background questionnaire, they receive default content recommendations and can complete the questionnaire later from their profile
+- **Session expiration**: When a user's session expires, they are prompted to sign in again but can continue using the site anonymously
+- **Database sync issues**: If Better Auth and FastAPI databases become out of sync, FastAPI validates sessions by querying the database directly
 - What happens when a user asks a question while the backend is deploying?
 - How does the chat widget behave when JavaScript is disabled?
 - What happens when OpenAI API rate limits are exceeded?
 - How does the system handle malformed or extremely long user queries?
 - What happens when the chat widget is used on very small mobile screens?
 - How does the system handle concurrent embedding updates during active chat sessions?
+- What happens if a user tries to sign up with an email that already exists?
+- How does the system handle users who complete the questionnaire multiple times?
 
 ## Requirements *(mandatory)*
 
@@ -129,6 +161,7 @@ Developers maintain code quality through automated linting and testing that runs
 - **RAG-C-002**: The chatbot MUST support highlight-restricted RAG (user-selected text only)
 - **RAG-C-003**: The chatbot MUST provide citations to book sections
 - **RAG-C-004**: The chatbot MUST return the error message "I cannot answer questions outside the documentation" when asked about out-of-scope content
+- **RAG-C-005**: The chatbot MUST personalize responses based on authenticated user's background (experience level, software/hardware knowledge)
 - **RAG-T-001**: The chatbot MUST use OpenAI `text-embedding-3-large` (or better) for embeddings
 - **RAG-T-002**: The chatbot MUST use Qdrant Cloud for the vector database
 - **RAG-T-003**: The chatbot MUST use Neon Serverless Postgres for the runtime metadata DB
@@ -155,6 +188,11 @@ Developers maintain code quality through automated linting and testing that runs
 - **FE-013**: Chat widget MUST NOT block page rendering
 - **FE-014**: All TypeScript code MUST be used for frontend implementation
 - **FE-015**: Site MUST be deployed to GitHub Pages
+- **FE-016**: Authentication UI MUST be integrated using Better Auth client SDK
+- **FE-017**: Signup flow MUST include user background questionnaire after account creation
+- **FE-018**: Authenticated users MUST see personalized content recommendations
+- **FE-019**: Authentication state MUST be managed using React Context or similar state management
+- **FE-020**: Signup and signin forms MUST be styled to match Docusaurus theme (dark mode support)
 
 ### Backend Requirements
 
@@ -173,9 +211,12 @@ Developers maintain code quality through automated linting and testing that runs
 - **BE-013**: Backend MUST respond in under 200ms (excluding LLM processing time)
 - **BE-014**: Backend MUST be deployed to Render
 - **BE-015**: Backend MUST support streaming responses to frontend
-- **BE-016**: Backend API endpoints MUST be publicly accessible without authentication
+- **BE-016**: Backend API endpoints MUST be publicly accessible without authentication (authentication is optional for enhanced features like personalization)
 - **BE-017**: Backend MUST implement rate limiting to prevent abuse of public API endpoints
 - **BE-018**: Backend MUST gracefully handle Qdrant database unavailability by returning the error message "Chat is temporarily unavailable, please try again later"
+- **BE-019**: Backend MUST support optional authentication for personalized features (chat personalization, content recommendations)
+- **BE-020**: Backend MUST validate Better Auth sessions by querying the shared database
+- **BE-021**: Backend MUST provide endpoints for user profile management (questionnaire submission, profile retrieval)
 
 ### Reliability & Availability Requirements
 
@@ -190,12 +231,27 @@ Developers maintain code quality through automated linting and testing that runs
 - **OBS-003**: Backend MUST track response status codes for all requests
 - **OBS-004**: Metrics MUST be accessible for monitoring and alerting purposes
 
+### Authentication Requirements
+
+- **AUTH-001**: Authentication MUST be implemented using Better Auth (https://www.better-auth.com/)
+- **AUTH-002**: Better Auth service MUST run as a standalone Node.js service (or integrated service)
+- **AUTH-003**: Better Auth MUST use Neon Postgres database (shared with FastAPI backend)
+- **AUTH-004**: Signup flow MUST collect user background questionnaire (software/hardware experience, experience level, learning goals)
+- **AUTH-005**: User profiles MUST be stored in FastAPI-managed `user_profiles` table
+- **AUTH-006**: Authentication MUST be optional - anonymous users can still use chatbot
+- **AUTH-007**: Authenticated users MUST receive personalized content recommendations
+- **AUTH-008**: Chatbot responses MUST adapt to authenticated user's experience level and background
+- **AUTH-009**: Session management MUST use secure, httpOnly cookies
+- **AUTH-010**: Password policy MUST enforce minimum 8 characters (Better Auth default)
+- **AUTH-011**: FastAPI backend MUST validate sessions by querying Better Auth's database tables
+
 ### Dependency Management Requirements
 
 - **DM-001**: Backend MUST use `uv` for dependency and virtual environment management
 - **DM-002**: Backend dependencies MUST be managed through `uv` commands
 - **DM-003**: Frontend dependencies MUST use npm/yarn standard package management
 - **DM-004**: All dependency versions MUST be explicitly pinned
+- **DM-005**: Better Auth service MUST use npm for Node.js dependency management
 
 ### Code Quality Requirements
 
@@ -245,9 +301,15 @@ Developers maintain code quality through automated linting and testing that runs
 
 - **Embedding Chunk**: Represents a segment of documentation that has been vectorized. Contains chunk text, embedding vector, source chapter reference, chunk index, and metadata for deduplication.
 
-- **Chat Session**: Represents a conversation between a user and the chatbot. Contains session ID, message history, creation timestamp, and optional user context.
+- **Chat Session**: Represents a conversation between a user and the chatbot. Contains session ID, message history, creation timestamp, optional user context, and optional user_id for authenticated users.
 
 - **Vector Search Result**: Represents a retrieved context chunk from vector database. Contains chunk content, relevance score, source reference, and metadata.
+
+- **User**: Represents an authenticated user account. Contains user ID, email, name, email verification status, and timestamps. Managed by Better Auth.
+
+- **User Profile**: Represents extended user information including background questionnaire data. Contains user_id, software/hardware background, experience level, learning goals, and preferences. Managed by FastAPI backend.
+
+- **User Background Questionnaire**: Represents user's responses to background questions during signup. Contains software skills, hardware experience, experience level, learning goals, and prior robotics project information.
 
 ## Success Criteria *(mandatory)*
 
@@ -268,12 +330,16 @@ Developers maintain code quality through automated linting and testing that runs
 - **SC-013**: Documentation is readable and understandable by beginners with no prior robotics knowledge
 - **SC-014**: All chapter content includes required sections: learning outcomes, explanations, diagrams, examples, exercises
 - **SC-015**: Backend chatbot service achieves 99% uptime measured monthly (maximum 7.2 hours downtime)
+- **SC-016**: Users can successfully sign up and sign in using Better Auth in under 3 seconds
+- **SC-017**: User background questionnaire completion rate is at least 80% of signups
+- **SC-018**: Personalized content recommendations match user's stated background in 90% of cases
+- **SC-019**: Chatbot personalization improves user satisfaction (measured via feedback or engagement metrics)
 
 ## Assumptions
 
 1. **Infrastructure Access**: Assumes maintainers have administrative access to GitHub repository, Render account, Qdrant Cloud, Neon Postgres, and OpenAI API
 2. **Content Creation**: Assumes content will be created using the Spec-Kit Plus workflow and committed to the repository
-3. **Authentication**: Assumes no user authentication is required for reading documentation or using chatbot (public access)
+3. **Authentication**: Authentication is optional - anonymous users can access all features, authenticated users receive personalized enhancements
 4. **Rate Limiting**: Assumes OpenAI API rate limits are sufficient for expected usage, or that appropriate fallback/queueing is implemented
 5. **Free Tier Sufficiency**: Assumes Qdrant Cloud Free Tier and Neon Postgres free tier provide sufficient capacity for the documentation size and expected traffic
 6. **CORS Configuration**: Assumes Render backend will be configured to allow CORS from the GitHub Pages domain
@@ -284,7 +350,6 @@ Developers maintain code quality through automated linting and testing that runs
 
 ## Out of Scope
 
-- User authentication and personalized accounts
 - Direct editing of documentation through web interface
 - Real-time collaborative editing
 - Payment processing or premium content tiers

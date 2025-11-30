@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .core.logging import configure_logging, logger
 from .core.monitoring import metrics
-from .api.routes import chat
+from .api.routes import chat, auth
 
 # Configure structured logging at application startup
 configure_logging()
@@ -27,14 +27,17 @@ app = FastAPI(lifespan=lifespan,
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # TODO: Configure dynamic origins from settings
-    allow_credentials=True,
+    allow_origins=[
+        "http://localhost:3000",  # Frontend origin (no path in origin)
+    ],
+    allow_credentials=True,  # Important: Allow cookies to be sent
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # Register API routers
 app.include_router(chat.router)
+app.include_router(auth.router)
 
 @app.get("/health")
 async def health_check():

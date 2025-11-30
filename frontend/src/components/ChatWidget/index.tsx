@@ -9,7 +9,7 @@ interface Message {
 
 const BACKEND_URL = 'http://localhost:8000';
 
-export default function ChatWidget(): JSX.Element {
+export default function ChatWidget(): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');

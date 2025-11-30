@@ -1,400 +1,766 @@
 ---
 sidebar_position: 3
-title: 2.2 Deep Learning for Vision
+title: 2.2 Physics Simulation (Gravity, Collisions, Friction)
 ---
 
-# Chapter 2.2: Deep Learning for Vision
+# Chapter 2.2: Physics Simulation (Gravity, Collisions, Friction)
 
-Deep learning transformed computer vision, enabling robots to recognize objects with human-level accuracy. This chapter covers Convolutional Neural Networks (CNNs) and modern object detection for robotics.
+Realistic physics simulation is critical for humanoid robots. Walking, balancing, and manipulation all depend on accurate modeling of gravity, collisions, and friction. This chapter covers configuring Gazebo's physics engines to simulate realistic humanoid dynamics.
 
 ## Learning Outcomes
 
-- **Understand** CNN architecture and how it processes images
-- **Apply** pre-trained models for object detection
-- **Implement** transfer learning for robot-specific tasks
-- **Use** YOLO for real-time detection in robotics
+By the end of this chapter, you will be able to:
 
-## Why Deep Learning for Vision?
+- **Configure** physics engines (ODE, Bullet) for humanoid dynamics
+- **Model** gravity, friction coefficients, and collision properties
+- **Simulate** humanoid walking and balance dynamics
+- **Debug** physics artifacts (penetration, jitter, instability)
+- **Tune** solver parameters for stability vs. performance tradeoffs
 
-**Classical CV limitations**:
-- Hand-crafted features (edges, corners) don't generalize well
-- Breaks down with lighting changes, occlusions, viewpoint shifts
-- Requires expert tuning for each task
+## Prerequisites
 
-**Deep learning advantages**:
-- ✅ Learns features automatically from data
-- ✅ Robust to variations (lighting, angles, backgrounds)
-- ✅ Achieves superhuman accuracy on many tasks
-- ✅ Transfer learning: pre-trained models work out-of-the-box
+- **Gazebo Classic 11** installed (Chapter 2.1)
+- **ROS 2 Humble** configured
+- **Basic understanding** of physics (forces, torques, Newton's laws)
+- **URDF modeling** experience (from Module 1)
 
----
+## Part 1: Physics Engine Fundamentals
 
-## Convolutional Neural Networks (CNNs)
+### Physics Engines in Gazebo
 
-CNNs are specialized neural networks for processing grid-like data (images).
+Gazebo supports multiple physics engines:
 
-### Key Components
+| Engine | Strengths | Use Cases |
+|--------|-----------|-----------|
+| **ODE** (Open Dynamics Engine) | Fast, stable, default | General robotics, humanoids |
+| **Bullet** | Accurate collisions, soft bodies | Manipulation, grasping |
+| **DART** | Advanced constraints | Complex mechanisms |
+| **Simbody** | Biomechanics | Human motion simulation |
 
-**1. Convolutional Layers**
-- Apply filters (kernels) to detect patterns
-- Early layers: edges, textures
-- Deep layers: object parts, full objects
+**This course uses ODE** (default, most widely used).
 
-**2. Pooling Layers**
-- Reduce spatial dimensions (downsampling)
-- Max pooling: take maximum value in region
-- Makes network invariant to small translations
+### Key Physics Parameters
 
-**3. Fully Connected Layers**
-- Final layers for classification
-- Combine features to make predictions
+#### 1. Gravity
+**Gravity** accelerates objects downward (typically -9.81 m/s² in Z direction).
 
-### CNN Architecture Example
-
-```
-Input Image (224×224×3)
-     ↓
-Conv Layer 1 (32 filters, 3×3) → ReLU → MaxPool
-     ↓
-Conv Layer 2 (64 filters, 3×3) → ReLU → MaxPool
-     ↓
-Conv Layer 3 (128 filters, 3×3) → ReLU → MaxPool
-     ↓
-Flatten → Fully Connected (512) → ReLU → Dropout
-     ↓
-Output (1000 classes)
+**Configuration**:
+```xml
+<physics type="ode">
+  <gravity>0 0 -9.81</gravity>  <!-- X, Y, Z components -->
+</physics>
 ```
 
----
+**Why it matters for humanoids**:
+- Walking requires gravity to generate ground reaction forces
+- Balance control depends on gravitational torque
+- Falling dynamics must be realistic for safety testing
 
-## Object Detection with Pre-Trained Models
+#### 2. Collision Detection
+**Collision detection** prevents objects from penetrating each other.
 
-Use **pre-trained models** (trained on ImageNet, COCO) instead of training from scratch.
+**Collision geometries**:
+- **Box**: Fast, good for simple shapes
+- **Sphere**: Very fast, good for round objects
+- **Mesh**: Accurate but slower (use for complex shapes)
+- **Cylinder**: Good for limbs, links
 
-### Example: Image Classification with ResNet
+**Example**:
+```xml
+<link name="foot">
+  <collision name="foot_collision">
+    <geometry>
+      <box>
+        <size>0.15 0.08 0.02</size>  <!-- Length, width, height -->
+      </box>
+    </geometry>
+    <pose>0 0 -0.01 0 0 0</pose>  <!-- Slightly below visual -->
+  </collision>
+</link>
+```
+
+**Best practice**: Collision geometry should be **simpler** than visual geometry (for performance).
+
+#### 3. Friction
+**Friction** resists sliding motion. Critical for walking and manipulation.
+
+**Friction coefficients**:
+- **Static friction** (`mu1`): Force to start sliding
+- **Dynamic friction** (`mu2`): Force to keep sliding
+- **Typical values**:
+  - Rubber on concrete: `mu1=1.0`, `mu2=0.8`
+  - Metal on metal: `mu1=0.5`, `mu2=0.3`
+  - Ice: `mu1=0.1`, `mu2=0.05`
+
+**Configuration**:
+```xml
+<collision name="foot_collision">
+  <surface>
+    <friction>
+      <ode>
+        <mu>1.0</mu>        <!-- Static friction -->
+        <mu2>0.8</mu2>      <!-- Dynamic friction -->
+        <fdir1>0 0 0</fdir1> <!-- Friction direction (anisotropic) -->
+        <slip1>0.0</slip1>   <!-- Slip in direction 1 -->
+        <slip2>0.0</slip2>   <!-- Slip in direction 2 -->
+      </ode>
+    </friction>
+  </surface>
+</collision>
+```
+
+#### 4. Inertia
+**Inertia** determines how objects resist rotational acceleration.
+
+**For humanoid links**:
+- **Mass**: Total weight of link
+- **Center of mass**: Where mass is concentrated
+- **Inertia tensor**: Resistance to rotation about each axis
+
+**Example (humanoid leg link)**:
+```xml
+<link name="thigh">
+  <inertial>
+    <mass>2.5</mass>  <!-- kg -->
+    <pose>0 0 0.15 0 0 0</pose>  <!-- Center of mass offset -->
+    <inertia>
+      <ixx>0.05</ixx>  <!-- Rotation about X-axis -->
+      <iyy>0.05</iyy>  <!-- Rotation about Y-axis -->
+      <izz>0.01</izz>  <!-- Rotation about Z-axis (smaller for cylindrical link) -->
+      <ixy>0.0</ixy>   <!-- Cross terms (usually 0 for symmetric objects) -->
+      <ixz>0.0</ixz>
+      <iyz>0.0</iyz>
+    </inertia>
+  </inertial>
+</link>
+```
+
+**Why inertia matters**:
+- Walking dynamics depend on leg inertia
+- Balance control requires accurate center of mass
+- Manipulation forces depend on object inertia
+
+### Solver Parameters
+
+**ODE solver settings** control accuracy vs. performance:
+
+```xml
+<physics type="ode">
+  <ode>
+    <solver>
+      <type>quick</type>      <!-- 'quick' or 'world' -->
+      <iters>10</iters>       <!-- Solver iterations (more = more accurate, slower) -->
+      <sor>1.4</sor>          <!-- Successive Over-Relaxation (1.0 to 1.9) -->
+      <use_dynamic_moi_rescaling>true</use_dynamic_moi_rescaling>
+    </solver>
+    <constraints>
+      <cfm>0.00001</cfm>      <!-- Constraint Force Mixing (smaller = stiffer) -->
+      <erp>0.2</erp>          <!-- Error Reduction Parameter (0 to 1, higher = faster correction) -->
+      <contact_max_correcting_vel>100.0</contact_max_correcting_vel>
+      <contact_surface_layer>0.001</contact_surface_layer>
+    </constraints>
+  </ode>
+</physics>
+```
+
+**Tuning guide**:
+- **More iterations** (`iters=50`): More accurate, slower
+- **Higher ERP** (`erp=0.8`): Faster constraint correction, may cause jitter
+- **Lower CFM** (`cfm=0.000001`): Stiffer contacts, more stable
+
+## Part 2: Hands-On Tutorial
+
+### Project: Simulate Humanoid Walking Dynamics
+
+**Goal**: Create a simple humanoid model with realistic physics and simulate walking dynamics.
+
+**Tools**: Gazebo Classic 11, ROS 2 Humble, URDF
+
+### Step 1: Create Simple Humanoid URDF
+
+**File**: `models/simple_humanoid/model.urdf`
+
+```xml
+<?xml version="1.0"?>
+<robot name="simple_humanoid">
+  
+  <!-- Base Link (Torso) -->
+  <link name="torso">
+    <visual name="torso_visual">
+      <geometry>
+        <box size="0.3 0.2 0.4"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 1 1"/>
+      </material>
+    </visual>
+    <collision name="torso_collision">
+      <geometry>
+        <box size="0.3 0.2 0.4"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="10.0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="0.2" ixy="0" ixz="0" iyy="0.15" iyz="0" izz="0.15"/>
+    </inertial>
+  </link>
+
+  <!-- Left Leg -->
+  <link name="left_thigh">
+    <visual name="thigh_visual">
+      <geometry>
+        <cylinder radius="0.05" length="0.3"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+    <collision name="thigh_collision">
+      <geometry>
+        <cylinder radius="0.05" length="0.3"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="2.0"/>
+      <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+      <inertia ixx="0.02" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <link name="left_shank">
+    <visual name="shank_visual">
+      <geometry>
+        <cylinder radius="0.04" length="0.3"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+    <collision name="shank_collision">
+      <geometry>
+        <cylinder radius="0.04" length="0.3"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.5"/>
+      <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+      <inertia ixx="0.015" ixy="0" ixz="0" iyy="0.015" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <link name="left_foot">
+    <visual name="foot_visual">
+      <geometry>
+        <box size="0.15 0.08 0.02"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+    <collision name="foot_collision">
+      <geometry>
+        <box size="0.15 0.08 0.02"/>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>1.0</mu>
+            <mu2>0.8</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.002"/>
+    </inertial>
+  </link>
+
+  <!-- Joints -->
+  <joint name="left_hip" type="revolute">
+    <parent link="torso"/>
+    <child link="left_thigh"/>
+    <origin xyz="0.1 0 -0.2" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="100" velocity="10"/>
+  </joint>
+
+  <joint name="left_knee" type="revolute">
+    <parent link="left_thigh"/>
+    <child link="left_shank"/>
+    <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="3.14" effort="100" velocity="10"/>
+  </joint>
+
+  <joint name="left_ankle" type="revolute">
+    <parent link="left_shank"/>
+    <child link="left_foot"/>
+    <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.5" upper="0.5" effort="50" velocity="5"/>
+  </joint>
+
+  <!-- Right Leg (mirror of left) -->
+  <link name="right_thigh">
+    <visual name="thigh_visual">
+      <geometry>
+        <cylinder radius="0.05" length="0.3"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+    <collision name="thigh_collision">
+      <geometry>
+        <cylinder radius="0.05" length="0.3"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="2.0"/>
+      <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+      <inertia ixx="0.02" ixy="0" ixz="0" iyy="0.02" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <link name="right_shank">
+    <visual name="shank_visual">
+      <geometry>
+        <cylinder radius="0.04" length="0.3"/>
+      </geometry>
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+      </material>
+    </visual>
+    <collision name="shank_collision">
+      <geometry>
+        <cylinder radius="0.04" length="0.3"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.5"/>
+      <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+      <inertia ixx="0.015" ixy="0" ixz="0" iyy="0.015" iyz="0" izz="0.001"/>
+    </inertial>
+  </link>
+
+  <link name="right_foot">
+    <visual name="foot_visual">
+      <geometry>
+        <box size="0.15 0.08 0.02"/>
+      </geometry>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+    <collision name="foot_collision">
+      <geometry>
+        <box size="0.15 0.08 0.02"/>
+      </geometry>
+      <surface>
+        <friction>
+          <ode>
+            <mu>1.0</mu>
+            <mu2>0.8</mu2>
+          </ode>
+        </friction>
+      </surface>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+      <inertia ixx="0.001" ixy="0" ixz="0" iyy="0.001" iyz="0" izz="0.002"/>
+    </inertial>
+  </link>
+
+  <joint name="right_hip" type="revolute">
+    <parent link="torso"/>
+    <child link="right_thigh"/>
+    <origin xyz="-0.1 0 -0.2" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="100" velocity="10"/>
+  </joint>
+
+  <joint name="right_knee" type="revolute">
+    <parent link="right_thigh"/>
+    <child link="right_shank"/>
+    <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0" upper="3.14" effort="100" velocity="10"/>
+  </joint>
+
+  <joint name="right_ankle" type="revolute">
+    <parent link="right_shank"/>
+    <child link="right_foot"/>
+    <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-0.5" upper="0.5" effort="50" velocity="5"/>
+  </joint>
+
+</robot>
+```
+
+**Key features**:
+- **Realistic masses**: Torso (10 kg), thighs (2 kg each), shanks (1.5 kg), feet (0.5 kg)
+- **Proper inertia**: Cylindrical links have higher inertia about length axis
+- **Friction on feet**: `mu=1.0` prevents sliding
+- **Joint limits**: Realistic ranges for hip, knee, ankle
+
+### Step 2: Create Gazebo World with Physics
+
+**File**: `worlds/humanoid_physics.world`
+
+```xml
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="humanoid_physics">
+    
+    <!-- Physics Configuration -->
+    <physics type="ode">
+      <gravity>0 0 -9.81</gravity>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+      
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>50</iters>  <!-- Higher for stability -->
+          <sor>1.4</sor>
+        </solver>
+        <constraints>
+          <cfm>0.00001</cfm>
+          <erp>0.2</erp>
+          <contact_max_correcting_vel>100.0</contact_max_correcting_vel>
+          <contact_surface_layer>0.001</contact_surface_layer>
+        </constraints>
+      </ode>
+    </physics>
+
+    <!-- Lighting -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground Plane with Friction -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>0.8</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Grey</name>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
+```
+
+### Step 3: Launch Humanoid in Gazebo
+
+**File**: `launch/humanoid_physics.launch.py`
 
 ```python
-import torch
-import torchvision.transforms as transforms
-from torchvision.models import resnet50
-from PIL import Image
-import requests
+#!/usr/bin/env python3
+"""
+Launch humanoid robot in Gazebo with physics simulation
+ROS 2 Humble | Gazebo Classic 11
+"""
+from launch import LaunchDescription
+from launch.actions import ExecuteProcess, DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
+import os
 
-# Load pre-trained ResNet50
-model = resnet50(pretrained=True)
-model.eval()
+def generate_launch_description():
+    pkg_share = FindPackageShare('gazebo_worlds').find('gazebo_worlds')
+    world_path = os.path.join(pkg_share, 'worlds', 'humanoid_physics.world')
+    urdf_path = os.path.join(pkg_share, 'models', 'simple_humanoid', 'model.urdf')
 
-# Image preprocessing (required by ResNet)
-preprocess = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]
-    )
-])
-
-# Load and preprocess image
-img = Image.open('robot_view.jpg')
-input_tensor = preprocess(img).unsqueeze(0)  # Add batch dimension
-
-# Inference
-with torch.no_grad():
-    output = model(input_tensor)
-
-# Get predicted class
-probabilities = torch.nn.functional.softmax(output[0], dim=0)
-top5_prob, top5_idx = torch.topk(probabilities, 5)
-
-# Load ImageNet labels
-labels_url = "https://raw.githubusercontent.com/anishathalye/imagenet-simple-labels/master/imagenet-simple-labels.json"
-labels = requests.get(labels_url).json()
-
-# Print predictions
-for i in range(5):
-    print(f"{labels[top5_idx[i]]}: {top5_prob[i].item()*100:.2f}%")
+    return LaunchDescription([
+        # Launch Gazebo
+        ExecuteProcess(
+            cmd=['gazebo', '--verbose', world_path],
+            output='screen'
+        ),
+        
+        # Spawn humanoid robot
+        Node(
+            package='gazebo_ros',
+            executable='spawn_entity.py',
+            arguments=['-entity', 'humanoid', '-file', urdf_path, '-x', '0', '-y', '0', '-z', '1.0'],
+            output='screen'
+        ),
+        
+        # Robot state publisher (for RViz2 visualization)
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            arguments=[urdf_path],
+            output='screen'
+        )
+    ])
 ```
 
-**Output example**:
-```
-coffee mug: 87.34%
-cup: 8.21%
-espresso: 2.15%
-...
-```
-
----
-
-## Real-Time Object Detection: YOLO
-
-**YOLO (You Only Look Once)** is the go-to detector for robotics—fast and accurate.
-
-### Why YOLO for Robots?
-
-| Model | Speed | Accuracy | Use Case |
-|-------|-------|----------|----------|
-| **Faster R-CNN** | ~5 FPS | Very High | Offline analysis |
-| **SSD** | ~20 FPS | Medium | Moderate real-time |
-| **YOLOv5/v8** | ~60+ FPS | High | **Robotics (real-time)** |
-
-### Using YOLOv8 (Ultralytics)
-
+**Build and launch**:
 ```bash
-# Install
-pip install ultralytics opencv-python
+cd ~/gazebo_ws
+colcon build --packages-select gazebo_worlds
+source install/setup.bash
+
+ros2 launch gazebo_worlds humanoid_physics.launch.py
 ```
 
-```python
-from ultralytics import YOLO
-import cv2
+**Expected Result**:
+- Humanoid spawns at height z=1.0 m
+- Robot falls due to gravity
+- Feet contact ground with friction
+- Robot should stabilize (not penetrate ground)
 
-# Load pre-trained model
-model = YOLO('yolov8n.pt')  # 'n' = nano (fastest), 's', 'm', 'l', 'x' (most accurate)
+### Step 4: Test Physics Parameters
 
-# Method 1: Detect in single image
-results = model('robot_workspace.jpg')
-
-# Visualize
-annotated = results[0].plot()
-cv2.imshow('Detections', annotated)
-cv2.waitKey(0)
-
-# Method 2: Real-time webcam detection
-cap = cv2.VideoCapture(0)
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    # Run detection
-    results = model(frame, conf=0.5)  # confidence threshold
-
-    # Get bounding boxes
-    for result in results:
-        boxes = result.boxes
-        for box in boxes:
-            # Extract box coordinates
-            x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
-            conf = box.conf[0].cpu().numpy()
-            cls = int(box.cls[0].cpu().numpy())
-            label = model.names[cls]
-
-            # Draw on frame
-            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)),
-                         (0, 255, 0), 2)
-            cv2.putText(frame, f'{label} {conf:.2f}',
-                       (int(x1), int(y1)-10),
-                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-    cv2.imshow('YOLO Detection', frame)
-
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
+**Modify friction** (in URDF foot collision):
+```xml
+<friction>
+  <ode>
+    <mu>0.1</mu>  <!-- Low friction (like ice) -->
+    <mu2>0.05</mu2>
+  </ode>
+</friction>
 ```
 
-### Getting 3D Position from Detection
+**Result**: Robot slides when landing (unstable).
 
-```python
-# After detecting object in image, estimate 3D position
-# (requires depth camera or stereo vision)
-
-def pixel_to_3d(u, v, depth, camera_matrix):
-    """
-    Convert pixel coordinates to 3D point.
-
-    Args:
-        u, v: Pixel coordinates
-        depth: Depth value at (u, v) in meters
-        camera_matrix: 3x3 camera intrinsic matrix
-
-    Returns:
-        (x, y, z) in camera frame
-    """
-    fx = camera_matrix[0, 0]
-    fy = camera_matrix[1, 1]
-    cx = camera_matrix[0, 2]
-    cy = camera_matrix[1, 2]
-
-    z = depth
-    x = (u - cx) * z / fx
-    y = (v - cy) * z / fy
-
-    return x, y, z
-
-# Example usage
-bbox_center_u = (x1 + x2) / 2
-bbox_center_v = (y1 + y2) / 2
-depth_at_center = depth_image[int(bbox_center_v), int(bbox_center_u)]
-
-x, y, z = pixel_to_3d(bbox_center_u, bbox_center_v, depth_at_center, K)
-print(f"Object at 3D position: ({x:.2f}, {y:.2f}, {z:.2f}) meters")
+**Modify gravity** (in world file):
+```xml
+<gravity>0 0 -4.9</gravity>  <!-- Half gravity (like moon) -->
 ```
 
----
+**Result**: Robot falls slower, easier to balance.
 
-## Transfer Learning for Custom Objects
-
-Train a detector for robot-specific objects (tools, parts, etc.).
-
-### Process
-
-1. **Collect images** of your objects (~100-500 per class)
-2. **Annotate** bounding boxes (use tools like LabelImg, Roboflow)
-3. **Fine-tune** pre-trained YOLO on your dataset
-
-### Fine-Tuning YOLOv8
-
-```python
-from ultralytics import YOLO
-
-# Load pre-trained model
-model = YOLO('yolov8n.pt')
-
-# Train on custom dataset
-results = model.train(
-    data='custom_data.yaml',  # Dataset config
-    epochs=50,
-    imgsz=640,
-    batch=16,
-    name='robot_tools_detector'
-)
-
-# Use trained model
-model = YOLO('runs/detect/robot_tools_detector/weights/best.pt')
-results = model('test_image.jpg')
+**Modify solver iterations**:
+```xml
+<iters>10</iters>  <!-- Lower iterations -->
 ```
 
-**Dataset config** (`custom_data.yaml`):
-```yaml
-train: /path/to/train/images
-val: /path/to/val/images
+**Result**: May see jittering or penetration (less stable).
 
-nc: 3  # Number of classes
-names: ['wrench', 'screwdriver', 'bolt']
+### Step 5: Debugging Physics Issues
+
+#### Issue 1: Objects Penetrating Ground
+**Symptoms**: Robot sinks into ground plane
+
+**Solutions**:
+```xml
+<!-- Increase contact surface layer -->
+<contact_surface_layer>0.01</contact_surface_layer>
+
+<!-- Increase solver iterations -->
+<iters>100</iters>
+
+<!-- Reduce timestep for more accuracy -->
+<max_step_size>0.0001</max_step_size>
 ```
 
-**Why this works**:
-- Pre-trained model already knows edges, shapes, textures
-- Fine-tuning adapts it to your specific objects
-- Needs far less data than training from scratch
+#### Issue 2: Jittering/Shaking
+**Symptoms**: Robot vibrates when stationary
 
----
+**Solutions**:
+```xml
+<!-- Reduce ERP (slower correction) -->
+<erp>0.1</erp>
 
-## Semantic Segmentation
+<!-- Increase CFM (softer contacts) -->
+<cfm>0.0001</cfm>
 
-Classify every pixel (not just bounding boxes).
-
-**Use cases**:
-- Terrain classification (road, grass, obstacles)
-- Grasp point detection (object vs. background)
-- Scene understanding
-
-### Example with DeepLabV3
-
-```python
-import torchvision
-import torch
-
-# Load pre-trained segmentation model
-model = torchvision.models.segmentation.deeplabv3_resnet50(pretrained=True)
-model.eval()
-
-# Preprocess image
-input_tensor = preprocess(img).unsqueeze(0)
-
-# Inference
-with torch.no_grad():
-    output = model(input_tensor)['out'][0]
-
-# Get class for each pixel
-output_predictions = output.argmax(0).byte().cpu().numpy()
-
-# Visualize (color-code each class)
-from matplotlib import pyplot as plt
-plt.imshow(output_predictions)
-plt.show()
+<!-- Increase damping in joints -->
+<joint name="left_hip" type="revolute">
+  <dynamics damping="1.0" friction="0.1"/>
+</joint>
 ```
 
----
+#### Issue 3: Unrealistic Bouncing
+**Symptoms**: Objects bounce too much on contact
 
-## Practical Tips for Robotics
-
-### 1. Model Selection
-
-**For real-time robotics (>30 FPS)**:
-- YOLOv8n (nano) or YOLOv8s (small)
-- MobileNetV3 + SSD
-
-**For accuracy-critical tasks**:
-- YOLOv8l/x
-- Faster R-CNN with ResNet101
-
-### 2. Hardware Acceleration
-
-```python
-# Use GPU if available
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model.to(device)
-
-# For edge devices (Jetson, Raspberry Pi)
-# Use TensorRT or ONNX optimization
+**Solutions**:
+```xml
+<!-- Add restitution (bounciness) control -->
+<collision name="foot_collision">
+  <surface>
+    <bounce>
+      <restitution_coefficient>0.0</restitution_coefficient>  <!-- 0 = no bounce -->
+    </bounce>
+  </surface>
+</collision>
 ```
 
-### 3. Confidence Thresholding
+## Part 3: Advanced Topics (Optional)
 
-```python
-# Adjust confidence based on application
-results = model(frame, conf=0.7)  # High conf = fewer false positives
+### Bullet Physics Engine
 
-# For safety-critical: higher threshold (0.8-0.9)
-# For exploration: lower threshold (0.3-0.5)
+**Switch to Bullet** (alternative to ODE):
+```xml
+<physics type="bullet">
+  <gravity>0 0 -9.81</gravity>
+  <bullet>
+    <solver>
+      <type>SequentialImpulse</type>
+      <iters>50</iters>
+      <sor>1.0</sor>
+    </solver>
+    <constraints>
+      <cfm>0.00001</cfm>
+      <erp>0.2</erp>
+    </constraints>
+  </bullet>
+</physics>
 ```
+
+**When to use Bullet**:
+- More accurate collision detection
+- Better for soft bodies
+- Slightly slower than ODE
+
+### Contact Forces Visualization
+
+**Enable contact visualization**:
+```bash
+# In Gazebo GUI: View → Contacts
+# Or via ROS 2:
+ros2 topic echo /gazebo/default/physics/contacts
+```
+
+**Useful for debugging**:
+- See which links are in contact
+- Verify contact forces
+- Debug collision geometries
+
+## Integration with Capstone
+
+**How this chapter contributes** to the Week 13 autonomous humanoid:
+
+- **Walking dynamics**: Capstone humanoid will walk using physics-accurate simulation
+- **Balance control**: Balance algorithms depend on accurate center of mass and inertia
+- **Manipulation**: Grasping objects requires realistic friction and contact forces
+- **Fall recovery**: Testing fall scenarios safely requires accurate physics
+
+Understanding physics parameters now is essential for tuning the capstone simulation.
+
+## Summary
+
+You learned:
+- ✅ Configured **physics engines** (ODE) for humanoid dynamics
+- ✅ Modeled **gravity, friction, and collisions** in URDF
+- ✅ Created **realistic humanoid model** with proper masses and inertia
+- ✅ Simulated **walking dynamics** and verified physics accuracy
+- ✅ Debugged **common physics artifacts** (penetration, jitter)
+
+**Next steps**: In Chapter 2.3, you'll add sensors (cameras, LiDAR, IMUs) to your humanoid model.
 
 ---
 
 ## Exercises
 
-### 1. Pre-Trained Model Exploration
-Download YOLOv8 and run it on 5 different images. Compare detection quality with different model sizes (yolov8n vs yolov8m). What's the FPS difference?
+### Exercise 1: Friction Experiment (Required)
 
-### 2. Custom Object Detection
-Create a small dataset (20-30 images) of an object in your environment (coffee mug, book, etc.). Annotate bounding boxes using [Roboflow](https://roboflow.com/). Fine-tune YOLOv8 and test it.
+**Objective**: Understand how friction affects humanoid stability.
 
-### 3. 3D Position Estimation
-Combine YOLO detection with a depth camera (Intel RealSense or Kinect). For each detected object, compute its 3D position relative to the robot. Print coordinates.
+**Tasks**:
+1. Launch humanoid with default friction (`mu=1.0`)
+2. Record if robot stabilizes after falling
+3. Change friction to `mu=0.1` (low friction)
+4. Observe robot sliding/unstable behavior
+5. Change friction to `mu=2.0` (high friction)
+6. Compare stability across friction values
 
-### 4. Segmentation vs Detection
-Compare outputs of YOLOv8 (bounding boxes) vs DeepLabV3 (segmentation) on the same image. Which is better for:
-- Counting objects?
-- Identifying traversable terrain?
-- Precise grasping?
+**Questions**:
+- What friction value gives best stability?
+- Why does low friction cause sliding?
+- How does friction affect walking?
+
+**Acceptance Criteria**:
+- [ ] Tested 3 different friction values
+- [ ] Documented behavior for each value
+- [ ] Explained relationship between friction and stability
+
+**Estimated Time**: 45 minutes
+
+### Exercise 2: Inertia Tuning (Required)
+
+**Objective**: Understand how inertia affects robot dynamics.
+
+**Tasks**:
+1. Modify thigh link inertia (increase `izz` by 10x)
+2. Launch robot and observe falling behavior
+3. Compare to original inertia values
+4. Modify center of mass position (move upward)
+5. Observe effect on balance
+
+**Questions**:
+- How does higher inertia affect rotation?
+- Why does center of mass position matter?
+- What inertia values are realistic for humanoid links?
+
+**Estimated Time**: 60 minutes
+
+### Exercise 3: Physics Solver Tuning (Challenge)
+
+**Objective**: Optimize solver parameters for stability vs. performance.
+
+**Tasks**:
+1. Test with `iters=10` (low accuracy)
+2. Test with `iters=100` (high accuracy)
+3. Measure simulation speed (FPS) for each
+4. Find minimum iterations for stable simulation
+5. Document performance vs. accuracy tradeoff
+
+**Metrics**:
+- Simulation FPS (higher = faster)
+- Physics stability (no jitter/penetration)
+- CPU usage
+
+**Estimated Time**: 90 minutes
 
 ---
 
-## Key Takeaways
+## Additional Resources
 
-✅ **CNNs** automatically learn hierarchical visual features
-✅ **Pre-trained models** (ImageNet, COCO) work well out-of-the-box
-✅ **YOLO** is the best choice for real-time robotic vision (60+ FPS)
-✅ **Transfer learning** enables custom detectors with limited data
-✅ **Segmentation** provides pixel-level understanding for complex tasks
-✅ Always use **GPU** for deep learning inference on robots
+- [ODE Documentation](https://www.ode.org/) - Physics engine reference
+- [Gazebo Physics Tutorial](https://gazebosim.org/docs/latest/physics_configuration) - Configuration guide
+- [URDF Physics](http://wiki.ros.org/urdf/XML/link) - Inertia and collision modeling
+- [Friction Coefficients](https://www.engineeringtoolbox.com/friction-coefficients-d_778.html) - Real-world values
 
 ---
 
-## Further Reading
-
-- [PyTorch Vision Tutorials](https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html)
-- [Ultralytics YOLO Docs](https://docs.ultralytics.com/)
-- *Deep Learning for Computer Vision* (Stanford CS231n course notes)
-
----
-
-**Previous**: [← Chapter 2.1: CV Fundamentals](chapter-2-1.md) | **Next**: [Chapter 2.3: 3D Vision and Depth →](chapter-2-3.md)
-
-With 2D detection mastered, let's explore how robots perceive depth and understand 3D space!
+**Next**: [Chapter 2.3: Sensor Simulation (LiDAR, Cameras, IMUs) →](chapter-2 to 3.md)

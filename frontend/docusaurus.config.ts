@@ -92,12 +92,24 @@ const config: Config = {
               to: '/docs/intro',
             },
             {
-              label: 'Module 1: Foundations',
-              to: '/docs/module-1/chapter-1-1',
+              label: 'Module 0: Foundations of Physical AI',
+              to: '/docs/module-0/intro',
             },
             {
-              label: 'Module 2: Computer Vision',
+              label: 'Module 1: ROS 2',
+              to: '/docs/module-1/intro',
+            },
+            {
+              label: 'Module 2: Gazebo & Unity',
               to: '/docs/module-2/intro',
+            },
+            {
+              label: 'Module 3: NVIDIA Isaac',
+              to: '/docs/module-3/intro',
+            },
+            {
+              label: 'Module 4: VLA',
+              to: '/docs/module-4/intro',
             },
           ],
         },

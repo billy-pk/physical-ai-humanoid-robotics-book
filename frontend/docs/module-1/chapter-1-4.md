@@ -1,686 +1,743 @@
 ---
-sidebar_position: 4
-title: 1.4 ROS and Simulation
+sidebar_position: 5
+title: 1.4 Package Development & Launch Files
 ---
 
-# Chapter 1.4: Introduction to ROS and Simulation
+# Chapter 1.4: Package Development & Launch Files
 
-Building real robots is expensive and time-consuming. Testing algorithms on hardware can be dangerous (robots break things—including themselves!). This is where **ROS (Robot Operating System)** and **simulation** become invaluable. This chapter introduces the essential tools that modern roboticists use to develop, test, and deploy robotic systems.
+ROS 2 packages are the fundamental unit of organization—they contain nodes, launch files, configuration files, and robot descriptions. Launch files automate the startup of multi-node systems, eliminating the need to manually run dozens of terminals.
 
 ## Learning Outcomes
 
 By the end of this chapter, you will be able to:
 
-- **Understand** what ROS is and why it's the industry standard for robotics
-- **Explain** ROS concepts: nodes, topics, messages, services
-- **Write** basic ROS programs (publishers, subscribers)
-- **Use** simulation tools (Gazebo, PyBullet) to test robot algorithms
-- **Recognize** the sim-to-real gap and strategies to bridge it
-- **Apply** simulation for safe, rapid prototyping
+- **Create** ROS 2 Python packages using \`ros2 pkg create\`
+- **Structure** packages with proper \`package.xml\` and \`setup.py\` configuration
+- **Build** workspaces with \`colcon\` and manage dependencies
+- **Write** launch files in Python to coordinate multiple nodes
+- **Deploy** complete robot systems with a single command
 
-## What is ROS?
+## Prerequisites
 
-**ROS (Robot Operating System)** is not actually an operating system—it's a **middleware framework** and collection of tools for building robot software.
+- **ROS 2 Humble installed**
+- **Completed Chapter 1.2** (Python nodes with rclpy)
+- **Completed Chapter 1.3** (URDF files)
+- **Basic understanding** of Python packaging
 
-### Why ROS Exists
+## Part 1: ROS 2 Package Structure
 
-Building robots involves complex challenges:
-- **Distributed computing**: Sensors, actuators, planning, perception all running concurrently
-- **Hardware abstraction**: Same code should work on different robots
-- **Code reuse**: Don't reinvent the wheel (SLAM, navigation, manipulation)
-- **Modularity**: Swap components without rewriting everything
+### What is a ROS 2 Package?
 
-**ROS solves these problems** by providing:
-1. **Communication infrastructure** (publish/subscribe, services)
-2. **Hardware abstraction layers** (sensor drivers, motor controllers)
-3. **Standard tools** (visualization, logging, debugging)
-4. **Massive ecosystem** (thousands of packages for perception, navigation, manipulation)
+A **package** is a directory containing:
+- **Source code**: Python nodes (\`.py\` files)
+- **Configuration**: \`package.xml\`, \`setup.py\`, \`setup.cfg\`
+- **Launch files**: \`.launch.py\` files
+- **Resources**: URDF files, meshes, config YAML files
 
-### ROS Versions
-
-| Version | Release Year | Status | Python | Notes |
-|---------|--------------|--------|--------|-------|
-| **ROS 1** (Noetic) | 2020 | LTS until 2025 | Python 3 | Widely used, mature |
-| **ROS 2** (Humble, Iron) | 2022-2023 | Active development | Python 3 | Modern, real-time capable, better for production |
-
-**Note**: We'll focus on ROS 2 (the future), but concepts apply to ROS 1 as well.
-
----
-
-## Core ROS Concepts
-
-### 1. Nodes
-
-**Nodes** are individual processes that perform specific tasks.
-
-**Examples**:
-- Camera driver node (publishes images)
-- Object detection node (subscribes to images, publishes detections)
-- Motor controller node (subscribes to velocity commands)
-
-**Why nodes?**
-- **Modularity**: Each node does one thing well
-- **Fault isolation**: One node crashing doesn't kill entire system
-- **Distributed**: Nodes can run on different computers
-
-### 2. Topics
-
-**Topics** are named channels for asynchronous data streaming (publish/subscribe pattern).
-
-**Flow**:
+**Example package structure**:
 ```
-[Camera Node] --publish--> /camera/image --subscribe--> [Detection Node]
+my_humanoid_control/
+├── package.xml           # Package metadata and dependencies
+├── setup.py              # Python package installation config
+├── setup.cfg             # Entry points for executables
+├── resource/             # Package marker files
+├── my_humanoid_control/  # Python module directory
+│   ├── __init__.py
+│   ├── joint_controller.py
+│   └── sensor_processor.py
+├── launch/               # Launch files
+│   └── robot_bringup.launch.py
+├── urdf/                 # Robot descriptions
+│   └── humanoid.urdf
+└── config/               # Parameter files
+    └── controller_params.yaml
 ```
 
-**Characteristics**:
-- **Many-to-many**: Multiple publishers, multiple subscribers
-- **Asynchronous**: No guaranteed delivery
-- **Typed**: Each topic has a specific message type
+### Package Types
 
-### 3. Messages
+| Type | Language | Build System | Use Case |
+|------|----------|--------------|----------|
+| **Python** | Python | setuptools | Most rapid development |
+| **CMake** | C++ | CMake | Performance-critical nodes |
+| **Hybrid** | C++ + Python | CMake + setuptools | Large projects |
 
-**Messages** are data structures sent over topics.
+This chapter focuses on **Python packages** (most common for beginners).
 
-**Standard message types** (from `std_msgs`, `sensor_msgs`, `geometry_msgs`):
-```python
-# String message
-std_msgs/String
-  string data
+## Part 2: Hands-On Tutorial
 
-# Image message
-sensor_msgs/Image
-  uint32 height
-  uint32 width
-  string encoding
-  uint8[] data
+### Project 1: Create Your First ROS 2 Package
 
-# Pose message (position + orientation)
-geometry_msgs/Pose
-  Point position
-    float64 x
-    float64 y
-    float64 z
-  Quaternion orientation
-    float64 x
-    float64 y
-    float64 z
-    float64 w
-```
+**Goal**: Create a package for humanoid joint control with publisher/subscriber nodes.
 
-You can also create custom message types.
-
-### 4. Services
-
-**Services** are synchronous request-response communication (like function calls).
-
-**Use when**:
-- You need a response (e.g., "what's the current position?")
-- Operation is quick
-- Request-response pattern makes sense
-
-**Example**: Gripper control
-```
-[Request] GripperCommand
-  float32 position
-  float32 max_effort
-
-[Response] GripperCommandResult
-  bool success
-  string message
-```
-
-### 5. Parameters
-
-**Parameters** are configuration values stored on a parameter server.
-
-**Examples**:
-- Camera resolution
-- PID gains for motor control
-- Robot dimensions
-
-**Benefit**: Change behavior without recompiling code
-
----
-
-## Your First ROS 2 Program
-
-### Installation
-
+**Step 1: Create workspace**
 ```bash
-# Ubuntu 22.04
-sudo apt update
-sudo apt install ros-humble-desktop python3-colcon-common-extensions
-
-# Source ROS environment
-echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
-source ~/.bashrc
-```
-
-### Creating a Workspace
-
-```bash
+# Create workspace directory
 mkdir -p ~/ros2_ws/src
-cd ~/ros2_ws
-colcon build
-source install/setup.bash
+cd ~/ros2_ws/src
 ```
 
-### Example 1: Simple Publisher
+**Step 2: Create package**
+```bash
+ros2 pkg create --build-type ament_python humanoid_control \
+  --dependencies rclpy std_msgs sensor_msgs geometry_msgs
 
-**talker.py** (publishes messages to `/chatter` topic)
+# Output:
+# going to create a new package
+# package name: humanoid_control
+# destination directory: /home/user/ros2_ws/src
+# package format: 3
+# version: 0.0.0
+# ...
+```
+
+**Explanation**:
+- \`--build-type ament_python\`: Python package
+- \`--dependencies\`: Auto-add dependencies to \`package.xml\`
+
+**Step 3: Examine generated files**
+```bash
+cd humanoid_control
+ls -la
+```
+
+Output:
+```
+humanoid_control/
+├── humanoid_control/
+│   └── __init__.py
+├── package.xml
+├── resource/
+│   └── humanoid_control
+├── setup.cfg
+├── setup.py
+└── test/
+```
+
+---
+
+### Project 2: Add Nodes to Package
+
+**Step 1: Create joint controller node**
+
+**File**: \`humanoid_control/humanoid_control/joint_controller.py\`
 
 ```python
+#!/usr/bin/env python3
+"""
+Humanoid Joint Controller Node
+Publishes joint commands for humanoid arms
+ROS 2 Humble | Python 3.10+
+"""
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
+from sensor_msgs.msg import JointState
+import math
 
-class MinimalPublisher(Node):
+class HumanoidJointController(Node):
+    """
+    Publishes joint commands to /joint_commands topic.
+    Simulates sinusoidal arm motion.
+    """
     def __init__(self):
-        super().__init__('minimal_publisher')
-
-        # Create publisher (topic: /chatter, message type: String, queue size: 10)
-        self.publisher_ = self.create_publisher(String, 'chatter', 10)
-
-        # Create timer (callback every 0.5 seconds)
-        self.timer = self.create_timer(0.5, self.timer_callback)
-        self.i = 0
-
-    def timer_callback(self):
-        msg = String()
-        msg.data = f'Hello ROS 2: {self.i}'
+        super().__init__('humanoid_joint_controller')
+        
+        # Publisher for joint states
+        self.publisher_ = self.create_publisher(
+            JointState,
+            '/joint_commands',
+            10
+        )
+        
+        # Timer for 50 Hz control loop
+        self.timer = self.create_timer(0.02, self.control_loop)
+        
+        # Joint names
+        self.joint_names = [
+            'left_shoulder',
+            'left_elbow',
+            'right_shoulder',
+            'right_elbow'
+        ]
+        
+        self.counter = 0
+        self.get_logger().info('Humanoid Joint Controller started (50 Hz)')
+    
+    def control_loop(self):
+        """Generate and publish joint commands."""
+        msg = JointState()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.name = self.joint_names
+        
+        # Generate sinusoidal motion
+        t = self.counter * 0.02  # Time in seconds
+        msg.position = [
+            0.5 * math.sin(t),                # Left shoulder
+            0.8 * math.sin(t * 1.5),          # Left elbow
+            0.5 * math.sin(t + math.pi),      # Right shoulder (out of phase)
+            0.8 * math.sin(t * 1.5 + math.pi) # Right elbow
+        ]
+        
+        msg.velocity = [0.0] * len(self.joint_names)
+        msg.effort = [0.0] * len(self.joint_names)
+        
         self.publisher_.publish(msg)
-        self.get_logger().info(f'Publishing: "{msg.data}"')
-        self.i += 1
+        self.counter += 1
 
 def main(args=None):
     rclpy.init(args=args)
-    minimal_publisher = MinimalPublisher()
-    rclpy.spin(minimal_publisher)  # Keep node running
-    minimal_publisher.destroy_node()
+    node = HumanoidJointController()
+    
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    
+    node.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
 ```
 
-**Run it**:
-```bash
-python3 talker.py
-```
+**Step 2: Create sensor processor node**
 
-Output:
-```
-[INFO] [minimal_publisher]: Publishing: "Hello ROS 2: 0"
-[INFO] [minimal_publisher]: Publishing: "Hello ROS 2: 1"
-...
-```
-
-### Example 2: Simple Subscriber
-
-**listener.py** (subscribes to `/chatter` topic)
+**File**: \`humanoid_control/humanoid_control/sensor_processor.py\`
 
 ```python
+#!/usr/bin/env python3
+"""
+Sensor Processor Node
+Processes joint state feedback
+ROS 2 Humble | Python 3.10+
+"""
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import String
+from sensor_msgs.msg import JointState
 
-class MinimalSubscriber(Node):
+class SensorProcessor(Node):
+    """
+    Subscribes to /joint_commands and logs joint states.
+    """
     def __init__(self):
-        super().__init__('minimal_subscriber')
-
-        # Create subscriber
+        super().__init__('sensor_processor')
+        
         self.subscription = self.create_subscription(
-            String,
-            'chatter',
-            self.listener_callback,
-            10)
-
-    def listener_callback(self, msg):
-        self.get_logger().info(f'I heard: "{msg.data}"')
+            JointState,
+            '/joint_commands',
+            self.joint_state_callback,
+            10
+        )
+        
+        self.get_logger().info('Sensor Processor started')
+    
+    def joint_state_callback(self, msg):
+        """Process joint state messages."""
+        if len(msg.position) > 0:
+            # Log first joint position (left shoulder)
+            self.get_logger().info(
+                f'{msg.name[0]}: {msg.position[0]:.3f} rad',
+                throttle_duration_sec=1.0  # Log max once per second
+            )
 
 def main(args=None):
     rclpy.init(args=args)
-    minimal_subscriber = MinimalSubscriber()
-    rclpy.spin(minimal_subscriber)
-    minimal_subscriber.destroy_node()
+    node = SensorProcessor()
+    
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    
+    node.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
 ```
 
-**Run in separate terminal**:
-```bash
-python3 listener.py
-```
+**Step 3: Register nodes in setup.py**
 
-Output:
-```
-[INFO] [minimal_subscriber]: I heard: "Hello ROS 2: 5"
-[INFO] [minimal_subscriber]: I heard: "Hello ROS 2: 6"
-...
-```
-
----
-
-## ROS Tools
-
-### 1. Command-Line Tools
-
-**List active nodes**:
-```bash
-ros2 node list
-```
-
-**List active topics**:
-```bash
-ros2 topic list
-```
-
-**See messages on a topic**:
-```bash
-ros2 topic echo /chatter
-```
-
-**Check topic publish rate**:
-```bash
-ros2 topic hz /camera/image
-```
-
-**Publish from command line** (useful for testing):
-```bash
-ros2 topic pub /cmd_vel geometry_msgs/Twist "{linear: {x: 0.5}, angular: {z: 0.1}}"
-```
-
-### 2. RViz (Visualization)
-
-**RViz** is the standard ROS tool for visualizing robot data in 3D.
-
-**Can display**:
-- Robot model (URDF)
-- Camera images
-- LIDAR point clouds
-- TF (coordinate frame) transforms
-- Planned paths
-
-**Launch**:
-```bash
-ros2 run rviz2 rviz2
-```
-
-### 3. rqt (GUI Tools)
-
-**rqt** provides various debugging GUIs:
-- **rqt_graph**: Visualize node/topic connections
-- **rqt_plot**: Plot numerical data over time
-- **rqt_image_view**: Display camera images
-
-**Example**:
-```bash
-ros2 run rqt_graph rqt_graph  # See system architecture
-```
-
----
-
-## Robot Simulation: Why and How
-
-### Why Simulate?
-
-**Advantages**:
-1. **Safety**: Test dangerous behaviors without risk
-2. **Speed**: Fast iteration (no hardware setup)
-3. **Cost**: No expensive robot hardware needed
-4. **Repeatability**: Exact same conditions every test
-5. **Scalability**: Test on robots you don't own
-
-**Disadvantages**:
-1. **Sim-to-real gap**: Simulations aren't perfect
-2. **Missing physics**: Hard to model friction, deformation, fluids
-3. **Sensor noise**: Real sensors are noisier than simulated
-
-### Popular Simulators
-
-| Simulator | Pros | Cons | Best For |
-|-----------|------|------|----------|
-| **Gazebo** | ROS integration, physics (ODE/Bullet), free | Steep learning curve, can be slow | General robotics, ROS users |
-| **PyBullet** | Python-native, fast, simple API | Less realistic graphics | RL training, quick prototyping |
-| **Isaac Sim** (NVIDIA) | Photorealistic, GPU-accelerated, ROS 2 | Requires powerful GPU, complex setup | High-fidelity, vision-heavy tasks |
-| **Webots** | Easy to use, cross-platform | Limited ROS integration | Education, beginners |
-| **MuJoCo** | Fast physics, excellent for control | Limited sensors, less realistic visuals | Control research, RL |
-
----
-
-## Gazebo: The ROS Standard Simulator
-
-**Gazebo** is tightly integrated with ROS and widely used in robotics research and industry.
-
-### Key Features
-
-- **Physics engines**: ODE, Bullet, Simbody, DART
-- **Sensor simulation**: Cameras, LIDAR, IMU, GPS, contact sensors
-- **Robot models**: URDF/SDF format
-- **Plugins**: Extend functionality (custom sensors, controllers)
-
-### Basic Gazebo Workflow
-
-1. **Define robot** in URDF/SDF (XML format describing links, joints, sensors)
-2. **Define world** (environment, obstacles, lighting)
-3. **Launch simulation** with ROS integration
-4. **Run ROS nodes** that interact with simulated robot (same as real robot!)
-
-### Example: Spawn a Simple Robot
-
-**robot.urdf** (simplified):
-```xml
-<?xml version="1.0"?>
-<robot name="simple_robot">
-  <!-- Base link -->
-  <link name="base_link">
-    <visual>
-      <geometry>
-        <box size="0.5 0.3 0.1"/>
-      </geometry>
-      <material name="blue">
-        <color rgba="0 0 0.8 1"/>
-      </material>
-    </visual>
-    <collision>
-      <geometry>
-        <box size="0.5 0.3 0.1"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="10"/>
-      <inertia ixx="0.1" iyy="0.1" izz="0.1" ixy="0" ixz="0" iyz="0"/>
-    </inertial>
-  </link>
-
-  <!-- Wheel (simplified) -->
-  <link name="wheel">
-    <visual>
-      <geometry>
-        <cylinder radius="0.1" length="0.05"/>
-      </geometry>
-    </visual>
-  </link>
-
-  <joint name="wheel_joint" type="continuous">
-    <parent link="base_link"/>
-    <child link="wheel"/>
-    <origin xyz="0.15 0 -0.1" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-  </joint>
-</robot>
-```
-
-**Launch in Gazebo**:
-```bash
-# ROS 2
-ros2 launch gazebo_ros spawn_entity.py -entity my_robot -file robot.urdf
-```
-
----
-
-## PyBullet: Python-Native Simulation
-
-**PyBullet** is perfect for quick prototyping and reinforcement learning.
-
-### Installation
-
-```bash
-pip install pybullet
-```
-
-### Example: Simulate a Humanoid Walking
+Edit \`setup.py\` to add entry points:
 
 ```python
-import pybullet as p
-import pybullet_data
-import time
+from setuptools import find_packages, setup
 
-# Connect to physics server
-physicsClient = p.connect(p.GUI)
+package_name = 'humanoid_control'
 
-# Set up environment
-p.setAdditionalSearchPath(pybullet_data.getDataPath())
-p.setGravity(0, 0, -9.81)
-
-# Load plane and humanoid
-planeId = p.loadURDF("plane.urdf")
-humanoidId = p.loadURDF("humanoid/nao.urdf", [0, 0, 0.5])
-
-# Get joint information
-num_joints = p.getNumJoints(humanoidId)
-print(f"Humanoid has {num_joints} joints")
-
-# Simple control: Apply forces to joints
-for step in range(10000):
-    # Example: Make robot wave (move right shoulder)
-    right_shoulder_joint = 2  # Index varies by model
-    target_position = 0.5  # Radians
-
-    p.setJointMotorControl2(
-        bodyUniqueId=humanoidId,
-        jointIndex=right_shoulder_joint,
-        controlMode=p.POSITION_CONTROL,
-        targetPosition=target_position
-    )
-
-    p.stepSimulation()
-    time.sleep(1./240.)  # 240 Hz simulation
-
-p.disconnect()
+setup(
+    name=package_name,
+    version='0.0.1',
+    packages=find_packages(exclude=['test']),
+    data_files=[
+        ('share/ament_index/resource_index/packages',
+            ['resource/' + package_name]),
+        ('share/' + package_name, ['package.xml']),
+        # Install launch files
+        ('share/' + package_name + '/launch', ['launch/robot_bringup.launch.py']),
+        # Install URDF files
+        ('share/' + package_name + '/urdf', ['urdf/simple_arm.urdf']),
+        # Install config files
+        ('share/' + package_name + '/config', ['config/params.yaml']),
+    ],
+    install_requires=['setuptools'],
+    zip_safe=True,
+    maintainer='Your Name',
+    maintainer_email='you@example.com',
+    description='Humanoid robot control package',
+    license='Apache-2.0',
+    tests_require=['pytest'],
+    entry_points={
+        'console_scripts': [
+            'joint_controller = humanoid_control.joint_controller:main',
+            'sensor_processor = humanoid_control.sensor_processor:main',
+        ],
+    },
+)
 ```
 
-**More advanced**: Use inverse kinematics, load custom models, integrate with RL frameworks
+**Key sections**:
+- **Lines 15 to 20**: Install additional files (launch, URDF, config)
+- **Lines 28 to 31**: Entry points create executable commands
+
+**Step 4: Build the package**
+```bash
+cd ~/ros2_ws
+colcon build --packages-select humanoid_control
+
+# Output:
+# Starting >>> humanoid_control
+# Finished <<< humanoid_control [1.23s]
+#
+# Summary: 1 package finished [1.45s]
+```
+
+**Step 5: Source the workspace**
+```bash
+source ~/ros2_ws/install/setup.bash
+
+# Add to ~/.bashrc for automatic sourcing:
+echo "source ~/ros2_ws/install/setup.bash" >> ~/.bashrc
+```
+
+**Step 6: Run the nodes**
+```bash
+# Terminal 1: Joint controller
+ros2 run humanoid_control joint_controller
+
+# Terminal 2: Sensor processor
+ros2 run humanoid_control sensor_processor
+```
+
+**Expected Output** (Terminal 2):
+```
+[INFO] [sensor_processor]: Sensor Processor started
+[INFO] [sensor_processor]: left_shoulder: 0.041 rad
+[INFO] [sensor_processor]: left_shoulder: 0.082 rad
+```
 
 ---
 
-## The Sim-to-Real Gap
+### Project 3: Create Launch File
 
-**Problem**: Algorithms that work perfectly in simulation often fail on real robots.
+**Goal**: Start both nodes with a single command using a launch file.
 
-### Sources of Sim-to-Real Gap
+**Step 1: Create launch directory**
+```bash
+cd ~/ros2_ws/src/humanoid_control
+mkdir -p launch
+```
 
-1. **Physics inaccuracies**:
-   - Contact dynamics (friction, bouncing)
-   - Deformable objects (cloth, rope)
-   - Fluid dynamics
+**Step 2: Write launch file**
 
-2. **Sensor differences**:
-   - Real cameras have noise, motion blur, lens distortion
-   - Real LIDAR has reflectivity variations, multi-path
+**File**: \`launch/robot_bringup.launch.py\`
 
-3. **Actuator differences**:
-   - Real motors have backlash, delays, non-linearities
-   - Battery voltage affects torque output
-
-4. **Environment variability**:
-   - Lighting changes
-   - Unexpected obstacles
-   - Surface texture variations
-
-### Strategies to Bridge the Gap
-
-**1. Domain Randomization**
-   - Vary simulation parameters randomly during training
-   - Examples: Random friction, lighting, object textures
-   - Forces policy to be robust to variations
-
-**2. Sim-to-Real Transfer Techniques**
-   - **System identification**: Measure real robot parameters, update simulator
-   - **Residual learning**: Train in sim, fine-tune on real robot
-   - **Progressive nets**: Separate networks for sim and real, transfer knowledge
-
-**3. High-Fidelity Simulation**
-   - Use realistic sensors (camera ray-tracing, LIDAR multi-path)
-   - Accurate physics parameters from datasheets
-   - Model actuator dynamics (not just instant response)
-
-**4. Hybrid Approaches**
-   - Train gross behaviors in sim
-   - Learn final adjustments on real hardware
-
----
-
-## Practical Example: ROS + Gazebo Integration
-
-### Scenario: Control a Mobile Robot
-
-**Launch file** (`robot_simulation.launch.py`):
 ```python
+#!/usr/bin/env python3
+"""
+Robot Bringup Launch File
+Starts joint controller and sensor processor nodes
+"""
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
 def generate_launch_description():
+    """
+    Launch file for humanoid control system.
+    
+    Starts:
+    - joint_controller: Publishes joint commands
+    - sensor_processor: Processes joint feedback
+    """
     return LaunchDescription([
-        # Start Gazebo with robot
+        # Joint Controller Node
         Node(
-            package='gazebo_ros',
-            executable='spawn_entity.py',
-            arguments=['-entity', 'my_robot', '-file', 'robot.urdf'],
-            output='screen'
+            package='humanoid_control',
+            executable='joint_controller',
+            name='joint_controller',
+            output='screen',
+            parameters=[{
+                'use_sim_time': False
+            }]
         ),
-
-        # Start robot controller
+        
+        # Sensor Processor Node
         Node(
-            package='my_robot_control',
-            executable='controller_node',
-            output='screen'
+            package='humanoid_control',
+            executable='sensor_processor',
+            name='sensor_processor',
+            output='screen',
+            parameters=[{
+                'use_sim_time': False
+            }]
         ),
-
-        # Start RViz for visualization
-        Node(
-            package='rviz2',
-            executable='rviz2',
-            arguments=['-d', 'config.rviz'],
-            output='screen'
-        )
     ])
 ```
 
-**Controller node** (simplified):
-```python
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import Twist
+**Explanation**:
+- **Lines 6 to 7**: Import launch system modules
+- **Lines 19 to 28**: Define first node with package, executable, output mode
+- **Lines 30 to 38**: Define second node
+- **output='screen'**: Display logs in terminal (vs. log files)
 
-class RobotController(Node):
-    def __init__(self):
-        super().__init__('robot_controller')
-        self.publisher = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.timer = self.create_timer(0.1, self.control_loop)
-
-    def control_loop(self):
-        msg = Twist()
-        # Simple control: Move forward, turn slightly
-        msg.linear.x = 0.5  # 0.5 m/s forward
-        msg.angular.z = 0.1  # 0.1 rad/s turn rate
-        self.publisher.publish(msg)
-
-def main():
-    rclpy.init()
-    controller = RobotController()
-    rclpy.spin(controller)
-    controller.destroy_node()
-    rclpy.shutdown()
+**Step 3: Rebuild with launch file**
+```bash
+cd ~/ros2_ws
+colcon build --packages-select humanoid_control
+source install/setup.bash
 ```
+
+**Step 4: Run launch file**
+```bash
+ros2 launch humanoid_control robot_bringup.launch.py
+```
+
+**Expected Output**:
+```
+[INFO] [launch]: All log files can be found below /home/user/.ros/log/...
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [joint_controller]: Humanoid Joint Controller started (50 Hz)
+[INFO] [sensor_processor]: Sensor Processor started
+[INFO] [sensor_processor]: left_shoulder: 0.041 rad
+[INFO] [sensor_processor]: left_shoulder: 0.123 rad
+```
+
+**Stop all nodes**: \`Ctrl+C\` once
+
+---
+
+### Project 4: Advanced Launch File with RViz2
+
+**Goal**: Launch nodes + URDF visualization in RViz2 automatically.
+
+**File**: \`launch/robot_visualization.launch.py\`
+
+```python
+#!/usr/bin/env python3
+"""
+Robot Visualization Launch File
+Launches controller, state publisher, and RViz2
+"""
+import os
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch_ros.actions import Node
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
+
+def generate_launch_description():
+    # Get package directory
+    pkg_dir = get_package_share_directory('humanoid_control')
+    
+    # Path to URDF file
+    urdf_file = os.path.join(pkg_dir, 'urdf', 'simple_arm.urdf')
+    
+    # Read URDF content
+    with open(urdf_file, 'r') as file:
+        robot_description = file.read()
+    
+    return LaunchDescription([
+        # Declare launch arguments
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Use simulation time'
+        ),
+        
+        # Robot State Publisher (publishes robot transforms)
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            output='screen',
+            parameters=[{
+                'robot_description': robot_description,
+                'use_sim_time': LaunchConfiguration('use_sim_time')
+            }]
+        ),
+        
+        # Joint State Publisher GUI (manual joint control)
+        Node(
+            package='joint_state_publisher_gui',
+            executable='joint_state_publisher_gui',
+            name='joint_state_publisher_gui',
+            output='screen'
+        ),
+        
+        # RViz2
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            name='rviz2',
+            output='screen',
+            arguments=['-d', os.path.join(pkg_dir, 'config', 'robot_view.rviz')]
+        ),
+        
+        # Joint Controller
+        Node(
+            package='humanoid_control',
+            executable='joint_controller',
+            name='joint_controller',
+            output='screen'
+        ),
+    ])
+```
+
+**Explanation**:
+- **Lines 14 to 21**: Load URDF file from package
+- **Lines 25 to 29**: Declare launch argument (can override from command line)
+- **Lines 31 to 41**: \`robot_state_publisher\` converts URDF → TF transforms
+- **Lines 43 to 49**: GUI for manual joint control
+- **Lines 51 to 57**: RViz2 with custom config file
 
 **Run**:
 ```bash
-ros2 launch my_robot_sim robot_simulation.launch.py
+ros2 launch humanoid_control robot_visualization.launch.py
 ```
 
-Now the robot moves in Gazebo, and you can visualize in RViz—all through ROS topics!
+---
+
+### Step 3: Debugging Common Issues
+
+#### Issue 1: "Package 'humanoid_control' not found"
+**Cause**: Workspace not sourced after build
+
+**Solution**:
+```bash
+cd ~/ros2_ws
+source install/setup.bash
+```
+
+#### Issue 2: "No executable found"
+**Cause**: Entry point not defined in \`setup.py\`
+
+**Solution**:
+```python
+# In setup.py, add:
+entry_points={
+    'console_scripts': [
+        'joint_controller = humanoid_control.joint_controller:main',
+    ],
+},
+```
+Then rebuild: \`colcon build --packages-select humanoid_control\`
+
+#### Issue 3: Launch file not found
+**Cause**: Launch file not installed in \`setup.py\`
+
+**Solution**:
+```python
+# In setup.py data_files:
+('share/' + package_name + '/launch', ['launch/robot_bringup.launch.py']),
+```
+Rebuild after modifying \`setup.py\`.
+
+#### Issue 4: "colcon: command not found"
+**Cause**: colcon not installed
+
+**Solution**:
+```bash
+sudo apt install python3-colcon-common-extensions
+```
+
+## Part 3: Advanced Topics (Optional)
+
+### Multi-Package Workspaces
+
+Real projects have multiple packages:
+```
+ros2_ws/
+├── src/
+│   ├── humanoid_control/      # Control nodes
+│   ├── humanoid_description/  # URDF files
+│   ├── humanoid_navigation/   # Nav2 config
+│   └── humanoid_perception/   # Vision nodes
+```
+
+**Build all packages**:
+```bash
+colcon build  # Builds all packages in src/
+```
+
+**Build specific package**:
+```bash
+colcon build --packages-select humanoid_control
+```
+
+### Launch File Composition
+
+Include other launch files:
+```python
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+
+IncludeLaunchDescription(
+    PythonLaunchDescriptionSource([
+        os.path.join(pkg_dir, 'launch', 'sensors.launch.py')
+    ])
+)
+```
+
+### Conditional Node Launching
+
+Start nodes based on conditions:
+```python
+from launch.conditions import IfCondition
+
+Node(
+    package='humanoid_control',
+    executable='joint_controller',
+    condition=IfCondition(LaunchConfiguration('use_controller'))
+)
+```
+
+Run with:
+```bash
+ros2 launch my_pkg robot.launch.py use_controller:=true
+```
+
+## Integration with Capstone
+
+**How this chapter contributes** to the Week 13 autonomous humanoid:
+
+- **Capstone workspace** will have 5+ packages:
+  ```
+  capstone_ws/
+  ├── humanoid_description/  # URDF models
+  ├── humanoid_bringup/      # Launch files
+  ├── voice_control/         # Whisper node
+  ├── llm_planner/           # GPT-4 planning
+  └── navigation/            # Nav2 config
+  ```
+
+- **Master launch file** starts entire system:
+  ```bash
+  ros2 launch humanoid_bringup full_system.launch.py
+  ```
+  This single command launches:
+  - Voice input node (Whisper)
+  - LLM planner (GPT-4)
+  - Navigation stack (Nav2)
+  - Object detection (YOLO)
+  - Joint controllers
+  - Gazebo/Isaac Sim
+
+Understanding package structure and launch files is critical for managing complex multi-node systems.
+
+## Summary
+
+You learned:
+- ✅ Created **ROS 2 Python packages** with proper structure
+- ✅ Configured **\`package.xml\`** and **\`setup.py\`** with dependencies and entry points
+- ✅ Built packages with **colcon** and sourced workspaces
+- ✅ Wrote **launch files** to start multiple nodes with one command
+- ✅ Integrated URDF, nodes, and visualization in automated launch sequences
+
+**Next steps**: In Chapter 1.5, you'll learn parameter management, QoS profiles, and best practices for production-ready ROS 2 systems.
 
 ---
 
 ## Exercises
 
-### 1. ROS Concepts
-Match each scenario with the appropriate ROS communication pattern:
-- Streaming camera images → ____ (Topic/Service/Parameter)
-- Asking for current robot position → ____
-- Configuring PID gains → ____
-- Publishing motor commands → ____
+### Exercise 1: Create Custom Package (Required)
 
-### 2. Message Types
-For each task, choose the appropriate standard ROS message type:
-- Publishing robot's 3D position → `geometry_msgs/____`
-- Publishing LIDAR scan → `sensor_msgs/____`
-- Publishing a simple text string → `std_msgs/____`
+**Objective**: Create a package for a temperature monitoring system.
 
-### 3. Code Challenge: ROS Subscriber
-Modify the subscriber example to:
-1. Keep track of how many messages received
-2. Print the average message length
-3. Shutdown after receiving 10 messages
+**Tasks**:
+1. Create package \`temperature_monitor\`
+2. Add node \`temp_publisher.py\` (publishes random temps 20 to 30°C to \`/temperature\`)
+3. Add node \`temp_analyzer.py\` (subscribes, logs if > 25°C)
+4. Create launch file starting both nodes
+5. Build and test
 
-### 4. Simulation Experiment
-Using PyBullet, load the `humanoid/nao.urdf` and:
-1. Find how many joints the robot has
-2. Apply a force to joint #5
-3. Observe what happens
-4. Screenshot and describe the motion
+**Acceptance Criteria**:
+- [ ] Package builds without errors
+- [ ] \`ros2 run temperature_monitor temp_publisher\` works
+- [ ] Launch file starts both nodes
+- [ ] \`ros2 topic echo /temperature\` shows data
 
-### 5. Sim-to-Real Gap Analysis
-List 3 specific differences between a simulated camera and a real camera that could cause a vision algorithm to fail when deployed.
+**Estimated Time**: 60 minutes
 
-### 6. Design Exercise
-You're building a ROS system for a delivery robot. Design the node architecture:
-- What nodes would you create?
-- What topics would they publish/subscribe to?
-- What message types would you use?
+### Exercise 2: Multi-Robot Launch (Challenge)
 
-Draw a diagram showing node connections.
+**Objective**: Launch multiple instances of the same node with different namespaces.
 
-### 7. Research Task
-Find a recent paper (2022-2024) on sim-to-real transfer for robotics. Summarize:
-- The task (what was the robot doing?)
-- The simulation tool used
-- The transfer technique
-- Success rate in simulation vs. real world
+**Tasks**:
+1. Modify launch file to start 3 joint controllers
+2. Each controller publishes to:
+   - \`/robot1/joint_commands\`
+   - \`/robot2/joint_commands\`
+   - \`/robot3/joint_commands\`
 
----
+**Hint**:
+```python
+Node(
+    package='humanoid_control',
+    executable='joint_controller',
+    name='joint_controller',
+    namespace='robot1',  # This adds /robot1 prefix
+    output='screen'
+)
+```
 
-## Key Takeaways
+**Acceptance Criteria**:
+- [ ] Launch file starts 3 controllers
+- [ ] \`ros2 topic list\` shows 3 separate topics
+- [ ] Each topic publishes independently
 
-✅ **ROS** is the de facto standard middleware for robotics development
-✅ **Nodes** communicate via **topics** (asynchronous) and **services** (synchronous)
-✅ **Messages** are typed data structures for inter-node communication
-✅ **ROS tools** (RViz, rqt, command-line) simplify debugging and visualization
-✅ **Simulation** (Gazebo, PyBullet) enables safe, fast, cost-effective development
-✅ **Sim-to-real gap** is a real challenge, addressed via domain randomization and high-fidelity simulation
-✅ ROS + simulation allows testing robot algorithms **before hardware exists**
+**Estimated Time**: 45 minutes
 
----
+### Exercise 3: Package with Dependencies (Advanced)
 
-## Further Reading
+**Objective**: Create a package that depends on another package.
 
-- **Official Documentation**:
-  - ROS 2 docs: https://docs.ros.org/
-  - Gazebo tutorials: https://gazebosim.org/docs
-  - PyBullet quickstart: https://pybullet.org/wordpress/
+**Tasks**:
+1. Create package \`robot_description\` (contains URDF files only)
+2. Create package \`robot_control\` (depends on \`robot_description\`)
+3. Launch file in \`robot_control\` loads URDF from \`robot_description\`
 
-- **Books**:
-  - *Programming Robots with ROS* by Quigley, Gerkey, Smart
-  - *A Gentle Introduction to ROS* by Jason M. O'Kane (free PDF)
+**Hints**:
+- Add dependency in \`package.xml\`:
+  ```xml
+  <depend>robot_description</depend>
+  ```
+- Use \`get_package_share_directory('robot_description')\` in launch file
 
-- **Courses**:
-  - "ROS for Beginners" (Udemy)
-  - ETH Zurich ROS course (YouTube)
+**Acceptance Criteria**:
+- [ ] Both packages build
+- [ ] \`robot_control\` can access URDF from \`robot_description\`
+- [ ] Launch file works
 
-- **Papers**:
-  - "Sim-to-Real Transfer of Robotic Control with Dynamics Randomization" (OpenAI, 2018)
-  - "Learning Dexterous In-Hand Manipulation" (OpenAI, 2019) — domain randomization
-
-- **Communities**:
-  - ROS Discourse: https://discourse.ros.org/
-  - r/ROS subreddit
-  - Gazebo community forum
+**Estimated Time**: 90 minutes
 
 ---
 
-**Previous**: [← Chapter 1.3: Sensors and Actuators](chapter-1-3.md) | **Next**: [Module 2: Introduction →](../module-2/intro.md)
+## Additional Resources
 
-🎉 **Congratulations!** You've completed Module 1: Foundations of Physical AI. You now understand AI fundamentals, robotics mechanics, sensors/actuators, and the tools used to build robotic systems. Ready to dive deeper into perception and control in Module 2!
+- [ROS 2 Package Creation Tutorial](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Creating-Your-First-ROS2-Package.html) - Official guide
+- [Launch File Documentation](https://docs.ros.org/en/humble/Tutorials/Intermediate/Launch/Launch-Main.html) - Complete launch system reference
+- [colcon Documentation](https://colcon.readthedocs.io/) - Build system details
+- [ament_cmake vs. ament_python](https://docs.ros.org/en/humble/How-To-Guides/Ament-CMake-Documentation.html) - When to use C++ vs. Python
+
+---
+
+**Previous**: [← Chapter 1.3: URDF for Humanoid Robots](chapter-1 to 3.md) | **Next**: [Chapter 1.5: Parameter Management & Best Practices →](chapter-1 to 5.md)

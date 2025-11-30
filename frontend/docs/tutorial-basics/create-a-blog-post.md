@@ -8,9 +8,9 @@ Docusaurus creates a **page for each blog post**, but also a **blog index page**
 
 ## Create your first Post
 
-Create a file at `blog/2021-02-28-greetings.md`:
+Create a file at `blog/2021 to 02 to 28-greetings.md`:
 
-```md title="blog/2021-02-28-greetings.md"
+```md title="blog/2021 to 02 to 28-greetings.md"
 ---
 slug: greetings
 title: Greetings!

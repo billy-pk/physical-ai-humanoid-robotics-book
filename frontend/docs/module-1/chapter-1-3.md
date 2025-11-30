@@ -1,710 +1,728 @@
 ---
-sidebar_position: 3
-title: 1.3 Sensors and Actuators
+sidebar_position: 4
+title: 1.3 URDF for Humanoid Robots
 ---
 
-# Chapter 1.3: Sensors and Actuators
+# Chapter 1.3: URDF for Humanoid Robots
 
-Robots need eyes to see, ears to hear, and muscles to move. This chapter explores the **sensors** that enable robots to perceive their environment and the **actuators** that allow them to act upon it. These are the interface between the digital brain (AI) and the physical world.
+URDF (Unified Robot Description Format) is the standard XML-based format for describing robot kinematics, dynamics, and sensors in ROS. Every humanoid robot—from academic research platforms to Boston Dynamics' Atlas—uses URDF (or its derivatives) to define structure.
 
 ## Learning Outcomes
 
 By the end of this chapter, you will be able to:
 
-- **Classify** major sensor types: proprioceptive vs. exteroceptive
-- **Understand** how cameras, LIDAR, IMUs, and force sensors work
-- **Explain** actuator types: electric motors, hydraulics, pneumatics
-- **Compare** sensor and actuator characteristics (range, accuracy, bandwidth)
-- **Apply** sensor fusion concepts to combine multiple data sources
-- **Design** sensor/actuator systems for specific robotic applications
+- **Define** robot structure using URDF (links, joints, sensors)
+- **Model** different joint types (revolute, prismatic, continuous, fixed)
+- **Add** collision geometries and visual meshes
+- **Attach** sensors (cameras, LiDAR, IMUs) to robot links
+- **Visualize** URDF models in RViz2 with joint state controls
 
-## Sensors: Perceiving the World
+## Prerequisites
 
-**Sensors** convert physical phenomena (light, force, acceleration) into electrical signals that robots can process.
+- **ROS 2 Humble installed** with RViz2
+- **Basic XML syntax**: tags, attributes, nesting
+- **Understanding of coordinate frames**: X-forward, Y-left, Z-up (REP-103)
+- **3D geometry basics**: rotations, translations, Euler angles
 
-### Sensor Classification
+## Part 1: URDF Fundamentals
 
-**1. Proprioceptive Sensors** (Internal State)
-- Measure robot's own configuration and motion
-- Examples: encoders, IMUs, force/torque sensors in joints
+### What is URDF?
 
-**2. Exteroceptive Sensors** (External Environment)
-- Measure external world properties
-- Examples: cameras, LIDAR, microphones, tactile sensors
+URDF is an XML format that describes:
+1. **Links**: Rigid bodies (torso, upper_arm, forearm, hand)
+2. **Joints**: Connections between links (shoulder, elbow, wrist)
+3. **Sensors**: Cameras, LiDAR, IMUs attached to links
+4. **Visual**: How the robot looks (meshes, colors)
+5. **Collision**: Simplified geometry for physics simulation
 
-| Sensor Type | Category | Measures | Typical Use |
-|-------------|----------|----------|-------------|
-| **Encoder** | Proprioceptive | Joint position/velocity | Motor control, odometry |
-| **IMU** | Proprioceptive | Acceleration, angular velocity | Balance, orientation |
-| **Camera** | Exteroceptive | Light intensity (RGB) | Object detection, navigation |
-| **LIDAR** | Exteroceptive | Distance (time-of-flight) | 3D mapping, obstacle avoidance |
-| **Force/Torque** | Proprioceptive | Contact forces | Manipulation, collision detection |
-| **Microphone** | Exteroceptive | Sound waves | Voice commands, audio localization |
+**Why URDF matters**:
+- **Kinematics**: Calculate end-effector position from joint angles (forward kinematics)
+- **Simulation**: Gazebo and Isaac Sim use URDF for physics
+- **Visualization**: RViz2 displays robot models
+- **Planning**: MoveIt 2 uses URDF for motion planning
+
+### URDF Structure
+
+```xml
+<robot name="my_robot">
+  <!-- Links define rigid bodies -->
+  <link name="base_link">
+    <visual>...</visual>
+    <collision>...</collision>
+    <inertial>...</inertial>
+  </link>
+  
+  <link name="upper_arm">...</link>
+  
+  <!-- Joints connect links -->
+  <joint name="shoulder_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="upper_arm"/>
+    <origin xyz="0 0 0.5" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.57" upper="1.57" effort="100" velocity="1.0"/>
+  </joint>
+</robot>
+```
+
+### Key Concepts
+
+#### Links
+A **link** represents a rigid body with:
+- **Visual**: Appearance (mesh file or primitive shapes)
+- **Collision**: Simplified geometry for collision detection
+- **Inertial**: Mass and moment of inertia for dynamics
+
+#### Joints
+A **joint** connects two links. Types:
+
+| Joint Type | Description | Humanoid Example |
+|------------|-------------|------------------|
+| **revolute** | Rotates around axis, with limits | Elbow (0° to 150°) |
+| **continuous** | Rotates 360° without limits | Wheel axle |
+| **prismatic** | Slides along axis | Elevator mechanism |
+| **fixed** | No movement | Sensor mount |
+| **floating** | 6-DOF (position + orientation) | Base link (for mobile humanoids) |
+| **planar** | Moves in XY plane | Rarely used |
+
+#### Coordinate Frames (REP-103 Standard)
+
+ROS follows **right-hand rule**:
+- **X-axis**: Forward (red)
+- **Y-axis**: Left (green)
+- **Z-axis**: Up (blue)
+
+**Rotations** (RPY - Roll, Pitch, Yaw):
+- **Roll**: Rotation around X-axis
+- **Pitch**: Rotation around Y-axis
+- **Yaw**: Rotation around Z-axis
+
+## Part 2: Hands-On Tutorial
+
+### Project 1: Simple Two-Link Robot Arm
+
+**Goal**: Create a URDF for a 2-DOF robot arm and visualize in RViz2.
+
+**File**: \`simple_arm.urdf\`
+
+```xml
+<?xml version="1.0"?>
+<robot name="simple_arm">
+  
+  <!-- Base Link (fixed to world) -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+      <material name="gray">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0"
+               iyy="0.01" iyz="0.0" izz="0.01"/>
+    </inertial>
+  </link>
+  
+  <!-- Upper Arm Link -->
+  <link name="upper_arm">
+    <visual>
+      <geometry>
+        <box size="0.05 0.05 0.3"/>
+      </geometry>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      <material name="blue">
+        <color rgba="0.0 0.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.05 0.05 0.3"/>
+      </geometry>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 0.15" rpy="0 0 0"/>
+      <inertia ixx="0.004" ixy="0.0" ixz="0.0"
+               iyy="0.004" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+  
+  <!-- Shoulder Joint (connects base to upper arm) -->
+  <joint name="shoulder_joint" type="revolute">
+    <parent link="base_link"/>
+    <child link="upper_arm"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>  <!-- Rotates around Y-axis (pitch) -->
+    <limit lower="-1.57" upper="1.57" effort="100" velocity="1.0"/>
+  </joint>
+  
+  <!-- Forearm Link -->
+  <link name="forearm">
+    <visual>
+      <geometry>
+        <box size="0.04 0.04 0.25"/>
+      </geometry>
+      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+      <material name="red">
+        <color rgba="1.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.04 0.04 0.25"/>
+      </geometry>
+      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.3"/>
+      <origin xyz="0 0 0.125" rpy="0 0 0"/>
+      <inertia ixx="0.002" ixy="0.0" ixz="0.0"
+               iyy="0.002" iyz="0.0" izz="0.0005"/>
+    </inertial>
+  </link>
+  
+  <!-- Elbow Joint (connects upper arm to forearm) -->
+  <joint name="elbow_joint" type="revolute">
+    <parent link="upper_arm"/>
+    <child link="forearm"/>
+    <origin xyz="0 0 0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>  <!-- Rotates around Y-axis (pitch) -->
+    <limit lower="0.0" upper="2.6" effort="50" velocity="1.0"/>
+  </joint>
+  
+</robot>
+```
+
+**Explanation**:
+- **Lines 6 to 27**: \`base_link\` - gray cylinder base (0.1m radius, 0.05m height)
+- **Lines 29 to 50**: \`upper_arm\` - blue box (0.3m long)
+- **Lines 52 to 58**: \`shoulder_joint\` - revolute joint rotating around Y-axis (-90° to 90°)
+- **Lines 60 to 81**: \`forearm\` - red box (0.25m long)
+- **Lines 83 to 89**: \`elbow_joint\` - revolute joint (0° to 150°)
+
+### Visualize in RViz2
+
+**Step 1: Install joint_state_publisher GUI**
+```bash
+sudo apt install ros-humble-joint-state-publisher-gui ros-humble-xacro
+```
+
+**Step 2: Launch RViz2 with joint state publisher**
+```bash
+# Terminal 1: Publish robot description
+ros2 run robot_state_publisher robot_state_publisher --ros-args -p robot_description:="$(cat simple_arm.urdf)"
+
+# Terminal 2: Publish joint states (manual control)
+ros2 run joint_state_publisher_gui joint_state_publisher_gui
+
+# Terminal 3: Visualize in RViz2
+rviz2
+```
+
+**Step 3: Configure RViz2**
+1. Click "Add" → "RobotModel"
+2. In RobotModel settings, set "Description Topic" to \`/robot_description\`
+3. Change "Fixed Frame" to \`base_link\`
+4. You should see the 2-link arm!
+
+**Step 4: Control joints**
+- In the \`joint_state_publisher_gui\` window, drag sliders to move shoulder and elbow
+- RViz2 updates in real-time
 
 ---
 
-## Vision Sensors: Cameras
+### Project 2: Humanoid Torso with Arms
 
-**Cameras** are the most common sensors in robotics, providing rich visual information.
+**Goal**: Model a simplified humanoid upper body with torso, shoulders, and arms.
 
-### Camera Types
+**File**: \`humanoid_torso.urdf\`
 
-**1. RGB Cameras** (Standard Color)
-- Capture red, green, blue channels
-- Resolution: 640×480 (VGA) to 4K+
-- Frame rate: 30-120 fps typical
-- **Pros**: Rich color info, inexpensive, mature algorithms
-- **Cons**: No depth info, sensitive to lighting
+```xml
+<?xml version="1.0"?>
+<robot name="humanoid_torso">
+  
+  <!-- Torso (Base) -->
+  <link name="torso">
+    <visual>
+      <geometry>
+        <box size="0.3 0.4 0.6"/>
+      </geometry>
+      <material name="white">
+        <color rgba="0.9 0.9 0.9 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.3 0.4 0.6"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="10.0"/>
+      <inertia ixx="0.4" ixy="0.0" ixz="0.0"
+               iyy="0.3" iyz="0.0" izz="0.25"/>
+    </inertial>
+  </link>
+  
+  <!-- Left Shoulder -->
+  <link name="left_shoulder">
+    <visual>
+      <geometry>
+        <sphere radius="0.06"/>
+      </geometry>
+      <material name="gray">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0"
+               iyy="0.001" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+  
+  <!-- Left Shoulder Joint (pitch) -->
+  <joint name="left_shoulder_pitch" type="revolute">
+    <parent link="torso"/>
+    <child link="left_shoulder"/>
+    <origin xyz="0 0.25 0.2" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="100" velocity="1.0"/>
+  </joint>
+  
+  <!-- Left Upper Arm -->
+  <link name="left_upper_arm">
+    <visual>
+      <geometry>
+        <cylinder radius="0.04" length="0.3"/>
+      </geometry>
+      <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+      <material name="blue">
+        <color rgba="0.2 0.2 0.8 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.04" length="0.3"/>
+      </geometry>
+      <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="1.0"/>
+      <origin xyz="0 0 -0.15" rpy="0 0 0"/>
+      <inertia ixx="0.01" ixy="0.0" ixz="0.0"
+               iyy="0.01" iyz="0.0" izz="0.001"/>
+    </inertial>
+  </link>
+  
+  <!-- Left Shoulder to Upper Arm (roll for rotation) -->
+  <joint name="left_shoulder_roll" type="revolute">
+    <parent link="left_shoulder"/>
+    <child link="left_upper_arm"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>  <!-- Roll axis -->
+    <limit lower="-2.0" upper="2.0" effort="50" velocity="1.0"/>
+  </joint>
+  
+  <!-- Left Forearm -->
+  <link name="left_forearm">
+    <visual>
+      <geometry>
+        <cylinder radius="0.03" length="0.25"/>
+      </geometry>
+      <origin xyz="0 0 -0.125" rpy="0 0 0"/>
+      <material name="light_blue">
+        <color rgba="0.4 0.4 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.03" length="0.25"/>
+      </geometry>
+      <origin xyz="0 0 -0.125" rpy="0 0 0"/>
+    </collision>
+    <inertial>
+      <mass value="0.7"/>
+      <origin xyz="0 0 -0.125" rpy="0 0 0"/>
+      <inertia ixx="0.005" ixy="0.0" ixz="0.0"
+               iyy="0.005" iyz="0.0" izz="0.0005"/>
+    </inertial>
+  </link>
+  
+  <!-- Left Elbow Joint -->
+  <joint name="left_elbow" type="revolute">
+    <parent link="left_upper_arm"/>
+    <child link="left_forearm"/>
+    <origin xyz="0 0 -0.3" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="0.0" upper="2.6" effort="50" velocity="1.0"/>
+  </joint>
+  
+  <!-- Mirror for right arm (abbreviated for space) -->
+  <!-- In practice, duplicate left arm structure with mirrored Y positions -->
+  
+</robot>
+```
 
-**2. Depth Cameras** (RGB-D)
-- Provide color + per-pixel distance
-- Technologies:
-  - **Structured light**: Project pattern, measure distortion (Intel RealSense)
-  - **Time-of-flight (ToF)**: Measure light travel time (Microsoft Kinect)
-  - **Stereo**: Use two cameras like human eyes
+**Key Features**:
+- **Torso**: White box as base link
+- **Shoulder joint**: 2-DOF (pitch + roll for realistic arm motion)
+- **Upper arm**: Blue cylinder
+- **Forearm**: Light blue cylinder
+- **Realistic joint limits**: Based on human anatomy
 
-**3. Event Cameras** (DVS - Dynamic Vision Sensor)
-- Each pixel independently detects brightness changes
-- **Pros**: Ultra-low latency (&lt;1ms), high dynamic range
-- **Cons**: Novel technology, fewer algorithms available
-
-### Camera Parameters
-
-**Intrinsic Parameters**:
-- **Focal length** (f): Distance from lens to sensor
-- **Principal point** (cₓ, cᵧ): Optical center in image
-- **Lens distortion**: Radial and tangential distortion coefficients
-
-**Camera Calibration** determines these parameters for accurate 3D reconstruction.
-
-### Example: Reading Camera in Python
-
-```python
-import cv2
-
-# Open camera (0 = default camera)
-cap = cv2.VideoCapture(0)
-
-# Set resolution
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-while True:
-    # Capture frame
-    ret, frame = cap.read()
-
-    if not ret:
-        break
-
-    # Convert to grayscale
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    # Display
-    cv2.imshow('Robot Camera View', gray)
-
-    # Exit on 'q' key
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
-cv2.destroyAllWindows()
+**Visualize**:
+```bash
+ros2 run robot_state_publisher robot_state_publisher --ros-args -p robot_description:="$(cat humanoid_torso.urdf)"
+ros2 run joint_state_publisher_gui joint_state_publisher_gui
+rviz2
 ```
 
 ---
 
-## LIDAR: Laser Distance Measurement
+### Project 3: Adding Sensors (Camera)
 
-**LIDAR** (Light Detection and Ranging) uses laser pulses to measure distances, creating precise 3D point clouds.
+**Goal**: Attach a camera sensor to the robot's head.
 
-### How LIDAR Works
+```xml
+<!-- Head Link -->
+<link name="head">
+  <visual>
+    <geometry>
+      <sphere radius="0.12"/>
+    </geometry>
+    <material name="skin">
+      <color rgba="0.9 0.75 0.65 1.0"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <sphere radius="0.12"/>
+    </geometry>
+  </collision>
+  <inertial>
+    <mass value="2.0"/>
+    <inertia ixx="0.01" ixy="0.0" ixz="0.0"
+             iyy="0.01" iyz="0.0" izz="0.01"/>
+  </inertial>
+</link>
 
-1. **Emit** laser pulse
-2. **Measure** time for reflection to return
-3. **Calculate** distance: d = (c × t) / 2
-   - c = speed of light (3×10⁸ m/s)
-   - t = round-trip time
+<!-- Neck Joint -->
+<joint name="neck" type="revolute">
+  <parent link="torso"/>
+  <child link="head"/>
+  <origin xyz="0 0 0.4" rpy="0 0 0"/>
+  <axis xyz="0 0 1"/>  <!-- Yaw (head turns left/right) -->
+  <limit lower="-1.57" upper="1.57" effort="10" velocity="1.0"/>
+</joint>
 
-### LIDAR Types
+<!-- Camera Sensor (attached to head) -->
+<link name="camera_link">
+  <visual>
+    <geometry>
+      <box size="0.02 0.05 0.02"/>
+    </geometry>
+    <material name="black">
+      <color rgba="0.0 0.0 0.0 1.0"/>
+    </material>
+  </visual>
+  <collision>
+    <geometry>
+      <box size="0.02 0.05 0.02"/>
+    </geometry>
+  </collision>
+  <inertial>
+    <mass value="0.05"/>
+    <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+             iyy="0.0001" iyz="0.0" izz="0.0001"/>
+  </inertial>
+</link>
 
-**1D LIDAR**: Single beam (distance sensor)
-**2D LIDAR**: Scanning in plane (e.g., Hokuyo, SICK) — common in mobile robots
-**3D LIDAR**: Full 3D scanning (e.g., Velodyne, Ouster) — autonomous vehicles
+<!-- Camera Mount (fixed to head) -->
+<joint name="camera_joint" type="fixed">
+  <parent link="head"/>
+  <child link="camera_link"/>
+  <origin xyz="0.12 0 0" rpy="0 0 0"/>  <!-- 12cm in front of head center -->
+</joint>
 
-### LIDAR Specifications
+<!-- Gazebo Camera Plugin (for simulation) -->
+<gazebo reference="camera_link">
+  <sensor type="camera" name="head_camera">
+    <update_rate>30.0</update_rate>
+    <camera name="head">
+      <horizontal_fov>1.3962634</horizontal_fov>  <!-- 80 degrees -->
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <near>0.02</near>
+        <far>300</far>
+      </clip>
+    </camera>
+    <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+      <alwaysOn>true</alwaysOn>
+      <updateRate>30.0</updateRate>
+      <cameraName>camera</cameraName>
+      <imageTopicName>/camera/image_raw</imageTopicName>
+      <cameraInfoTopicName>/camera/camera_info</cameraInfoTopicName>
+      <frameName>camera_link</frameName>
+    </plugin>
+  </sensor>
+</gazebo>
+```
 
-| Specification | Typical Range | Example |
-|---------------|---------------|---------|
-| **Range** | 0.1m - 100m | Indoor: 10m, Outdoor: 50m+ |
-| **Angular resolution** | 0.1° - 1° | Velodyne: 0.4° horizontal |
-| **Scan rate** | 5 - 20 Hz | 10 Hz = 10 scans/second |
-| **Accuracy** | ±2cm - ±5cm | High-end: ±2cm |
-
-### Applications in Humanoid Robots
-
-- **Navigation**: Avoid obstacles, map environment
-- **Localization**: Determine position in known map (SLAM)
-- **Object detection**: Identify objects by shape
-- **Terrain analysis**: Detect stairs, slopes, uneven ground
+**Explanation**:
+- **Lines 1 to 22**: Head link (sphere)
+- **Lines 24 to 30**: Neck joint (rotates head left/right)
+- **Lines 32 to 50**: Camera link (small box)
+- **Lines 52 to 56**: Fixed joint mounting camera to head
+- **Lines 58 to 80**: Gazebo camera plugin (for simulation in Module 2)
 
 ---
 
-## IMU: Inertial Measurement Unit
+### Step 3: Debugging Common Issues
 
-**IMUs** measure acceleration and rotational velocity, crucial for balance and orientation.
+#### Issue 1: RViz2 shows "No transform from [link] to [fixed frame]"
+**Cause**: \`fixed_frame\` set to non-existent link
 
-### IMU Components
+**Solution**:
+- In RViz2, change "Fixed Frame" to \`base_link\` or \`torso\`
+- Run \`ros2 run tf2_tools view_frames\` to see available frames
 
-**1. Accelerometer** (3-axis)
-- Measures linear acceleration in x, y, z
-- Detects gravity (when stationary)
-- Used for: orientation estimation, fall detection
+#### Issue 2: Joint doesn't move in joint_state_publisher_gui
+**Cause**: Joint type is \`fixed\` instead of \`revolute\`
 
-**2. Gyroscope** (3-axis)
-- Measures angular velocity (rotation rate)
-- Used for: orientation tracking, stabilization
+**Solution**:
+```xml
+<!-- Wrong: -->
+<joint name="shoulder" type="fixed">
 
-**3. Magnetometer** (3-axis, optional)
-- Measures magnetic field (compass)
-- Provides absolute heading (north reference)
-- **Challenge**: Susceptible to magnetic interference
-
-### IMU Data Fusion
-
-Raw IMU data is noisy. **Sensor fusion** combines accelerometer and gyroscope:
-
-**Complementary Filter** (simple approach):
-```python
-import numpy as np
-
-class ComplementaryFilter:
-    """
-    Fuse accelerometer and gyroscope for tilt angle estimation.
-    """
-    def __init__(self, alpha=0.98, dt=0.01):
-        """
-        Args:
-            alpha: Filter coefficient (0-1, higher = trust gyro more)
-            dt: Time step (seconds)
-        """
-        self.alpha = alpha
-        self.dt = dt
-        self.angle = 0.0  # Current estimated angle
-
-    def update(self, accel_angle, gyro_rate):
-        """
-        Update angle estimate.
-
-        Args:
-            accel_angle: Angle from accelerometer (degrees)
-            gyro_rate: Angular velocity from gyroscope (deg/s)
-
-        Returns:
-            Estimated angle (degrees)
-        """
-        # Integrate gyroscope (high-frequency, drifts over time)
-        gyro_angle = self.angle + gyro_rate * self.dt
-
-        # Combine with accelerometer (low-frequency, stable long-term)
-        self.angle = self.alpha * gyro_angle + (1 - self.alpha) * accel_angle
-
-        return self.angle
-
-# Example usage
-filter = ComplementaryFilter(alpha=0.98, dt=0.01)
-
-# Simulate IMU readings
-accel_angle = 45.0  # Tilt from accelerometer
-gyro_rate = 2.0     # Rotating at 2 deg/s
-
-for _ in range(100):
-    estimated_angle = filter.update(accel_angle, gyro_rate)
-    print(f"Estimated angle: {estimated_angle:.2f}°")
+<!-- Correct: -->
+<joint name="shoulder" type="revolute">
+  <limit lower="-1.57" upper="1.57" effort="100" velocity="1.0"/>
+</joint>
 ```
 
-**Advanced Fusion**: Kalman Filter, Madgwick Filter (quaternion-based)
+#### Issue 3: "Unable to parse robot model" error
+**Cause**: XML syntax error (missing closing tag, typo)
 
-### Humanoid Robot Applications
+**Solution**:
+```bash
+# Validate URDF syntax
+check_urdf simple_arm.urdf
 
-- **Balance control**: Detect tipping, adjust posture
-- **Fall detection**: Trigger protective response
-- **Orientation estimation**: Know which way is "up"
-- **Gait analysis**: Monitor walking patterns
-
----
-
-## Force and Torque Sensors
-
-**Force/Torque (F/T) sensors** measure contact forces, essential for manipulation and safe interaction.
-
-### Where They're Used
-
-- **Wrist**: Measure forces during grasping/manipulation
-- **Feet**: Measure ground reaction forces (ZMP estimation)
-- **Joints**: Detect collisions, measure load
-
-### Sensing Principles
-
-**Strain Gauges**: Measure deformation of material under load
-**Capacitive**: Measure capacitance change under pressure
-**Piezoelectric**: Generate voltage when compressed
-
-### 6-Axis F/T Sensor
-
-Measures:
-- **Forces**: Fₓ, Fᵧ, Fz (3 axes)
-- **Torques**: τₓ, τᵧ, τz (3 axes)
-
-**Applications**:
-```python
-# Example: Detect collision from force spike
-def detect_collision(force_reading, threshold=50.0):
-    """
-    Detect collision based on force magnitude.
-
-    Args:
-        force_reading: (Fx, Fy, Fz) in Newtons
-        threshold: Force threshold for collision (N)
-
-    Returns:
-        True if collision detected
-    """
-    force_magnitude = np.linalg.norm(force_reading)
-    return force_magnitude > threshold
-
-# Simulated force reading
-force = np.array([5.0, 10.0, 45.0])  # Mostly vertical
-
-if detect_collision(force, threshold=30.0):
-    print("Collision detected! Emergency stop.")
-else:
-    print("Normal operation.")
+# If check_urdf not found:
+sudo apt install liburdfdom-tools
 ```
 
----
+#### Issue 4: Robot appears inside-out or distorted
+**Cause**: Incorrect inertia matrix or negative mass
 
-## Actuators: Making Robots Move
+**Solution**:
+- Mass must be > 0
+- Inertia diagonal elements (ixx, iyy, izz) must be > 0
+- For primitive shapes, use standard formulas:
+  - **Box**: \`ixx = (m/12) * (h² + d²)\`
+  - **Cylinder**: \`ixx = (m/12) * (3r² + h²)\`
+  - **Sphere**: \`ixx = iyy = izz = (2/5) * m * r²\`
 
-**Actuators** convert electrical energy into mechanical motion. The choice of actuator determines robot capabilities, cost, and complexity.
+## Part 3: Advanced Topics (Optional)
 
-### Actuator Comparison
+### Using Xacro for Macros
 
-| Type | Power-to-Weight | Speed | Precision | Cost | Common Use |
-|------|-----------------|-------|-----------|------|------------|
-| **DC Motor** | Medium | High | High | Low | Small robots, joints |
-| **Servo Motor** | Medium | Medium | Very High | Medium | Precise positioning |
-| **Stepper Motor** | Low | Low | High | Low | 3D printers, slow motion |
-| **Brushless DC (BLDC)** | High | Very High | High | Medium | Drones, high-performance robots |
-| **Hydraulic** | Very High | Medium | Medium | High | Heavy-duty (construction, Atlas) |
-| **Pneumatic** | Medium | High | Low | Medium | Grippers, soft robotics |
+URDF is verbose. **Xacro** (XML Macros) adds:
+- Variables
+- Math expressions
+- Macros (reusable templates)
 
----
+**Example**: Define arm as macro, instantiate for left and right
 
-## Electric Motors
-
-**Electric motors** are the most common actuators in humanoid robots.
-
-### DC Motor (Brushed)
-
-**Pros**:
-- Simple to control (voltage → speed)
-- Inexpensive
-- Good torque-to-weight ratio
-
-**Cons**:
-- Brushes wear out over time
-- Less efficient than brushless
-- Electrical noise
-
-**Control Example**:
-```python
-import RPi.GPIO as GPIO
-
-class DCMotorController:
-    """
-    Simple DC motor controller using PWM.
-    """
-    def __init__(self, enable_pin, in1_pin, in2_pin):
-        GPIO.setmode(GPIO.BCM)
-        self.enable_pin = enable_pin
-        self.in1_pin = in1_pin
-        self.in2_pin = in2_pin
-
-        GPIO.setup(enable_pin, GPIO.OUT)
-        GPIO.setup(in1_pin, GPIO.OUT)
-        GPIO.setup(in2_pin, GPIO.OUT)
-
-        self.pwm = GPIO.PWM(enable_pin, 1000)  # 1kHz frequency
-        self.pwm.start(0)
-
-    def set_speed(self, speed):
-        """
-        Set motor speed.
-
-        Args:
-            speed: -100 to 100 (negative = reverse)
-        """
-        if speed > 0:
-            GPIO.output(self.in1_pin, GPIO.HIGH)
-            GPIO.output(self.in2_pin, GPIO.LOW)
-            self.pwm.ChangeDutyCycle(abs(speed))
-        elif speed < 0:
-            GPIO.output(self.in1_pin, GPIO.LOW)
-            GPIO.output(self.in2_pin, GPIO.HIGH)
-            self.pwm.ChangeDutyCycle(abs(speed))
-        else:
-            GPIO.output(self.in1_pin, GPIO.LOW)
-            GPIO.output(self.in2_pin, GPIO.LOW)
-            self.pwm.ChangeDutyCycle(0)
-
-    def stop(self):
-        self.set_speed(0)
-        self.pwm.stop()
-        GPIO.cleanup()
+```xml
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="humanoid">
+  
+  <!-- Properties (variables) -->
+  <xacro:property name="arm_length" value="0.3"/>
+  <xacro:property name="arm_radius" value="0.04"/>
+  
+  <!-- Macro for arm -->
+  <xacro:macro name="arm" params="side reflect">
+    <link name="${side}_upper_arm">
+      <visual>
+        <geometry>
+          <cylinder radius="${arm_radius}" length="${arm_length}"/>
+        </geometry>
+      </visual>
+    </link>
+    
+    <joint name="${side}_shoulder" type="revolute">
+      <origin xyz="0 ${reflect * 0.25} 0.2" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+      <limit lower="-1.57" upper="1.57" effort="100" velocity="1.0"/>
+    </joint>
+  </xacro:macro>
+  
+  <!-- Instantiate for both arms -->
+  <xacro:arm side="left" reflect="1"/>
+  <xacro:arm side="right" reflect="-1"/>
+  
+</robot>
 ```
 
-### Servo Motor
-
-**Servos** combine motor + encoder + controller for precise position control.
-
-**Types**:
-- **Standard servo**: Limited rotation (0-180°)
-- **Continuous rotation servo**: Full 360° rotation
-- **Digital servo**: Faster response, more precise
-
-**Control**: PWM signal encodes desired angle
-```
-Pulse width: 1ms = 0°, 1.5ms = 90°, 2ms = 180°
+**Convert xacro to URDF**:
+```bash
+xacro humanoid.xacro > humanoid.urdf
 ```
 
-**Example with Python**:
-```python
-import time
-import pigpio  # Raspberry Pi GPIO library
+### Loading Meshes
 
-class ServoController:
-    """
-    Control hobby servo motor (0-180°).
-    """
-    def __init__(self, pin, min_pulse=500, max_pulse=2500):
-        self.pi = pigpio.pi()
-        self.pin = pin
-        self.min_pulse = min_pulse  # microseconds for 0°
-        self.max_pulse = max_pulse  # microseconds for 180°
+For realistic appearance, use STL or DAE mesh files:
 
-    def set_angle(self, angle):
-        """
-        Set servo angle.
-
-        Args:
-            angle: 0-180 degrees
-        """
-        angle = max(0, min(180, angle))  # Clamp to valid range
-        pulse_width = self.min_pulse + (angle / 180.0) * (self.max_pulse - self.min_pulse)
-        self.pi.set_servo_pulsewidth(self.pin, pulse_width)
-
-    def cleanup(self):
-        self.pi.set_servo_pulsewidth(self.pin, 0)
-        self.pi.stop()
-
-# Usage
-servo = ServoController(pin=18)
-servo.set_angle(90)  # Move to center
-time.sleep(1)
-servo.set_angle(0)   # Move to 0°
-servo.cleanup()
+```xml
+<visual>
+  <geometry>
+    <mesh filename="package://my_robot_description/meshes/upper_arm.stl" scale="1.0 1.0 1.0"/>
+  </geometry>
+</visual>
 ```
 
-### Brushless DC Motor (BLDC)
+**Mesh file sources**:
+- CAD software (Fusion 360, SolidWorks) → export as STL
+- 3D scanning of real robots
+- Open-source repositories (GrabCAD, Thingiverse)
 
-**Advantages**:
-- High efficiency (85-90%)
-- Long lifespan (no brushes)
-- High power-to-weight ratio
-- Quiet operation
+## Integration with Capstone
 
-**Disadvantages**:
-- Requires electronic speed controller (ESC)
-- More complex control (requires rotor position feedback)
+**How this chapter contributes** to the Week 13 autonomous humanoid:
 
-**Applications**: Quadcopters, high-performance humanoid joints
+- **Humanoid model**: Week 13 capstone uses a complete URDF with:
+  - Torso, head, arms, legs (20+ links, 18+ DOF)
+  - Camera sensor for object detection
+  - LiDAR for navigation
+  - IMU for balance control
 
----
+- **Simulation**: URDF loaded into Gazebo (Module 2) and Isaac Sim (Module 3)
+  ```bash
+  # Spawn in Gazebo
+  ros2 launch gazebo_ros spawn_entity.py -entity humanoid -file humanoid.urdf
+  ```
 
-## Hydraulic and Pneumatic Actuators
+- **Motion planning**: MoveIt 2 uses URDF for inverse kinematics
+  - "Move right hand to (x, y, z)" → MoveIt calculates joint angles
 
-### Hydraulic Actuators
+Understanding URDF is essential for any robot project in ROS 2.
 
-**Principle**: Pressurized fluid (oil) drives piston
+## Summary
 
-**Pros**:
-- Extremely high force (Boston Dynamics Atlas uses hydraulics)
-- High power density
-- Natural compliance (shock absorption)
+You learned:
+- ✅ Defined robot structure using **URDF** (links, joints, sensors)
+- ✅ Modeled **revolute**, **fixed**, and **continuous** joints
+- ✅ Added **visual**, **collision**, and **inertial** properties
+- ✅ Attached **sensors** (camera) to robot links
+- ✅ Visualized URDF in **RViz2** with interactive joint control
 
-**Cons**:
-- Heavy (pump, reservoir, valves)
-- Messy (oil leaks)
-- Complex maintenance
-- Expensive
-
-**Use cases**: Heavy-duty humanoids, construction robots
-
-### Pneumatic Actuators
-
-**Principle**: Compressed air drives piston or inflates chamber
-
-**Pros**:
-- Safe (air is compressible → inherent compliance)
-- Fast actuation
-- Clean (no fluids)
-
-**Cons**:
-- Low precision (air compressibility)
-- Requires air compressor
-- Noisy
-
-**Use cases**: Grippers, soft robotics, prosthetics
-
----
-
-## Sensor Fusion: Combining Multiple Sensors
-
-No single sensor is perfect. **Sensor fusion** combines multiple sensors to overcome individual limitations.
-
-### Why Sensor Fusion?
-
-| Sensor | Strengths | Weaknesses |
-|--------|-----------|------------|
-| **Camera** | Rich visual info, object recognition | No depth, lighting-dependent |
-| **LIDAR** | Accurate depth, works in dark | Expensive, no color/texture |
-| **IMU** | High-frequency orientation | Drifts over time |
-| **GPS** | Absolute position outdoors | Inaccurate indoors, slow updates |
-
-**Fusion examples**:
-- **Camera + LIDAR**: Color point clouds, semantic segmentation with depth
-- **IMU + Encoder**: Accurate odometry (wheel slippage detection)
-- **Camera + IMU**: Visual-inertial odometry (VIO) for drones
-
-### Kalman Filter: The Classic Fusion Algorithm
-
-**Kalman filter** optimally combines noisy sensor measurements with predictions.
-
-**Concept**:
-1. **Predict** next state using motion model
-2. **Update** prediction with new sensor measurement
-3. **Weight** prediction vs. measurement based on uncertainty
-
-**Example: Fusing GPS and IMU for position**
-
-```python
-import numpy as np
-
-class SimpleKalmanFilter:
-    """
-    1D Kalman filter for position estimation.
-    """
-    def __init__(self, process_variance, measurement_variance):
-        self.process_variance = process_variance  # Model uncertainty
-        self.measurement_variance = measurement_variance  # Sensor noise
-
-        self.position = 0.0
-        self.variance = 1.0
-
-    def predict(self, motion):
-        """
-        Predict next position based on motion.
-
-        Args:
-            motion: Expected movement (e.g., from IMU integration)
-        """
-        self.position += motion
-        self.variance += self.process_variance
-
-    def update(self, measurement):
-        """
-        Update estimate with new sensor measurement.
-
-        Args:
-            measurement: Sensor reading (e.g., from GPS)
-        """
-        # Kalman gain (how much to trust measurement vs. prediction)
-        kalman_gain = self.variance / (self.variance + self.measurement_variance)
-
-        # Update position
-        self.position += kalman_gain * (measurement - self.position)
-
-        # Update variance (uncertainty)
-        self.variance = (1 - kalman_gain) * self.variance
-
-    def get_state(self):
-        return self.position, self.variance
-
-# Example usage
-kf = SimpleKalmanFilter(process_variance=0.1, measurement_variance=1.0)
-
-# Simulate sensor readings
-for t in range(10):
-    # IMU predicts 1m movement
-    kf.predict(motion=1.0)
-
-    # GPS measures position (with noise)
-    gps_reading = t + np.random.normal(0, 0.5)
-    kf.update(gps_reading)
-
-    pos, var = kf.get_state()
-    print(f"Time {t}: Position = {pos:.2f}m, Uncertainty = {var:.3f}")
-```
-
----
-
-## Designing a Sensor Suite for Humanoid Robots
-
-When selecting sensors for a humanoid robot, consider:
-
-### Design Checklist
-
-**1. Task Requirements**
-- What must the robot sense? (objects, terrain, humans)
-- Required range, accuracy, update rate?
-
-**2. Environmental Constraints**
-- Indoor vs. outdoor (lighting, weather)
-- Structured vs. unstructured environment
-- Presence of humans (safety sensors needed)
-
-**3. Computational Resources**
-- Processing power for sensor data (cameras are data-heavy)
-- Real-time requirements (latency budgets)
-
-**4. Cost and Power**
-- Budget constraints
-- Battery life impact
-
-**5. Redundancy**
-- Critical sensors should have backups
-- Diverse sensor modalities (don't rely on vision alone)
-
-### Example: Warehouse Humanoid Robot
-
-**Task**: Navigate warehouse, pick items, avoid humans
-
-**Sensor Suite**:
-- **2× RGB cameras** (stereo pair): Object recognition, depth estimation
-- **1× 2D LIDAR**: Floor-level obstacle detection, navigation
-- **1× IMU**: Balance, orientation
-- **2× Force sensors** (wrists): Grasp feedback
-- **4× Bumper switches** (body): Emergency collision detection
-- **1× Microphone array**: Voice commands
-
-**Rationale**:
-- Stereo cameras: Sufficient for indoors, cheaper than LIDAR
-- 2D LIDAR: Reliable navigation, lower cost than 3D
-- Force sensors: Essential for manipulation
-- Redundancy: Vision + LIDAR + bumpers for safety
+**Next steps**: In Chapter 1.4, you'll package URDF files in ROS 2 packages and create launch files to automate visualization.
 
 ---
 
 ## Exercises
 
-### 1. Sensor Selection
-For each scenario, select the most appropriate sensor and justify:
-- Detecting if a door is open or closed from 5m away
-- Measuring precise angle of robot's elbow joint
-- Detecting when robot's hand touches an object
-- Determining if robot is tilted (about to fall)
+### Exercise 1: 3-Link Leg (Required)
 
-### 2. Camera Resolution Trade-off
-A robot has limited processing power (can analyze 10 million pixels/second).
-- Option A: 1280×720 at 30 fps
-- Option B: 1920×1080 at 15 fps
+**Objective**: Model a simple humanoid leg with hip, knee, and ankle joints.
 
-Which would you choose for:
-a) Fast-moving object tracking
-b) Detailed object recognition
-c) Indoor navigation
+**Tasks**:
+1. Create \`simple_leg.urdf\`
+2. Define links: \`hip\`, \`thigh\`, \`shin\`, \`foot\`
+3. Joints:
+   - \`hip_joint\`: revolute, pitch (flexion/extension)
+   - \`knee_joint\`: revolute, pitch (0° to 150°)
+   - \`ankle_joint\`: revolute, pitch (-30° to 45°)
+4. Visualize in RViz2
 
-### 3. IMU Integration
-Given accelerometer reading: (0.5, 0.2, 9.6) m/s² when robot is stationary, calculate the tilt angle from vertical. (Hint: Gravity is 9.81 m/s²)
+**Acceptance Criteria**:
+- [ ] Leg has 3 movable joints
+- [ ] Joint limits prevent unnatural poses
+- [ ] RViz2 displays correctly with sliders
 
-### 4. Motor Sizing
-A robot arm link has:
-- Mass: 1.5 kg
-- Length: 0.4 m (center of mass at 0.2 m from joint)
-- Maximum angular acceleration: 10 rad/s²
+**Estimated Time**: 60 minutes
 
-Calculate the required motor torque (ignoring gravity for simplicity).
-Formula: τ = I·α, where I = m·r² for point mass
+### Exercise 2: Add IMU Sensor (Challenge)
 
-### 5. Code Challenge
-Implement a **median filter** to remove noise spikes from LIDAR data:
-```python
-def median_filter(distances, window_size=5):
-    """
-    Apply median filter to distance measurements.
+**Objective**: Attach an IMU (Inertial Measurement Unit) to the torso.
 
-    Args:
-        distances: List of distance readings
-        window_size: Size of median window (odd number)
+**Tasks**:
+1. Add \`imu_link\` (small box, 2cm × 2cm × 1cm)
+2. Fixed joint mounting IMU to \`torso\` at origin
+3. Add Gazebo IMU plugin:
 
-    Returns:
-        Filtered distances
-    """
-    # Your code here
-    pass
+```xml
+<gazebo reference="imu_link">
+  <sensor type="imu" name="imu_sensor">
+    <update_rate>100.0</update_rate>
+    <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+      <ros>
+        <namespace>/imu</namespace>
+        <remapping>~/out:=data</remapping>
+      </ros>
+    </plugin>
+  </sensor>
+</gazebo>
 ```
 
-### 6. Sensor Fusion Design
-Design a sensor fusion scheme for estimating a humanoid robot's position in a building. You have:
-- GPS (accurate outdoors, unreliable indoors)
-- IMU (high-frequency, drifts)
-- LIDAR (for localization via map matching)
-- Wheel encoders (measure distance traveled)
+**Acceptance Criteria**:
+- [ ] IMU link visible in RViz2
+- [ ] URDF validates with \`check_urdf\`
 
-Describe which sensors to use in which situations and how to combine them.
+**Estimated Time**: 45 minutes
 
-### 7. Research Task
-Find specifications for a real humanoid robot (e.g., NAO, Pepper, Atlas, Optimus). List:
-- All sensors it uses
-- All actuator types
-- Estimated cost (if available)
-- One limitation in its sensor/actuator design
+### Exercise 3: Complete Humanoid Skeleton (Advanced)
 
----
+**Objective**: Build a full humanoid URDF with arms, legs, torso, and head.
 
-## Key Takeaways
+**Requirements**:
+- **18 DOF total**:
+  - Neck: 1 DOF (yaw)
+  - Arms: 2 × 3 DOF (shoulder pitch/roll, elbow)
+  - Torso: 1 DOF (waist rotation)
+  - Legs: 2 × 5 DOF (hip pitch/roll/yaw, knee, ankle)
 
-✅ **Proprioceptive sensors** measure internal state; **exteroceptive sensors** measure environment
-✅ **Cameras** provide rich visual data but lack depth; **LIDAR** provides accurate 3D geometry
-✅ **IMUs** are essential for balance and orientation in mobile robots
-✅ **Force sensors** enable safe, compliant manipulation
-✅ **Electric motors** (DC, servo, BLDC) are most common; **hydraulics** provide extreme power
-✅ **Sensor fusion** combines multiple sensors to overcome individual limitations
-✅ Sensor/actuator selection involves **task requirements, cost, power, and redundancy**
+**Hints**:
+- Use \`xacro\` macros to avoid duplication
+- Start with torso, add head, then mirror arms and legs
 
----
+**Acceptance Criteria**:
+- [ ] All 18 joints controllable in \`joint_state_publisher_gui\`
+- [ ] Realistic joint limits based on human anatomy
+- [ ] Clean visualization in RViz2
 
-## Further Reading
-
-- **Books**:
-  - *Probabilistic Robotics* by Thrun, Burgard, Fox (sensor models, Kalman filtering)
-  - *Robotics: Modelling, Planning and Control* by Siciliano et al. (actuators, control)
-
-- **Papers**:
-  - "LIDAR-based 3D Object Perception" (survey of LIDAR processing)
-  - "A Comparison of Kalman Filtering Approaches for Sensor Fusion" (fusion techniques)
-
-- **Tutorials**:
-  - OpenCV documentation (camera calibration, image processing)
-  - ROS sensor integration tutorials (LIDAR, IMU, cameras)
-
-- **Datasheets**:
-  - Intel RealSense D435 (depth camera)
-  - Velodyne VLP-16 (3D LIDAR)
-  - Bosch BMI088 (IMU)
-  - Dynamixel servos (common in research robots)
+**Estimated Time**: 3 to 4 hours (spread over multiple days)
 
 ---
 
-**Previous**: [← Chapter 1.2: Robotics Fundamentals](chapter-1-2.md) | **Next**: [Chapter 1.4: ROS and Simulation →](chapter-1-4.md)
+## Additional Resources
 
-With sensors and actuators understood, we're ready to learn the tools roboticists use to build and test systems: ROS and simulation!
+- [URDF Tutorials](https://docs.ros.org/en/humble/Tutorials/Intermediate/URDF/URDF-Main.html) - Official ROS 2 tutorials
+- [Xacro Documentation](http://wiki.ros.org/xacro) - XML macros for URDF
+- [REP-103: Coordinate Frames](https://www.ros.org/reps/rep-0103.html) - Standard frames for mobile robots
+- [URDF Visual Studio Code Extension](https://marketplace.visualstudio.com/items?itemName=smilerobotics.urdf) - Syntax highlighting and validation
+- [Online URDF Validator](http://wiki.ros.org/urdf/Tutorials/Using%20urdf%20with%20robot_state_publisher) - Debug XML syntax
+
+---
+
+**Previous**: [← Chapter 1.2: Python Integration with rclpy](chapter-1 to 2.md) | **Next**: [Chapter 1.4: Package Development & Launch Files →](chapter-1 to 4.md)

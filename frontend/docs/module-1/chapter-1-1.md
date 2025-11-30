@@ -1,429 +1,473 @@
 ---
-sidebar_position: 1
-title: 1.1 Fundamentals of Artificial Intelligence
+sidebar_position: 2
+title: 1.1 ROS 2 Architecture & Core Concepts
 ---
 
-# Chapter 1.1: Fundamentals of Artificial Intelligence
+# Chapter 1.1: ROS 2 Architecture & Core Concepts
 
-Before diving into Physical AI and humanoid robotics, we must build a solid foundation in artificial intelligence itself. This chapter explores core AI concepts, learning paradigms, and the evolution from narrow to general intelligence—all essential for understanding how AI powers physical systems.
+ROS 2 is the middleware layer that enables humanoid robots to coordinate hundreds of sensors, motors, and algorithms in real-time. Understanding its architecture is fundamental to building autonomous Physical AI systems.
 
 ## Learning Outcomes
 
 By the end of this chapter, you will be able to:
 
-- **Define** artificial intelligence and distinguish between narrow and general AI
-- **Explain** the main learning paradigms: supervised, unsupervised, and reinforcement learning
-- **Understand** neural networks and deep learning fundamentals
-- **Identify** key challenges in AI: generalization, sample efficiency, and robustness
-- **Connect** traditional AI concepts to physical robotics applications
+- **Understand** the ROS 2 computational graph (nodes, topics, services, actions)
+- **Install** ROS 2 Humble on Ubuntu 22.04 and configure the environment
+- **Implement** basic publisher and subscriber nodes using command-line tools
+- **Debug** communication between nodes using ROS 2 introspection tools
+- **Explain** how DDS middleware enables distributed robot systems
 
-## What is Artificial Intelligence?
+## Prerequisites
 
-**Artificial Intelligence (AI)** is the field of computer science focused on creating systems that can perform tasks typically requiring human intelligence. These tasks include:
+- **Ubuntu 22.04 LTS** installed (native or VM with 4GB+ RAM)
+- **Basic Linux terminal skills**: cd, ls, sudo, nano/vim
+- **Python 3.10+** (comes with Ubuntu 22.04)
+- **Git** for version control
 
-- **Perception**: Understanding visual, auditory, or tactile information
-- **Reasoning**: Logical thinking, planning, and problem-solving
-- **Learning**: Improving performance through experience
-- **Language Understanding**: Processing and generating natural language
-- **Decision-Making**: Choosing optimal actions in complex situations
+## Part 1: ROS 2 Architecture Fundamentals
 
-### Intelligence Spectrum
+### The ROS 2 Computational Graph
 
-AI systems exist on a spectrum from narrow to general intelligence:
+ROS 2 applications consist of **nodes** communicating through three primary patterns:
 
-| Type | Description | Examples | Status |
-|------|-------------|----------|--------|
-| **Narrow AI (ANI)** | Specialized for specific tasks; no general understanding | Chess engines, image classifiers, chatbots | **Current state** |
-| **General AI (AGI)** | Human-level intelligence across diverse domains | Hypothetical systems that can learn any intellectual task | **Future goal** |
-| **Super AI (ASI)** | Surpasses human intelligence in all domains | Speculative; theoretical endpoint | **Far future** |
+| Communication Pattern | Use Case | Example |
+|-----------------------|----------|---------|
+| **Topics** (Pub/Sub) | Continuous sensor data streaming | Camera publishes images at 30 Hz |
+| **Services** (Request/Reply) | One-time computations | "What's the current battery level?" |
+| **Actions** (Goal-Based) | Long-running tasks with feedback | "Navigate to (x, y) and report progress" |
 
-Currently, all real-world AI—including robotics—falls under **Narrow AI**. Each system excels at specific tasks but lacks the flexible, transferable intelligence humans possess.
+### Key Concepts
 
-## Core AI Paradigms
+#### 1. Nodes
+A **node** is a single executable process performing a specific task.
 
-AI systems learn and make decisions using different approaches. The three foundational learning paradigms are:
+**Example nodes in a humanoid robot**:
+- \`/camera_driver\`: Publishes RGB images
+- \`/object_detector\`: Subscribes to images, publishes detected objects
+- \`/motion_planner\`: Plans joint trajectories to grasp objects
+- \`/joint_controller\`: Commands motors based on planned trajectories
 
-### 1. Supervised Learning
+**Why multiple nodes?**
+- **Modularity**: Replace object_detector with a better model without touching other code
+- **Fault isolation**: If camera_driver crashes, planner keeps running
+- **Distributed processing**: Run camera_driver on Jetson, planner on workstation
 
-**Definition**: Learning from labeled examples where the correct output is provided.
+#### 2. Topics (Publish/Subscribe)
+**Topics** are named buses where nodes publish and subscribe to messages.
 
-**How it works**:
-1. Provide training data: input-output pairs (X, Y)
-2. Algorithm learns a function f(X) → Y
-3. Minimize prediction error on training data
-4. Generalize to new, unseen inputs
+**Key Properties**:
+- **Many-to-many**: Multiple publishers and subscribers per topic
+- **Asynchronous**: Publishers don't wait for subscribers
+- **Typed**: Each topic has a message type (e.g., \`sensor_msgs/Image\`)
 
-**Example - Image Classification**:
-```python
-# Training data: images of robots with labels
-# Input (X): Image of robot
-# Output (Y): Category label ("humanoid", "wheeled", "quadruped")
-
-# Supervised learning algorithm learns:
-# f(image) → category
-
-# After training, can classify new robot images
+**Example**:
+```
+Topic: /camera/image_raw
+Type: sensor_msgs/msg/Image
+Publishers: /camera_driver
+Subscribers: /object_detector, /face_recognizer, /slam_node
 ```
 
-**Robotics Applications**:
-- **Object Recognition**: Identifying tools, obstacles, or target objects
-- **Pose Estimation**: Determining robot's position from sensor data
-- **Grasp Success Prediction**: Estimating if a grasp will succeed
+#### 3. Services (Request/Reply)
+**Services** provide synchronous request/reply interactions.
 
-**Limitations**:
-- Requires large labeled datasets (expensive to create)
-- Doesn't handle novel situations well
-- Limited to problems with clear input-output relationships
-
-### 2. Unsupervised Learning
-
-**Definition**: Finding patterns in data **without labels** or explicit guidance.
-
-**How it works**:
-1. Provide unlabeled data (only X, no Y)
-2. Algorithm discovers structure, patterns, or groupings
-3. Common techniques: clustering, dimensionality reduction, anomaly detection
-
-**Example - Sensor Data Clustering**:
-```python
-# Robot collects sensor data during navigation
-# Algorithm clusters similar environments:
-# - Cluster 1: Indoor, flat surfaces
-# - Cluster 2: Outdoor, rough terrain
-# - Cluster 3: Staircases
-
-# Helps robot adapt behavior to environment type
+**Example**:
+```
+Service: /get_battery_level
+Type: std_srvs/srv/Trigger
+Server: /battery_monitor
+Clients: /mission_planner, /safety_monitor
 ```
 
-**Robotics Applications**:
-- **Environment Mapping**: Discovering spatial structure from sensor data
-- **Anomaly Detection**: Identifying unusual sensor readings (potential faults)
-- **Feature Learning**: Extracting useful representations from raw data
+**Use case**: Mission planner calls service before starting a task: "Do we have enough battery for this 5-minute navigation?"
 
-**Limitations**:
-- Patterns may not align with task objectives
-- Difficult to evaluate quality of learning
-- Requires domain knowledge to interpret results
+#### 4. Actions (Goal-Based)
+**Actions** are for long-running tasks requiring feedback and cancellation.
 
-### 3. Reinforcement Learning (RL)
-
-**Definition**: Learning through **trial and error** by interacting with an environment and receiving rewards or penalties.
-
-**How it works**:
-1. Agent takes actions in environment
-2. Environment returns new state and reward signal
-3. Agent learns policy (action strategy) to maximize cumulative reward
-4. Explores different actions to find optimal behavior
-
-**Key Concepts**:
-- **Agent**: The learning system (e.g., robot)
-- **Environment**: The world the agent interacts with
-- **State (s)**: Current situation
-- **Action (a)**: What the agent can do
-- **Reward (r)**: Feedback signal (positive or negative)
-- **Policy (π)**: Strategy mapping states to actions
-
-**Example - Robot Walking**:
-```python
-# Reinforcement Learning for Bipedal Walking
-
-# State: Joint angles, velocities, orientation
-# Actions: Motor torques for each joint
-# Reward:
-#   +1 for each forward step
-#   -10 for falling
-#   -0.1 for excessive energy use
-
-# Over time, robot learns stable, efficient walking policy
+**Example**:
+```
+Action: /navigate_to_pose
+Type: nav2_msgs/action/NavigateToPose
+Server: /nav2_controller
+Client: /mission_planner
 ```
 
-**Robotics Applications**:
-- **Locomotion**: Learning to walk, run, or navigate
-- **Manipulation**: Grasping and object handling
-- **Task Planning**: Multi-step decision-making
-- **Adaptive Control**: Adjusting to changing conditions
+**Workflow**:
+1. Client sends goal: "Navigate to (x=5.0, y=3.2)"
+2. Server sends feedback: "60% complete, ETA 12 seconds"
+3. Client can cancel if needed
+4. Server sends result: "Goal reached" or "Failed: obstacle"
 
-**Advantages for Robotics**:
-- No need for labeled training data
-- Can discover novel, creative solutions
-- Naturally handles sequential decision-making
+### DDS Middleware Layer
 
-**Limitations**:
-- Requires many trial-and-error attempts (sample inefficient)
-- Reward design is critical and challenging
-- Safety concerns during exploration (robots can break things!)
+ROS 2 uses **DDS (Data Distribution Service)** as its communication layer.
 
-## Neural Networks: The Foundation of Modern AI
+**Benefits for humanoid robots**:
+- **QoS (Quality of Service)**: Configure reliability/latency tradeoffs
+  - Camera images: "Best effort" (OK to drop frames for low latency)
+  - Safety commands: "Reliable" (never drop emergency stop messages)
+- **Discovery**: Nodes automatically find each other on the network
+- **Security**: Encrypt communication (critical for commercial robots)
+- **Multi-robot**: Multiple humanoids share data on the same network
 
-**Neural networks** are computational models inspired by biological brains, composed of interconnected "neurons" that process information.
+## Part 2: Hands-On Tutorial
 
-### Basic Structure
+### Project: Install ROS 2 and Communicate Between Nodes
 
-```
-Input Layer → Hidden Layers → Output Layer
+**Goal**: Install ROS 2 Humble, create publisher and subscriber nodes using CLI tools, and verify communication.
 
-Example: Robot Obstacle Detection
+**Tools**: Ubuntu 22.04, ROS 2 Humble
 
-Input: Camera pixels (RGB values)
-       ↓
-Hidden Layer 1: Edge detection
-       ↓
-Hidden Layer 2: Shape recognition
-       ↓
-Hidden Layer 3: Object classification
-       ↓
-Output: Probability of obstacle (0-1)
-```
+### Step 1: Install ROS 2 Humble
 
-### How Neurons Work
+```bash
+# Ensure UTF-8 locale
+locale  # check if UTF-8
+sudo apt update && sudo apt install locales
+sudo locale-gen en_US en_US.UTF-8
+sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
 
-Each artificial neuron:
-1. Receives inputs (x₁, x₂, ..., xₙ)
-2. Applies weights (w₁, w₂, ..., wₙ)
-3. Sums weighted inputs: z = w₁x₁ + w₂x₂ + ... + wₙxₙ + b (bias)
-4. Passes through activation function: y = f(z)
+# Add ROS 2 apt repository
+sudo apt install software-properties-common
+sudo add-apt-repository universe
 
-**Common Activation Functions**:
-- **ReLU** (Rectified Linear Unit): f(z) = max(0, z) — most common in deep learning
-- **Sigmoid**: f(z) = 1/(1 + e⁻ᶻ) — outputs between 0 and 1
-- **Tanh**: f(z) = (eᶻ - e⁻ᶻ)/(eᶻ + e⁻ᶻ) — outputs between -1 and 1
+sudo apt update && sudo apt install curl -y
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
 
-### Training Neural Networks
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
-**Backpropagation Algorithm**:
-1. **Forward pass**: Input data flows through network to produce prediction
-2. **Compute loss**: Measure error between prediction and target
-3. **Backward pass**: Calculate gradients (how to change weights to reduce error)
-4. **Update weights**: Adjust using gradient descent: w ← w - α·∇L (α = learning rate)
-5. **Repeat** for many iterations until convergence
-
-### Deep Learning
-
-**Deep learning** uses neural networks with many layers (10s to 100s) to learn hierarchical representations:
-
-- **Layer 1**: Low-level features (edges, textures)
-- **Layer 2**: Mid-level features (shapes, parts)
-- **Layer 3**: High-level features (objects, concepts)
-
-**Why Deep Learning Revolutionized AI**:
-- Automatically learns features (no manual engineering needed)
-- Scales with data (more data → better performance)
-- Achieves human-level performance in many perception tasks
-
-**Deep Learning Architectures for Robotics**:
-
-| Architecture | Use Case | Example Application |
-|--------------|----------|---------------------|
-| **Convolutional Neural Networks (CNNs)** | Image/video processing | Object detection, scene understanding |
-| **Recurrent Neural Networks (RNNs)** | Sequential data | Trajectory prediction, time-series analysis |
-| **Transformers** | Long-range dependencies | Language understanding, multi-modal reasoning |
-| **Graph Neural Networks (GNNs)** | Structured relationships | Robot morphology, scene graphs |
-
-## Key AI Challenges Relevant to Robotics
-
-### 1. Generalization
-
-**Problem**: AI systems often fail on examples slightly different from training data.
-
-**Robotics Impact**: A robot trained to grasp red cups may fail with blue cups or slightly different shapes.
-
-**Solutions**:
-- Data augmentation (vary training examples)
-- Domain randomization (train in diverse simulated environments)
-- Meta-learning (learning to learn across tasks)
-
-### 2. Sample Efficiency
-
-**Problem**: Deep learning requires massive datasets (millions of examples).
-
-**Robotics Impact**: Collecting real-world robot data is slow and expensive.
-
-**Solutions**:
-- Simulation-based training (sim-to-real transfer)
-- Transfer learning (use pre-trained models)
-- Few-shot learning (learn from few examples)
-
-### 3. Robustness
-
-**Problem**: AI systems can be fragile to noise, adversarial examples, or distribution shifts.
-
-**Robotics Impact**: Lighting changes, worn sensors, or novel obstacles can cause failures.
-
-**Solutions**:
-- Adversarial training
-- Uncertainty estimation
-- Sensor fusion (combine multiple data sources)
-
-### 4. Interpretability
-
-**Problem**: Deep neural networks are "black boxes" — hard to understand why they make decisions.
-
-**Robotics Impact**: Critical for safety, debugging, and trust in human-robot collaboration.
-
-**Solutions**:
-- Attention visualization
-- Explainable AI (XAI) methods
-- Hybrid approaches (symbolic + neural)
-
-## From Traditional AI to Physical AI
-
-Traditional AI focuses on digital tasks (classification, prediction, language), while **Physical AI** adds unique constraints:
-
-| Aspect | Traditional AI | Physical AI |
-|--------|----------------|-------------|
-| **Environment** | Digital, predictable | Physical, unpredictable |
-| **Feedback** | Instant, precise | Delayed, noisy |
-| **Safety** | Low stakes (software errors) | High stakes (hardware damage, human harm) |
-| **Embodiment** | None | Must respect physics, kinematics |
-| **Real-time** | Often offline processing | Must react in milliseconds |
-
-**Key Implications**:
-1. **Sim-to-Real Gap**: Models trained in simulation may fail on real robots due to unmodeled physics.
-2. **Safety Constraints**: Exploration must avoid dangerous actions.
-3. **Partial Observability**: Sensors provide incomplete, noisy information.
-4. **Multi-objective Optimization**: Must balance performance, energy, safety, wear.
-
-## Practical Example: AI-Powered Object Detection
-
-Let's see how AI enables a humanoid robot to detect objects in its environment.
-
-### Code Example (PyTorch + Pre-trained CNN)
-
-```python
-import torch
-import torchvision.transforms as transforms
-from torchvision.models import resnet50
-from PIL import Image
-
-# Load pre-trained ResNet50 model
-model = resnet50(pretrained=True)
-model.eval()  # Set to evaluation mode
-
-# Image preprocessing
-transform = transforms.Compose([
-    transforms.Resize(256),
-    transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                       std=[0.229, 0.224, 0.225])
-])
-
-def detect_object(image_path):
-    """
-    Detect object in image using pre-trained CNN.
-
-    Args:
-        image_path: Path to input image
-
-    Returns:
-        Predicted class label
-    """
-    # Load and preprocess image
-    image = Image.open(image_path)
-    input_tensor = transform(image).unsqueeze(0)  # Add batch dimension
-
-    # Forward pass
-    with torch.no_grad():
-        output = model(input_tensor)
-
-    # Get predicted class (highest probability)
-    probabilities = torch.nn.functional.softmax(output[0], dim=0)
-    predicted_class = torch.argmax(probabilities).item()
-    confidence = probabilities[predicted_class].item()
-
-    # Load ImageNet class labels
-    with open("imagenet_classes.txt") as f:
-        classes = [line.strip() for line in f.readlines()]
-
-    return classes[predicted_class], confidence
-
-# Example usage
-object_name, confidence = detect_object("robot_camera_view.jpg")
-print(f"Detected: {object_name} (confidence: {confidence:.2%})")
-
-# Output: Detected: coffee mug (confidence: 94.23%)
+# Install ROS 2 Humble Desktop (includes RViz2, demos, tutorials)
+sudo apt update
+sudo apt upgrade
+sudo apt install ros-humble-desktop
 ```
 
-**How This Connects to Robotics**:
-- Robot's camera captures image → `robot_camera_view.jpg`
-- CNN processes image → identifies object
-- Decision system uses detection → "pick up the coffee mug"
+**Installation time**: ~10 to 15 minutes (downloads ~1GB)
+
+### Step 2: Configure Environment
+
+```bash
+# Source ROS 2 setup file (add to ~/.bashrc to make permanent)
+source /opt/ros/humble/setup.bash
+
+# Verify installation
+ros2 --help
+
+# You should see:
+# usage: ros2 [-h] [--use-python-default-buffering] Call \`ros2 <command> -h\` for more detailed usage. ...
+```
+
+**Add to \`~/.bashrc\` for automatic sourcing**:
+```bash
+echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+```
+
+### Step 3: Test with Example Nodes
+
+**Terminal 1: Run a publisher (talker node)**:
+```bash
+ros2 run demo_nodes_cpp talker
+```
+
+**Expected Output**:
+```
+[INFO] [1698765432.123456789] [talker]: Publishing: 'Hello World: 1'
+[INFO] [1698765433.123456789] [talker]: Publishing: 'Hello World: 2'
+[INFO] [1698765434.123456789] [talker]: Publishing: 'Hello World: 3'
+```
+
+**Terminal 2: Run a subscriber (listener node)**:
+```bash
+ros2 run demo_nodes_py listener
+```
+
+**Expected Output**:
+```
+[INFO] [1698765434.234567890] [listener]: I heard: 'Hello World: 3'
+[INFO] [1698765435.234567890] [listener]: I heard: 'Hello World: 4'
+```
+
+**What's happening?**
+1. \`talker\` publishes messages to topic \`/chatter\` every 1 second
+2. \`listener\` subscribes to \`/chatter\` and prints received messages
+3. DDS middleware automatically discovers nodes and routes messages
+
+### Step 4: Introspection Tools
+
+**List all active nodes**:
+```bash
+ros2 node list
+```
+Output:
+```
+/talker
+/listener
+```
+
+**List all topics**:
+```bash
+ros2 topic list
+```
+Output:
+```
+/chatter
+/parameter_events
+/rosout
+```
+
+**Get topic info**:
+```bash
+ros2 topic info /chatter
+```
+Output:
+```
+Type: std_msgs/msg/String
+Publisher count: 1
+Subscription count: 1
+```
+
+**Echo topic messages** (see live data):
+```bash
+ros2 topic echo /chatter
+```
+Output:
+```
+data: 'Hello World: 10'
+---
+data: 'Hello World: 11'
+---
+```
+
+**Check message type definition**:
+```bash
+ros2 interface show std_msgs/msg/String
+```
+Output:
+```
+# This was originally provided as an example message.
+# It is deprecated as of Foxy
+# It is recommended to create your own semantically meaningful message.
+# However if you would like to continue using this please use the equivalent in example_msgs.
+
+string data
+```
+
+**Publish from command line** (no code needed):
+```bash
+ros2 topic pub /chatter std_msgs/msg/String "data: 'Hello from terminal'"
+```
+
+### Step 5: Visualize with RQt Graph
+
+RQt provides a graphical view of the ROS 2 computational graph.
+
+```bash
+# Install rqt (if not already installed)
+sudo apt install ros-humble-rqt*
+
+# Run rqt_graph
+rqt_graph
+```
+
+**What you'll see**:
+- Nodes as ovals (\`/talker\`, \`/listener\`)
+- Topics as rectangles (\`/chatter\`)
+- Arrows showing publish/subscribe relationships
+
+### Step 6: Debugging Common Issues
+
+#### Issue 1: "ros2: command not found"
+**Cause**: ROS 2 setup file not sourced
+
+**Solution**:
+```bash
+source /opt/ros/humble/setup.bash
+# Or add to ~/.bashrc:
+echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+```
+
+#### Issue 2: "Package 'demo_nodes_cpp' not found"
+**Cause**: Desktop install missing or incomplete
+
+**Solution**:
+```bash
+sudo apt install ros-humble-demo-nodes-cpp ros-humble-demo-nodes-py
+```
+
+#### Issue 3: Nodes running but not communicating
+**Cause**: DDS discovery issues or different ROS_DOMAIN_ID
+
+**Solution**:
+```bash
+# Check domain ID (default is 0)
+echo $ROS_DOMAIN_ID
+
+# If using multiple ROS 2 systems, set unique domain IDs
+export ROS_DOMAIN_ID=42  # Use same ID for all nodes that should communicate
+```
+
+#### Issue 4: "Unable to initialize transports" error
+**Cause**: Firewall blocking DDS multicast
+
+**Solution**:
+```bash
+# Disable firewall (temporary, for development only)
+sudo ufw disable
+
+# Or add rule to allow ROS 2 traffic
+sudo ufw allow from 224.0.0.0/4
+```
+
+## Part 3: Advanced Topics (Optional)
+
+### Quality of Service (QoS) Profiles
+
+ROS 2 allows fine-grained control over message delivery guarantees.
+
+**Common QoS profiles**:
+- **Reliable**: Guaranteed delivery (for safety commands)
+- **Best Effort**: Drop old messages (for sensor streams)
+- **Transient Local**: Late joiners receive last message
+- **Volatile**: Late joiners get nothing
+
+**Example use case**:
+- Camera publishes at 30 Hz with "Best Effort" (low latency, OK to drop frames)
+- Emergency stop uses "Reliable" (never drop critical commands)
+
+**Set QoS via CLI**:
+```bash
+ros2 topic pub --qos-reliability reliable /emergency_stop std_msgs/msg/Bool "data: true"
+```
+
+### ROS 2 vs. ROS 1 Architecture
+
+| Aspect | ROS 1 | ROS 2 |
+|--------|-------|-------|
+| **Master** | Required (single point of failure) | None (peer-to-peer discovery) |
+| **Middleware** | Custom (TCP/UDP) | DDS (industry standard) |
+| **Language Support** | C++, Python | C++, Python, Rust, Ada, more |
+| **Real-time** | Not supported | Real-time capable with DDS-RT |
+| **Security** | None | DDS encryption & authentication |
+
+## Integration with Capstone
+
+**How this chapter contributes** to the Week 13 autonomous humanoid:
+
+- **Node architecture**: The capstone will have 10+ nodes:
+  - \`/whisper_listener\` (voice input)
+  - \`/llm_planner\` (task decomposition)
+  - \`/nav2_controller\` (navigation)
+  - \`/object_detector\` (vision)
+  - \`/gripper_controller\` (manipulation)
+  
+- **Topic communication**: Nodes exchange data asynchronously:
+  - Voice → LLM → Navigation goals → Motor commands
+  
+- **Service calls**: "Get current robot pose", "Check if object reachable"
+  
+- **Actions**: Long-running navigation and manipulation tasks with feedback
+
+Understanding topics, services, and actions now is essential for orchestrating complex multi-node systems.
+
+## Summary
+
+You learned:
+- ✅ ROS 2 uses **nodes** communicating via **topics**, **services**, and **actions**
+- ✅ **DDS middleware** enables distributed, real-time robot systems
+- ✅ Installed **ROS 2 Humble** on Ubuntu 22.04
+- ✅ Ran example nodes and verified communication with introspection tools
+- ✅ Debugged common installation and communication issues
+
+**Next steps**: In Chapter 1.2, you'll write custom publisher/subscriber nodes in Python using \`rclpy\`.
 
 ---
 
 ## Exercises
 
-### 1. Conceptual Understanding
-For each learning paradigm, provide a robotics example **not mentioned in the chapter**:
-- Supervised learning: ___
-- Unsupervised learning: ___
-- Reinforcement learning: ___
+### Exercise 1: Multi-Publisher Experiment (Required)
 
-### 2. Neural Network Math
-Given a simple neuron with:
-- Inputs: x₁ = 0.5, x₂ = -0.3
-- Weights: w₁ = 1.2, w₂ = 0.8
-- Bias: b = -0.1
-- Activation: ReLU
+**Objective**: Understand many-to-many topic communication.
 
-Calculate the neuron's output step-by-step.
+**Tasks**:
+1. Open **three terminals**
+2. Terminal 1: Run \`ros2 run demo_nodes_cpp talker\`
+3. Terminal 2: Run \`ros2 run demo_nodes_py talker\` (yes, same topic!)
+4. Terminal 3: Run \`ros2 topic echo /chatter\`
 
-### 3. Design Challenge
-You're building a humanoid robot for warehouse sorting. Design an AI system:
-- **Task**: Identify and sort packages by size (small, medium, large)
-- **Sensors**: RGB camera
-- **Decide**:
-  - Which learning paradigm would you use? (justify)
-  - What would be your input and output?
-  - What challenges might you face?
+**Questions**:
+- How many messages per second do you see?
+- Run \`ros2 topic info /chatter\` — how many publishers are listed?
+- Stop one talker — what happens to the message rate?
 
-### 4. Code Exploration
-Modify the object detection code to:
-1. Return the **top 3** predicted classes instead of just one
-2. Add a confidence threshold (only return if confidence > 0.8)
-3. Save the prediction results to a log file
+**Acceptance Criteria**:
+- [ ] Successfully ran multiple publishers on same topic
+- [ ] Observed interleaved messages from both publishers
+- [ ] Explained behavior in 2 to 3 sentences
 
-### 5. Critical Thinking
-Explain why reinforcement learning is challenging for real-world robotics compared to simulated environments like video games. List at least 3 specific challenges.
+**Estimated Time**: 15 minutes
 
-### 6. Research Task
-Find a recent paper (2023-2024) on AI for robotics. Summarize:
-- The main AI technique used (supervised, RL, etc.)
-- The robotics application
-- Key results or innovations
+### Exercise 2: Custom Topic Publishing (Required)
+
+**Objective**: Publish data to a topic using the command line.
+
+**Tasks**:
+1. Create a new topic \`/robot/joint_position\` of type \`std_msgs/msg/Float64\`
+2. Publish a value (e.g., 1.57 radians for 90 degrees)
+3. Echo the topic in another terminal to verify
+
+**Commands**:
+```bash
+# Terminal 1: Publish
+ros2 topic pub /robot/joint_position std_msgs/msg/Float64 "data: 1.57" --rate 1
+
+# Terminal 2: Echo
+ros2 topic echo /robot/joint_position
+```
+
+**Acceptance Criteria**:
+- [ ] Topic publishes at 1 Hz
+- [ ] Echo shows correct value
+- [ ] Explained what \`--rate 1\` does
+
+**Estimated Time**: 20 minutes
+
+### Exercise 3: Investigate Message Types (Challenge)
+
+**Objective**: Explore ROS 2 message types for sensors.
+
+**Tasks**:
+1. Find the message type for **IMU data** (Inertial Measurement Unit)
+2. Display the message definition
+3. Identify which fields store **angular velocity** and **linear acceleration**
+
+**Hints**:
+```bash
+# List all message types
+ros2 interface list | grep Imu
+
+# Show message definition
+ros2 interface show sensor_msgs/msg/Imu
+```
+
+**Questions**:
+- What is the full message type name?
+- Which coordinate frame is the IMU data expressed in?
+- Why does the message have \`orientation_covariance\` fields?
+
+**Estimated Time**: 30 minutes
 
 ---
 
-## Key Takeaways
+## Additional Resources
 
-✅ **AI** is about creating systems that perform tasks requiring intelligence
-✅ **Three main paradigms**: Supervised (labeled data), Unsupervised (find patterns), Reinforcement (trial and error)
-✅ **Neural networks** process information through layers of weighted connections
-✅ **Deep learning** uses many layers to learn hierarchical features automatically
-✅ **Physical AI** faces unique challenges: real-time constraints, safety, sim-to-real gap
-✅ Modern robotics relies heavily on **deep learning for perception** and **RL for control**
-
----
-
-## Further Reading
-
-- **Books**:
-  - *Deep Learning* by Goodfellow, Bengio, and Courville (comprehensive DL textbook)
-  - *Reinforcement Learning: An Introduction* by Sutton and Barto (RL bible)
-  - *Artificial Intelligence: A Modern Approach* by Russell and Norvig (AI fundamentals)
-
-- **Online Courses**:
-  - Andrew Ng's Machine Learning (Coursera) — foundational course
-  - CS231n: Convolutional Neural Networks (Stanford) — computer vision
-  - Deep RL Bootcamp (UC Berkeley) — reinforcement learning
-
-- **Papers**:
-  - "ImageNet Classification with Deep Convolutional Neural Networks" (AlexNet, 2012)
-  - "Mastering the game of Go with deep neural networks" (AlphaGo, 2016)
-  - "Sim-to-Real: Learning Agile Locomotion For Quadruped Robots" (2018)
+- [ROS 2 Humble Documentation](https://docs.ros.org/en/humble/) - Official reference
+- [ROS 2 Concepts](https://docs.ros.org/en/humble/Concepts.html) - Detailed architecture guide
+- [DDS Specification](https://www.omg.org/spec/DDS/) - Underlying middleware protocol
+- [ROS 2 Design](https://design.ros2.org/) - Why ROS 2 was redesigned from ROS 1
+- [QoS Policies](https://docs.ros.org/en/humble/Concepts/About-Quality-of-Service-Settings.html) - Reliability and durability settings
 
 ---
 
-**Previous**: [← Introduction](../intro.md) | **Next**: [Chapter 1.2: Robotics Fundamentals →](chapter-1-2.md)
-
-Ready to connect AI theory to physical systems? The next chapter explores the mechanical and control foundations of robotics!
+**Next**: [Chapter 1.2: Python Integration with rclpy →](chapter-1 to 2.md)

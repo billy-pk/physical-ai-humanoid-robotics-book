@@ -1,263 +1,351 @@
 ---
 sidebar_position: 1
-title: Introduction to Physical AI and Humanoid Robotics
+title: Physical AI & Humanoid Robotics
 ---
 
-# Introduction to Physical AI and Humanoid Robotics
+# Physical AI & Humanoid Robotics
+## AI Systems in the Physical World
 
-Welcome to the comprehensive guide on Physical AI and Humanoid Robotics! This book will take you on a journey from foundational concepts to cutting-edge applications in one of the most exciting fields at the intersection of artificial intelligence, robotics, and human-machine interaction.
+Welcome to **Physical AI & Humanoid Robotics**—a comprehensive, hands-on course that bridges the gap between digital intelligence and physical embodiment. This course teaches you to design, simulate, and deploy humanoid robots capable of natural human interactions using industry-standard tools: **ROS 2**, **Gazebo**, **NVIDIA Isaac**, and **Vision-Language-Action** models.
+
+---
+
+## Why Physical AI Matters
+
+The future of AI extends beyond digital spaces into the physical world. Humanoid robots are poised to excel in our human-centered world because they:
+
+- **Share our physical form**: Can navigate stairs, open doors, use tools designed for humans
+- **Train with abundant data**: Learn from interacting in human environments
+- **Bridge digital and physical**: Connect computational intelligence with tangible outcomes
+- **Enable natural collaboration**: Work alongside humans in shared spaces
+
+This represents a significant transition from AI models confined to digital environments to **embodied intelligence** that operates in physical space.
+
+---
+
+## Course Overview
+
+**Focus**: Embodied Intelligence and Physical AI Systems
+**Theme**: From Digital Brain to Physical Body
+**Capstone**: Voice-controlled autonomous humanoid robot
+
+### What You'll Build
+
+By the end of this course, you will create an **Autonomous Humanoid** that can:
+1. Receive voice commands using **OpenAI Whisper**
+2. Plan actions using **LLM-based cognitive reasoning**
+3. Navigate environments avoiding obstacles with **Nav2**
+4. Identify objects using **computer vision**
+5. Manipulate objects with **humanoid hands**
+
+All in a photorealistic simulation environment powered by **NVIDIA Isaac Sim**.
+
+---
+
+## Course Structure (5 Modules)
+
+This course is structured around the complete Physical AI stack, from foundational concepts to high-level cognitive planning:
+
+### **Module 0: Foundations of Physical AI**
+**Focus**: Understanding embodied intelligence and Physical AI principles
+**Duration**: Weeks 1 to 2 (2 weeks)
+
+Build the conceptual foundation for Physical AI and humanoid robotics:
+
+- **Embodied Intelligence**: What makes Physical AI different from digital AI
+- **Humanoid Robotics Landscape**: Key players, current capabilities, and applications
+- **Sensor Systems**: Vision, LiDAR, IMU, force/torque sensors
+- **Basic Simulation**: Hands-on experience with PyBullet
+
+**Project**: Build a simple simulated robot demonstrating physics understanding
+
+**→ [Module 0: Foundations of Physical AI](module-0/intro.md)**
+
+---
+
+### **Module 1: The Robotic Nervous System (ROS 2)**
+**Focus**: Middleware for robot control
+**Duration**: Weeks 3 to 5 (3 weeks)
+
+Master the Robot Operating System 2 (ROS 2)—the industry-standard middleware for robotics:
+
+- **ROS 2 Architecture**: Nodes, topics, services, and actions
+- **Python Integration**: Building controllers with `rclpy`
+- **Robot Description**: URDF (Unified Robot Description Format) for humanoids
+- **Package Development**: Creating, building, and deploying ROS 2 packages
+- **Parameter Management**: Launch files and runtime configuration
+
+**Project**: Build a ROS 2 package that controls a simulated humanoid's joints
+
+---
+
+### **Module 2: The Digital Twin (Gazebo & Unity)**
+**Focus**: Physics simulation and environment building
+**Duration**: Weeks 6 to 7 (2 weeks)
+
+Create photorealistic simulation environments where your robots train before deployment:
+
+- **Gazebo Fundamentals**: Open-source robot simulator
+- **Physics Simulation**: Gravity, collisions, friction, rigid body dynamics
+- **Sensor Simulation**: LiDAR, depth cameras, IMUs, force/torque sensors
+- **Unity Integration**: High-fidelity rendering and human-robot interaction
+- **URDF/SDF**: Robot and world description formats
+
+**Project**: Simulate a humanoid robot in Gazebo with sensor feedback
+
+---
+
+### **Module 3: The AI-Robot Brain (NVIDIA Isaac™)**
+**Focus**: Advanced perception, navigation, and training
+**Duration**: Weeks 8 to 10 (3 weeks)
+
+Harness NVIDIA's cutting-edge platform for AI-powered robotics:
+
+- **Isaac Sim**: Photorealistic simulation with Omniverse
+- **Synthetic Data Generation**: Train vision models with unlimited labeled data
+- **Isaac ROS**: Hardware-accelerated VSLAM (Visual SLAM) and perception
+- **Nav2 Navigation**: Path planning for bipedal humanoid movement
+- **Sim-to-Real Transfer**: Deploy simulation-trained models to real hardware
+
+**Project**: Implement VSLAM-based navigation in Isaac Sim
+
+---
+
+### **Module 4: Vision-Language-Action (VLA)**
+**Focus**: The convergence of LLMs and Robotics
+**Duration**: Weeks 11 to 13 (3 weeks)
+
+Integrate natural language understanding with robotic action:
+
+- **Voice-to-Action**: OpenAI Whisper for voice command recognition
+- **Cognitive Planning**: LLMs translate natural language into ROS 2 action sequences
+- **Multi-Modal Integration**: Speech, gesture, and vision
+- **Task Decomposition**: Breaking down complex commands ("Clean the room")
+- **Capstone Project**: Autonomous humanoid with conversational AI
+
+**Capstone**: A simulated humanoid that receives voice commands, plans paths, navigates obstacles, identifies objects, and manipulates them
+
+---
 
 ## Learning Outcomes
 
-By the end of this introduction, you will be able to:
+By completing this course, you will be able to:
 
-- **Define** Physical AI and explain how it differs from traditional AI systems
-- **Identify** the key components and challenges in humanoid robotics
-- **Understand** the historical context and evolution of embodied AI
-- **Recognize** real-world applications and future potential of physical AI systems
-- **Articulate** the interdisciplinary nature of the field and required skill sets
+✅ **Understand** Physical AI principles and embodied intelligence
+✅ **Master** ROS 2 (Robot Operating System) for robotic control
+✅ **Simulate** robots with Gazebo, Unity, and NVIDIA Isaac
+✅ **Develop** AI-powered perception and navigation systems
+✅ **Design** humanoid robots for natural human interactions
+✅ **Integrate** GPT models for conversational robotics
+✅ **Deploy** sim-to-real transfer workflows
+✅ **Build** complete Physical AI systems from scratch
 
-## What is Physical AI?
+---
 
-**Physical AI** refers to artificial intelligence systems that have a physical embodiment and interact directly with the real world through sensors, actuators, and mechanical components. Unlike purely digital AI that operates in virtual environments (like chatbots or recommendation systems), Physical AI must navigate the complexities, uncertainties, and constraints of the physical world.
+## Weekly Breakdown (13 Weeks)
 
-### Key Characteristics of Physical AI
+### **Weeks 1 to 2: Foundations of Physical AI (Module 0)**
+- Introduction to embodied intelligence
+- From digital AI to robots that understand physical laws
+- Overview of humanoid robotics landscape
+- Sensor systems: LiDAR, cameras, IMUs, force/torque sensors
+- **Tools**: PyBullet, basic robotics simulators
+- **Assessment**: Basic robot simulation project
+- **→ [Module 0: Foundations of Physical AI](module-0/intro.md)**
 
-1. **Embodiment**: The AI is housed in a physical platform (robot, vehicle, drone, etc.)
-2. **Perception**: Uses sensors (cameras, LIDAR, tactile sensors) to gather information about the environment
-3. **Action**: Employs actuators (motors, servos, hydraulics) to manipulate and navigate the world
-4. **Real-time Processing**: Must make decisions and react within tight time constraints
-5. **Physical Constraints**: Subject to laws of physics, energy limitations, and mechanical wear
+### **Weeks 3 to 5: ROS 2 Fundamentals (Module 1)**
+- ROS 2 architecture and core concepts
+- Nodes, topics, services, and actions
+- Building ROS 2 packages with Python (`rclpy`)
+- Launch files and parameter management
+- **Assessment**: ROS 2 package development project
 
-### Why Physical AI Matters
+### **Weeks 6 to 7: Robot Simulation (Module 2)**
+- Gazebo simulation environment setup
+- URDF and SDF robot description formats
+- Physics simulation and sensor simulation
+- Unity for high-fidelity rendering
+- **Assessment**: Gazebo simulation implementation
 
-Physical AI represents a paradigm shift in how AI systems can impact our world:
+### **Weeks 8 to 10: NVIDIA Isaac Platform (Module 3)**
+- NVIDIA Isaac SDK and Isaac Sim
+- AI-powered perception and manipulation
+- Reinforcement learning for robot control
+- Sim-to-real transfer techniques
+- **Assessment**: Isaac-based perception pipeline
 
-- **Direct World Interaction**: Can perform physical tasks that purely digital systems cannot
-- **Adaptability**: Must handle unpredictable, unstructured environments
-- **Safety-Critical Applications**: Healthcare, manufacturing, disaster response, elder care
-- **Human Collaboration**: Works alongside humans in shared spaces
-- **Bridging Digital and Physical**: Connects computational intelligence with tangible outcomes
+### **Weeks 11 to 12: VLA and HRI (Module 4)**
+- Integrating GPT models for conversational AI
+- Speech recognition and natural language understanding
+- Multi-modal interaction: speech, gesture, vision
+- Humanoid kinematics, dynamics, and balance control
 
-## Humanoid Robotics: AI in Human Form
+### **Week 13: Capstone Project**
+- **Autonomous Humanoid**: Voice command → Planning → Navigation → Manipulation
+- Integration of all course modules
+- **Assessment**: Complete Physical AI system demonstration
 
-**Humanoid robots** are a subset of Physical AI systems designed to mimic human appearance and capabilities. They typically feature:
-
-- Bipedal locomotion (two-legged walking)
-- Anthropomorphic structure (head, torso, arms, hands)
-- Human-like sensory systems (vision, hearing, touch)
-- Dexterous manipulation capabilities
-
-### Why Build Humanoid Robots?
-
-The humanoid form factor offers several advantages:
-
-1. **Human-Designed Environments**: Our world is built for humans—stairs, doorknobs, tools, vehicles. Humanoid robots can navigate and use these without infrastructure changes.
-
-2. **Intuitive Interaction**: Humans naturally understand and empathize with humanoid forms, making collaboration more seamless.
-
-3. **Versatility**: A general-purpose humanoid can potentially perform any task a human can, from cooking to construction.
-
-4. **Research Platform**: Understanding how to build humanoid intelligence helps us understand human cognition and biomechanics.
-
-### Challenges in Humanoid Robotics
-
-Building capable humanoid robots involves solving numerous technical challenges:
-
-| Challenge | Description | Current State |
-|-----------|-------------|---------------|
-| **Balance & Locomotion** | Maintaining stability while walking, running, or navigating uneven terrain | Advanced (e.g., Boston Dynamics Atlas) |
-| **Manipulation** | Dexterous handling of diverse objects with appropriate force | Developing (improving but limited) |
-| **Perception** | Understanding 3D environments, objects, and human intentions | Rapidly improving with deep learning |
-| **Power & Energy** | Operating for extended periods without recharging | Major limitation (1-2 hours typical) |
-| **Durability** | Withstanding falls, collisions, and continuous operation | Ongoing research |
-| **Cost** | Making robots economically viable for widespread deployment | Very expensive (>$100K+ for research robots) |
-
-## Historical Context
-
-The dream of creating humanoid machines dates back centuries, but practical progress accelerated in recent decades:
-
-### Timeline of Key Milestones
-
-**1960s-1970s: Early Foundations**
-- WABOT-1 (1973): First full-scale humanoid robot at Waseda University
-
-**1980s-1990s: Research Prototypes**
-- Honda P-series (1986-1993): Early walking robots leading to ASIMO
-- MIT Cog Project (1993): Cognitive humanoid research platform
-
-**2000s: Commercial Ambitions**
-- ASIMO (2000): Honda's iconic humanoid demonstrating advanced mobility
-- QRIO, HOAP: Sony and Fujitsu humanoid platforms
-- NAO (2006): Aldebaran's programmable humanoid for education/research
-
-**2010s: Deep Learning Revolution**
-- Integration of modern AI (computer vision, NLP) with robotics
-- Boston Dynamics Atlas (2013): Advanced dynamic locomotion
-- Softbank Pepper (2014): Social interaction focus
-
-**2020s: Foundation Models & Generalization**
-- Tesla Optimus (2022): Mass-production humanoid ambitions
-- Figure 01, Sanctuary AI Phoenix: AI-first humanoid startups
-- Integration of large language models (LLMs) and vision-language models (VLMs)
-- Sim-to-real transfer with reinforcement learning
-
-## The Modern Physical AI Stack
-
-Today's humanoid robots integrate multiple AI technologies:
-
-```
-┌─────────────────────────────────────────┐
-│       High-Level Reasoning              │
-│  (LLMs, Task Planning, World Models)    │
-└─────────────┬───────────────────────────┘
-              │
-┌─────────────▼───────────────────────────┐
-│       Perception & Understanding        │
-│  (Vision Models, SLAM, Object Detection)│
-└─────────────┬───────────────────────────┘
-              │
-┌─────────────▼───────────────────────────┐
-│       Motion & Control                  │
-│  (Inverse Kinematics, MPC, RL Policies) │
-└─────────────┬───────────────────────────┘
-              │
-┌─────────────▼───────────────────────────┐
-│       Hardware & Actuation              │
-│  (Sensors, Motors, Power Systems)       │
-└─────────────────────────────────────────┘
-```
-
-## Real-World Applications
-
-Physical AI and humanoid robotics are being deployed across diverse domains:
-
-### Current Applications
-
-- **Manufacturing**: Assembly, quality inspection, material handling (e.g., BMW, Tesla factories)
-- **Warehousing**: Order fulfillment, inventory management (e.g., Amazon robotics)
-- **Healthcare**: Surgical assistance, rehabilitation, elder care support
-- **Hospitality**: Reception, guidance, food service in hotels and restaurants
-- **Research & Education**: Teaching platforms (NAO, TurtleBot)
-- **Entertainment**: Theme parks, exhibitions, promotional events
-
-### Emerging Applications
-
-- **Household Assistance**: Cooking, cleaning, organizing (long-term goal)
-- **Disaster Response**: Search and rescue in dangerous environments
-- **Space Exploration**: Mars rovers, lunar construction, satellite servicing
-- **Agriculture**: Harvesting, crop monitoring, livestock management
-- **Construction**: Bricklaying, welding, inspection in hazardous conditions
-
-## The Interdisciplinary Nature
-
-Success in Physical AI requires expertise across multiple domains:
-
-- **Mechanical Engineering**: Kinematics, dynamics, materials, actuator design
-- **Electrical Engineering**: Power systems, sensor integration, circuit design
-- **Computer Science**: Algorithms, software architecture, real-time systems
-- **Artificial Intelligence**: Machine learning, computer vision, reinforcement learning
-- **Control Theory**: Feedback systems, stability analysis, optimal control
-- **Cognitive Science**: Human perception, decision-making, learning mechanisms
-- **Human-Robot Interaction**: UX design, safety protocols, social robotics
-
-## Looking Ahead
-
-The field of Physical AI is at an inflection point. Recent breakthroughs in:
-
-- **Foundation Models**: Pre-trained AI that can generalize across tasks
-- **Sim-to-Real Transfer**: Training in simulation, deploying on real hardware
-- **Imitation Learning**: Learning from human demonstrations
-- **Multimodal AI**: Integrating vision, language, and action
-
-...are converging to create robots that are more capable, adaptable, and accessible than ever before.
-
-## How to Use This Book
-
-This book is structured into progressive modules:
-
-1. **Foundations** (Modules 1-2): Core concepts in AI, robotics, and mechanics
-2. **Perception** (Modules 3-4): Computer vision, sensor fusion, environment understanding
-3. **Action** (Modules 5-6): Motion planning, control, manipulation
-4. **Intelligence** (Modules 7-8): Learning, reasoning, human-robot interaction
-5. **Systems** (Modules 9-10): Integration, deployment, real-world applications
-
-Each chapter includes:
-- **Learning Objectives**: What you'll master
-- **Conceptual Explanations**: Deep dives into theory and principles
-- **Diagrams & Visualizations**: Clarifying complex ideas
-- **Code Examples**: Practical implementations (Python, ROS, simulation frameworks)
-- **Exercises**: Hands-on practice to reinforce learning
-- **Further Reading**: Resources to go deeper
+---
 
 ## Prerequisites
 
-To get the most from this book, you should have:
+To succeed in this course, you should have:
 
-- **Basic Programming**: Python proficiency (loops, functions, classes)
-- **Mathematics**: Linear algebra (vectors, matrices), calculus, probability
-- **Physics**: Newtonian mechanics, forces, kinematics
-- **Optional**: Prior exposure to machine learning, ROS (Robot Operating System)
+### **Required**
+- **Programming**: Python proficiency (functions, classes, async/await)
+- **Mathematics**: Linear algebra (vectors, matrices, transformations)
+- **Physics**: Basic Newtonian mechanics (forces, kinematics)
+- **AI Background**: Familiarity with ML concepts (neural networks, training, inference)
 
-Don't worry if you're not an expert—we'll build up from fundamentals!
+### **Recommended**
+- Prior exposure to ROS (version 1 or 2)
+- Experience with Linux/Ubuntu command line
+- Understanding of computer vision basics
+- Git version control
+
+### **Don't worry if you're not an expert**—we provide foundational coverage where needed!
+
+---
+
+## Hardware Requirements
+
+This course sits at the intersection of three computationally heavy domains: **Physics Simulation**, **Visual Perception**, and **Generative AI**. Your hardware setup determines what you can accomplish.
+
+### **Minimum Setup (Cloud-Based)**
+If you don't have high-end hardware, you can use cloud instances:
+- **Cloud GPU**: AWS g5.2xlarge (A10G GPU, 24GB VRAM) or equivalent
+- **Local Machine**: Any laptop with SSH access
+- **Cost**: ~$1.50/hour (~$200/quarter for 10 hours/week)
+
+### **Recommended Setup (Local Workstation)**
+For optimal learning experience:
+
+**GPU**: NVIDIA RTX 4070 Ti (12GB VRAM) or higher
+- Why: Isaac Sim requires RTX ray-tracing capabilities
+- Ideal: RTX 3090 or 4090 (24GB VRAM) for smooth sim-to-real training
+
+**CPU**: Intel Core i7 (13th Gen+) or AMD Ryzen 9
+- Why: Physics calculations are CPU-intensive
+
+**RAM**: 64 GB DDR5 (32 GB minimum)
+- Why: Complex scene rendering in Isaac Sim
+
+**OS**: Ubuntu 22.04 LTS
+- Note: While Isaac Sim runs on Windows, ROS 2 is native to Linux
+
+### **Physical AI Edge Kit** (Optional, for real deployment)
+**The Brain**: NVIDIA Jetson Orin Nano (8GB) or Orin NX (16GB) - $249-$699
+**The Eyes**: Intel RealSense D435i depth camera - $349
+**The Ears**: ReSpeaker USB Mic Array - $69
+**Total**: ~$700
+
+This kit lets you deploy your trained models to real edge hardware and understand resource constraints.
+
+### **Robot Hardware** (Optional, shared lab equipment)
+- **Budget**: Hiwonder TonyPi Pro (~$600) - table-top humanoid
+- **Intermediate**: Robotis OP3 (~$12,000) - research humanoid
+- **Advanced**: Unitree G1 (~$16,000) or Go2 (~$3,000) - production-ready
+
+**Note**: Robot hardware is not required for completing the course. All projects can be completed in simulation.
+
+---
+
+## Software Stack
+
+### **Core Tools** (Required)
+- **ROS 2 Humble** or Iron (Ubuntu 22.04)
+- **Gazebo Classic** or Gazebo Fortress
+- **NVIDIA Isaac Sim** (Omniverse)
+- **Python 3.10+** with pip/conda
+
+### **AI/ML Libraries**
+- **PyTorch** or TensorFlow (deep learning)
+- **OpenCV** (computer vision)
+- **OpenAI API** (Whisper, GPT models)
+- **LangChain** (LLM orchestration)
+
+### **Development Tools**
+- **VS Code** with ROS extensions
+- **Git/GitHub** for version control
+- **Docker** (optional, for containerized deployment)
+- **RViz2** (ROS visualization)
+
+---
+
+## Assessments
+
+### **1. ROS 2 Package Development (20%)**
+Build a ROS 2 package that controls a simulated robot arm or mobile base
+
+### **2. Gazebo Simulation Implementation (20%)**
+Create a custom robot URDF and simulate it in Gazebo with sensor integration
+
+### **3. Isaac Perception Pipeline (20%)**
+Implement VSLAM and object detection using Isaac ROS
+
+### **4. Capstone: Autonomous Humanoid (40%)**
+Complete Physical AI system:
+- Voice command recognition
+- LLM-based task planning
+- Navigation with obstacle avoidance
+- Object manipulation
+
+**Demo**: Record a video showing the humanoid executing a complex command like "Find the red ball and place it on the table"
+
+---
 
 ## Getting Help
 
-Throughout your learning journey, use the **embedded chatbot** (bottom-right corner) to:
-- Ask questions about any chapter content
-- Get clarification on complex topics
-- Explore related concepts in more depth
+### **AI Book Assistant** (Bottom-Right Corner)
+Our embedded chatbot is powered by this book's content. Ask it:
+- "How do I create a ROS 2 node in Python?"
+- "What's the difference between Gazebo and Isaac Sim?"
+- "Explain URDF joint types"
 
-The chatbot is powered by the book's content and can provide contextual, accurate answers.
-
----
-
-## Exercises
-
-### 1. Reflection Exercise
-Write a 200-word reflection on: *Why is the physical embodiment of AI fundamentally different from traditional software-based AI?* Consider constraints, opportunities, and challenges.
-
-### 2. Research Task
-Find three recent news articles (within the last year) about humanoid robots or Physical AI applications. For each:
-- Summarize the application domain
-- Identify which technical challenges were addressed
-- Note what limitations remain
-
-### 3. Comparative Analysis
-Compare two humanoid robots from different eras (e.g., ASIMO from 2000 vs. Tesla Optimus from 2023). Create a table comparing:
-- Capabilities (walking, manipulation, perception)
-- AI technologies used
-- Intended applications
-- Cost (if available)
-
-### 4. Thought Experiment
-Imagine you're designing a humanoid robot for a specific task (choose: elderly care, warehouse work, or disaster rescue). List:
-- Top 5 required capabilities
-- Main technical challenges
-- Sensors and actuators needed
-- Safety considerations
-
-### 5. Code Exploration (Optional)
-If you have Python installed, explore a simple robotics simulation:
-```python
-# Install: pip install pybullet
-import pybullet as p
-import pybullet_data
-
-# Start simulation
-p.connect(p.GUI)
-p.setAdditionalSearchPath(pybullet_data.getDataPath())
-plane = p.loadURDF("plane.urdf")
-robot = p.loadURDF("humanoid/nao.urdf", [0, 0, 0.5])
-
-# Run simulation
-for _ in range(10000):
-    p.stepSimulation()
-```
-Observe the robot's default behavior and explore the documentation.
+### **Additional Resources**
+- [ROS 2 Documentation](https://docs.ros.org/en/humble/)
+- [NVIDIA Isaac Sim Docs](https://docs.omniverse.nvidia.com/isaacsim/latest/index.html)
+- [Gazebo Tutorials](https://gazebosim.org/docs)
 
 ---
 
-**Next Chapter**: [Module 1: Foundations of Physical AI →](module-1/chapter-1-1.md)
+## What Makes This Course Different
 
-Ready to dive deeper? Let's start building your expertise in this transformative field!
+### **Industry-Aligned**
+We use the same tools as Boston Dynamics, Tesla, and NVIDIA:
+- ROS 2 (used by 90%+ of robotics companies)
+- Isaac Sim (NVIDIA's production-grade simulator)
+- Jetson edge AI platform (deployed in thousands of robots)
+
+### **Hands-On First**
+- Every concept includes a coding tutorial
+- Build real projects, not toy examples
+- Simulation-to-reality pipeline
+- Capstone project showcases your skills
+
+### **Cutting-Edge**
+- Vision-Language-Action (VLA) models (2023 to 2024)
+- LLM integration for cognitive planning
+- Synthetic data generation workflows
+- Multi-modal human-robot interaction
+
+---
+
+## Success Stories: What You'll Build
+
+### **Week 5**: A ROS 2 node that makes a robot arm wave
+### **Week 7**: A simulated humanoid walking in Gazebo
+### **Week 10**: A robot navigating a warehouse using VSLAM
+### **Week 13**: A voice-controlled humanoid that cleans a room
+
+---
+
+## Ready to Begin?
+
+This is a technically demanding course. You'll face challenges with simulation stability, hardware drivers, and complex AI pipelines. But by the end, you'll have built a complete Physical AI system—a skill set that's in high demand as robotics companies race to deploy humanoid robots.
+
+**Let's build the future of embodied intelligence, together.**
+
+---
+
+**Next**: [Module 0: Foundations of Physical AI →](module-0/intro.md) | [Module 1: The Robotic Nervous System (ROS 2) →](module-1/intro.md)

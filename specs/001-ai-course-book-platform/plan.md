@@ -1,6 +1,6 @@
 # Implementation Plan: AI-Course-Book Platform
 
-**Branch**: `001-ai-course-book-platform` | **Date**: 2025-11-28 | **Spec**: [spec.md](spec.md)
+**Branch**: `001-ai-course-book-platform` | **Date**: 2025-01-27 | **Spec**: [spec.md](spec.md)
 **Input**: Feature specification from `/specs/001-ai-course-book-platform/spec.md`
 
 **Note**: This template is filled in by the `/sp.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
@@ -11,29 +11,15 @@ Build a documentation platform hosting AI-generated book content about Physical 
 
 ## Technical Context
 
-**Language/Version**:
-- Backend: Python 3.12
-- Frontend: JavaScript/TypeScript (Node.js LTS)
+**Language/Version**: Python 3.12 (Backend), JavaScript/TypeScript/Node.js LTS (Frontend)
 
-**Primary Dependencies**:
-- Backend: FastAPI, OpenAI Agents SDK (or ChatKit), Qdrant Client, Neon Postgres client, uv (dependency management), ruff (linting/formatting), pytest
-- Frontend: Docusaurus, React, OpenAI ChatKit Web SDK, TypeScript, ESLint, Prettier, Jest, React Testing Library
+**Primary Dependencies**: FastAPI, OpenAI Agents SDK, Qdrant Client, Neon Postgres, Docusaurus, React, TypeScript, uv, ruff, pytest, Jest, React Testing Library
 
-**Storage**:
-- Vector Database: Qdrant Cloud (Free Tier)
-- Metadata/Runtime DB: Neon Serverless Postgres (Free Tier)
-- Content: Static Markdown files in Git repository
-- Embeddings: OpenAI text-embedding-3-large
+**Storage**: Qdrant Cloud (vector database), Neon Serverless Postgres (metadata), Static Markdown files (content), OpenAI text-embedding-3-large (embeddings)
 
-**Testing**:
-- Backend: pytest with 70% minimum coverage
-- Frontend: Jest + React Testing Library
-- RAG Evaluation: Precision@k, Context recall metrics
+**Testing**: pytest (backend, 70% coverage), Jest + React Testing Library (frontend), Precision@k and Context recall (RAG evaluation)
 
-**Target Platform**:
-- Frontend: GitHub Pages (static hosting)
-- Backend: Render.com (cloud hosting)
-- Browsers: Modern browsers (Chrome, Firefox, Safari, Edge) with JavaScript enabled
+**Target Platform**: GitHub Pages (frontend), Render.com (backend), Modern browsers (Chrome, Firefox, Safari, Edge)
 
 **Project Type**: Web application (frontend + backend)
 
@@ -75,12 +61,13 @@ Build a documentation platform hosting AI-generated book content about Physical 
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+specs/001-ai-course-book-platform/
 ├── plan.md              # This file (/sp.plan command output)
 ├── research.md          # Phase 0 output (/sp.plan command)
 ├── data-model.md        # Phase 1 output (/sp.plan command)
 ├── quickstart.md        # Phase 1 output (/sp.plan command)
 ├── contracts/           # Phase 1 output (/sp.plan command)
+│   └── api-spec.yaml    # OpenAPI specification
 └── tasks.md             # Phase 2 output (/sp.tasks command - NOT created by /sp.plan)
 ```
 
@@ -105,7 +92,7 @@ backend/
 │   ├── core/
 │   │   ├── config.py        # Environment variables, settings
 │   │   ├── logging.py       # Structured logging setup
-│   │   └── monitoring.py    # Metrics tracking (request count, error rate, status codes)
+│   │   └── monitoring.py   # Metrics tracking (request count, error rate, status codes)
 │   └── main.py              # FastAPI app initialization
 ├── tests/
 │   ├── unit/                # Unit tests for services, models
@@ -113,14 +100,15 @@ backend/
 │   └── conftest.py          # Pytest fixtures
 ├── scripts/
 │   └── ingest_content.py    # Script to embed documentation into Qdrant
-├── pyproject.toml           # uv project configuration
+├── alembic/                 # Database migrations
+├── pyproject.toml          # uv project configuration
 ├── .env.example             # Example environment variables
 └── README.md                # Backend setup and deployment docs
 
 frontend/
 ├── docs/                    # Docusaurus documentation content
 │   ├── intro.md
-│   └── [chapter-folders]/
+│   └── [module-folders]/
 ├── src/
 │   ├── components/
 │   │   └── ChatWidget/      # ChatKit integration component

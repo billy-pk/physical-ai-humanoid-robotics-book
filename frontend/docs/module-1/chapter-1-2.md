@@ -1,502 +1,692 @@
 ---
-sidebar_position: 2
-title: 1.2 Robotics Fundamentals
+sidebar_position: 3
+title: 1.2 Python Integration with rclpy
 ---
 
-# Chapter 1.2: Robotics Fundamentals
+# Chapter 1.2: Python Integration with rclpy
 
-Now that we understand AI fundamentals, let's explore the physical side of Physical AI: **robotics**. This chapter covers core robotics concepts—kinematics, dynamics, control theory—essential for understanding how humanoid robots move and interact with the world.
+Python is the primary language for rapid robotics development. The \`rclpy\` library provides a Pythonic interface to ROS 2, enabling you to build nodes, publish data, subscribe to topics, and create services—all with clean, readable code.
 
 ## Learning Outcomes
 
 By the end of this chapter, you will be able to:
 
-- **Understand** robot anatomy: links, joints, degrees of freedom (DOF)
-- **Define** forward and inverse kinematics and their applications
-- **Explain** robot dynamics: forces, torques, and equations of motion
-- **Describe** control system fundamentals (PID, feedforward, feedback)
-- **Apply** basic kinematic calculations for simple robot arms
-- **Recognize** challenges unique to bipedal humanoid robots
+- **Implement** publisher nodes that send sensor data to topics
+- **Create** subscriber nodes that process incoming messages
+- **Configure** timers for periodic control loops (e.g., 10 Hz, 50 Hz)
+- **Build** service servers and clients for request/reply patterns
+- **Debug** Python nodes using ROS 2 logging and introspection tools
 
-## Robot Anatomy: Links, Joints, and Degrees of Freedom
+## Prerequisites
 
-A robot's physical structure determines what motions it can perform. Understanding this anatomy is foundational to robotics.
+- **ROS 2 Humble installed** (Chapter 1.1)
+- **Python 3.10+** (check with \`python3 --version\`)
+- **Basic Python**: classes, methods, \`__init__\`, decorators
+- **Understanding of ROS 2 concepts**: nodes, topics, services (Chapter 1.1)
 
-### Basic Components
+## Part 1: rclpy Fundamentals
 
-**Links (Rigid Bodies)**
-- Physical segments of the robot (e.g., upper arm, forearm, thigh)
-- Connected by joints
-- Have mass, inertia, and geometry
+### The rclpy Node Lifecycle
 
-**Joints (Connections)**
-- Allow relative motion between links
-- Types:
-  - **Revolute (R)**: Rotation around an axis (like human elbow)
-  - **Prismatic (P)**: Linear sliding motion (like a drawer)
-  - **Spherical**: 3-DOF ball-and-socket (like human shoulder)
-  - **Fixed**: No motion (welded connection)
-
-**Degrees of Freedom (DOF)**
-- Number of independent ways a robot can move
-- Each joint contributes DOF:
-  - Revolute joint: 1 DOF
-  - Prismatic joint: 1 DOF
-  - Spherical joint: 3 DOF
-
-### Example: Human Arm vs. Robot Arm
-
-| Segment | Human | Typical Robot Arm |
-|---------|-------|-------------------|
-| **Shoulder** | 3 DOF (spherical) | 3 DOF (3 revolute joints) |
-| **Elbow** | 1 DOF (hinge) | 1 DOF (revolute) |
-| **Wrist** | 3 DOF (complex) | 3 DOF (3 revolute joints) |
-| **Total DOF** | 7 DOF per arm | 7 DOF per arm |
-
-**Humanoid robots** typically have:
-- **Total**: 25-40 DOF for full body
-- **Legs**: 6 DOF per leg (hip: 3, knee: 1, ankle: 2)
-- **Arms**: 7 DOF per arm
-- **Torso**: 1-3 DOF
-- **Head**: 2-3 DOF (pan, tilt, sometimes roll)
-- **Hands**: 5-20 DOF depending on dexterity
-
-### Task Space vs. Joint Space
-
-- **Joint Space**: Describes robot configuration using joint angles (θ₁, θ₂, ..., θₙ)
-- **Task Space (Cartesian Space)**: Describes end-effector position and orientation in 3D space (x, y, z, roll, pitch, yaw)
-
-**Example**:
-```
-Joint Space: [shoulder: 45°, elbow: 90°, wrist: 30°]
-Task Space: hand position at (0.5m, 0.3m, 1.2m)
-```
-
-## Kinematics: The Geometry of Motion
-
-**Kinematics** studies motion without considering forces. For robots, it's about relating joint angles to end-effector position.
-
-### Forward Kinematics (FK)
-
-**Definition**: Given joint angles, compute end-effector position and orientation.
-
-**Formula**: Position = f(joint angles)
-
-**Example - 2-Link Planar Robot Arm**:
-
-```
-Link 1 length: L₁ = 1.0m, angle: θ₁
-Link 2 length: L₂ = 0.8m, angle: θ₂
-
-End-effector position:
-x = L₁·cos(θ₁) + L₂·cos(θ₁ + θ₂)
-y = L₁·sin(θ₁) + L₂·sin(θ₁ + θ₂)
-
-If θ₁ = 30°, θ₂ = 45°:
-x = 1.0·cos(30°) + 0.8·cos(75°) ≈ 1.073m
-y = 1.0·sin(30°) + 0.8·sin(75°) ≈ 1.273m
-```
-
-**Code Example**:
+Every ROS 2 Python node follows this pattern:
 
 ```python
-import numpy as np
+import rclpy
+from rclpy.node import Node
 
-def forward_kinematics_2link(theta1, theta2, L1=1.0, L2=0.8):
-    """
-    Compute end-effector position for 2-link planar arm.
+class MyNode(Node):
+    def __init__(self):
+        super().__init__('node_name')
+        # Initialize publishers, subscribers, timers, services
+    
+def main(args=None):
+    rclpy.init(args=args)           # Initialize ROS 2 context
+    node = MyNode()                  # Create node instance
+    rclpy.spin(node)                 # Keep node alive and process callbacks
+    node.destroy_node()              # Cleanup
+    rclpy.shutdown()                 # Shutdown ROS 2 context
 
-    Args:
-        theta1: First joint angle (radians)
-        theta2: Second joint angle (radians)
-        L1: Length of first link (meters)
-        L2: Length of second link (meters)
-
-    Returns:
-        (x, y) position of end-effector
-    """
-    x = L1 * np.cos(theta1) + L2 * np.cos(theta1 + theta2)
-    y = L1 * np.sin(theta1) + L2 * np.sin(theta1 + theta2)
-    return x, y
-
-# Example usage
-theta1 = np.deg2rad(30)  # Convert degrees to radians
-theta2 = np.deg2rad(45)
-x, y = forward_kinematics_2link(theta1, theta2)
-print(f"End-effector position: ({x:.3f}m, {y:.3f}m)")
-# Output: End-effector position: (1.073m, 1.273m)
+if __name__ == '__main__':
+    main()
 ```
 
-### Inverse Kinematics (IK)
+**Key functions**:
+- **\`rclpy.init()\`**: Initializes ROS 2 communication
+- **\`rclpy.spin()\`**: Blocks and processes callbacks (subscriptions, timers, services)
+- **\`node.destroy_node()\`**: Cleans up resources
+- **\`rclpy.shutdown()\`**: Closes ROS 2 context
 
-**Definition**: Given desired end-effector position, compute required joint angles.
+### Message Types
 
-**Formula**: Joint angles = f⁻¹(desired position)
+ROS 2 messages are strongly typed. Common message packages:
 
-**Challenge**: Much harder than FK!
-- May have **multiple solutions** (elbow up vs. elbow down)
-- May have **no solution** (target out of reach)
-- **Computationally expensive** for complex robots
+| Package | Use Case | Example Types |
+|---------|----------|---------------|
+| **std_msgs** | Simple data | \`String\`, \`Int32\`, \`Float64\`, \`Bool\` |
+| **sensor_msgs** | Sensor data | \`Image\`, \`LaserScan\`, \`Imu\`, \`JointState\` |
+| **geometry_msgs** | Positions/velocities | \`Pose\`, \`Twist\`, \`PoseStamped\` |
+| **nav_msgs** | Navigation | \`Odometry\`, \`Path\` |
 
-**Example - 2-Link Planar Robot (Analytical Solution)**:
+**Import syntax**:
+```python
+from std_msgs.msg import String, Int32
+from sensor_msgs.msg import JointState
+from geometry_msgs.msg import Twist
+```
+
+## Part 2: Hands-On Tutorial
+
+### Project 1: Simple Publisher Node
+
+**Goal**: Create a node that publishes joint angle commands at 10 Hz.
+
+**File**: \`simple_publisher.py\`
 
 ```python
-def inverse_kinematics_2link(x, y, L1=1.0, L2=0.8, elbow_up=True):
+#!/usr/bin/env python3
+"""
+Simple Publisher Node
+Publishes joint angle commands to /joint_commands topic
+ROS 2 Humble | Python 3.10+
+"""
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import Float64
+import math
+
+class JointCommandPublisher(Node):
     """
-    Compute joint angles for desired end-effector position.
-
-    Args:
-        x, y: Desired end-effector position
-        L1, L2: Link lengths
-        elbow_up: If True, use elbow-up solution
-
-    Returns:
-        (theta1, theta2) joint angles in radians
-
-    Raises:
-        ValueError: If position is unreachable
+    Publishes sinusoidal joint commands for demonstration.
+    Topic: /joint_commands
+    Type: std_msgs/msg/Float64
+    Rate: 10 Hz
     """
-    # Check if position is reachable
-    distance = np.sqrt(x**2 + y**2)
-    if distance > L1 + L2 or distance < abs(L1 - L2):
-        raise ValueError("Position unreachable!")
-
-    # Law of cosines for theta2
-    cos_theta2 = (x**2 + y**2 - L1**2 - L2**2) / (2 * L1 * L2)
-    cos_theta2 = np.clip(cos_theta2, -1, 1)  # Numerical stability
-
-    if elbow_up:
-        theta2 = np.arccos(cos_theta2)
-    else:
-        theta2 = -np.arccos(cos_theta2)
-
-    # Solve for theta1
-    k1 = L1 + L2 * np.cos(theta2)
-    k2 = L2 * np.sin(theta2)
-    theta1 = np.arctan2(y, x) - np.arctan2(k2, k1)
-
-    return theta1, theta2
-
-# Example usage
-target_x, target_y = 1.5, 0.5
-theta1, theta2 = inverse_kinematics_2link(target_x, target_y)
-print(f"Joint angles: θ₁={np.rad2deg(theta1):.1f}°, θ₂={np.rad2deg(theta2):.1f}°")
-
-# Verify with forward kinematics
-x_check, y_check = forward_kinematics_2link(theta1, theta2)
-print(f"Verification: ({x_check:.3f}, {y_check:.3f}) ≈ ({target_x}, {target_y})")
-```
-
-**For Humanoid Robots**:
-- IK is **critical** for task execution (reach to a point, place foot)
-- Usually solved **numerically** (optimization, Jacobian methods)
-- Real-time requirements demand fast IK solvers
-
-## Dynamics: Forces and Motion
-
-While kinematics ignores forces, **dynamics** explicitly models them using Newton's laws.
-
-### Key Concepts
-
-**Newton's Second Law**: F = ma (Force = mass × acceleration)
-
-For rotational motion: **τ = I·α** (Torque = inertia × angular acceleration)
-
-**Robot Dynamics Equation** (Lagrangian formulation):
-
-```
-τ = M(q)·q̈ + C(q, q̇)·q̇ + G(q)
-
-Where:
-τ = Joint torques (what motors must produce)
-M(q) = Mass/inertia matrix (depends on configuration q)
-C(q, q̇) = Coriolis and centrifugal terms (velocity-dependent)
-G(q) = Gravity terms
-q = Joint positions, q̇ = velocities, q̈ = accelerations
-```
-
-**Forward Dynamics**: Given torques → compute accelerations
-**Inverse Dynamics**: Given desired motion → compute required torques
-
-### Why Dynamics Matter
-
-For humanoid robots, understanding dynamics is essential for:
-
-1. **Motor Selection**: Knowing required torques helps choose appropriate actuators
-2. **Control**: Feedforward control uses inverse dynamics to compensate for gravity and inertia
-3. **Simulation**: Predicting how robot will move under applied forces
-4. **Energy Efficiency**: Optimal trajectories minimize energy consumption
-
-### Example: Gravity Compensation
-
-```python
-def gravity_torque_single_joint(mass, length, theta):
-    """
-    Calculate torque needed to hold a link against gravity.
-
-    Args:
-        mass: Link mass (kg)
-        length: Distance from joint to center of mass (m)
-        theta: Joint angle from horizontal (radians)
-
-    Returns:
-        Required torque (N·m)
-    """
-    g = 9.81  # Gravity (m/s²)
-    torque = mass * g * length * np.cos(theta)
-    return torque
-
-# Example: Humanoid arm link
-# Mass: 2kg, center of mass 0.3m from shoulder, angle 45° from horizontal
-arm_mass = 2.0
-arm_length = 0.3
-arm_angle = np.deg2rad(45)
-
-torque_needed = gravity_torque_single_joint(arm_mass, arm_length, arm_angle)
-print(f"Torque to hold arm: {torque_needed:.2f} N·m")
-# Output: ~4.16 N·m
-```
-
-This simple calculation shows why robot joints need **continuous torque** just to hold position against gravity!
-
-## Control Systems: Making Robots Move Accurately
-
-**Control systems** ensure robots follow desired trajectories despite disturbances, model errors, and uncertainties.
-
-### Control Loop Architecture
-
-```
-Desired State → [Controller] → Motor Commands → [Robot] → Actual State
-                      ↑                                      ↓
-                      └────────── Feedback (Sensors) ───────┘
-```
-
-### PID Control
-
-**PID (Proportional-Integral-Derivative)** is the most common control algorithm in robotics.
-
-**Formula**:
-```
-u(t) = Kₚ·e(t) + Kᵢ·∫e(t)dt + Kₐ·de(t)/dt
-
-Where:
-u(t) = Control output (motor command)
-e(t) = Error (desired - actual)
-Kₚ = Proportional gain (reacts to current error)
-Kᵢ = Integral gain (eliminates steady-state error)
-Kₐ = Derivative gain (dampens oscillations)
-```
-
-**Components**:
-- **P (Proportional)**: Larger error → larger correction (fast response, but may overshoot)
-- **I (Integral)**: Accumulates error over time (eliminates bias, but can cause instability)
-- **D (Derivative)**: Responds to rate of error change (reduces overshoot, adds damping)
-
-**Code Example**:
-
-```python
-class PIDController:
-    """Simple PID controller for joint position control."""
-
-    def __init__(self, Kp, Ki, Kd, dt):
+    def __init__(self):
+        super().__init__('joint_command_publisher')
+        
+        # Create publisher
+        self.publisher_ = self.create_publisher(
+            Float64,                    # Message type
+            '/joint_commands',          # Topic name
+            10                          # Queue size (buffer last 10 messages)
+        )
+        
+        # Create timer that calls timer_callback every 0.1 seconds (10 Hz)
+        self.timer = self.create_timer(0.1, self.timer_callback)
+        
+        # Counter for generating sinusoidal motion
+        self.counter = 0
+        
+        self.get_logger().info('Joint Command Publisher started')
+    
+    def timer_callback(self):
         """
-        Initialize PID controller.
+        Called every 0.1 seconds (10 Hz).
+        Publishes sinusoidal joint angle.
+        """
+        msg = Float64()
+        
+        # Generate sinusoidal motion: angle = sin(counter * 0.1)
+        # Range: -1 to 1 radians
+        msg.data = math.sin(self.counter * 0.1)
+        
+        # Publish message
+        self.publisher_.publish(msg)
+        
+        # Log every 10th message (once per second)
+        if self.counter % 10 == 0:
+            self.get_logger().info(f'Publishing joint command: {msg.data:.3f} rad')
+        
+        self.counter += 1
 
+def main(args=None):
+    rclpy.init(args=args)
+    node = JointCommandPublisher()
+    
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
+```
+
+**Explanation**:
+- **Lines 21 to 26**: Create publisher with topic name, message type, and queue size
+- **Lines 28 to 29**: Timer triggers \`timer_callback()\` every 0.1 seconds
+- **Lines 40 to 42**: Generate sinusoidal joint motion
+- **Lines 44 to 45**: Publish message to topic
+- **Queue size**: If subscribers are slow, keep last 10 messages in buffer
+
+**Run the node**:
+```bash
+# Make executable
+chmod +x simple_publisher.py
+
+# Run directly (for testing)
+python3 simple_publisher.py
+
+# Or use ros2 run (after packaging in Chapter 1.4)
+# ros2 run my_package simple_publisher
+```
+
+**Verify it's working**:
+```bash
+# Terminal 2: Echo the topic
+ros2 topic echo /joint_commands
+
+# Terminal 3: Check publish rate
+ros2 topic hz /joint_commands
+```
+
+Expected output from \`ros2 topic hz\`:
+```
+average rate: 10.002
+        min: 0.099s max: 0.101s std dev: 0.00050s window: 100
+```
+
+---
+
+### Project 2: Simple Subscriber Node
+
+**Goal**: Create a node that subscribes to joint commands and logs them.
+
+**File**: \`simple_subscriber.py\`
+
+```python
+#!/usr/bin/env python3
+"""
+Simple Subscriber Node
+Subscribes to joint commands and processes them
+ROS 2 Humble | Python 3.10+
+"""
+import rclpy
+from rclpy.node import Node
+from std_msgs.msg import Float64
+
+class JointCommandSubscriber(Node):
+    """
+    Subscribes to /joint_commands and logs received values.
+    Topic: /joint_commands
+    Type: std_msgs/msg/Float64
+    """
+    def __init__(self):
+        super().__init__('joint_command_subscriber')
+        
+        # Create subscription
+        self.subscription = self.create_subscription(
+            Float64,                        # Message type
+            '/joint_commands',              # Topic name
+            self.listener_callback,         # Callback function
+            10                              # Queue size
+        )
+        
+        self.get_logger().info('Joint Command Subscriber started')
+    
+    def listener_callback(self, msg):
+        """
+        Called whenever a message arrives on /joint_commands.
+        
         Args:
-            Kp, Ki, Kd: PID gains
-            dt: Time step (seconds)
+            msg (Float64): Received joint angle in radians
         """
-        self.Kp = Kp
-        self.Ki = Ki
-        self.Kd = Kd
-        self.dt = dt
+        # Convert radians to degrees for display
+        angle_degrees = msg.data * (180.0 / 3.14159)
+        
+        self.get_logger().info(
+            f'Received joint command: {msg.data:.3f} rad ({angle_degrees:.1f}°)'
+        )
 
-        self.integral = 0.0
-        self.prev_error = 0.0
+def main(args=None):
+    rclpy.init(args=args)
+    node = JointCommandSubscriber()
+    
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    
+    node.destroy_node()
+    rclpy.shutdown()
 
-    def compute(self, setpoint, measured_value):
+if __name__ == '__main__':
+    main()
+```
+
+**Explanation**:
+- **Lines 20 to 25**: Create subscription with topic, message type, callback, and queue size
+- **Lines 29 to 40**: Callback triggered automatically when messages arrive
+- **Line 37**: Convert radians to degrees for human-readable output
+- **Callback execution**: Runs in background while \`rclpy.spin()\` processes events
+
+**Run both nodes together**:
+```bash
+# Terminal 1: Publisher
+python3 simple_publisher.py
+
+# Terminal 2: Subscriber
+python3 simple_subscriber.py
+```
+
+**Expected output** (subscriber terminal):
+```
+[INFO] [1698765432.123] [joint_command_subscriber]: Joint Command Subscriber started
+[INFO] [1698765432.224] [joint_command_subscriber]: Received joint command: 0.995 rad (57.0°)
+[INFO] [1698765432.324] [joint_command_subscriber]: Received joint command: 0.985 rad (56.4°)
+```
+
+---
+
+### Project 3: Service Server and Client
+
+**Goal**: Create a service that calculates battery runtime based on current draw.
+
+#### Service Server (Battery Monitor)
+
+**File**: \`battery_service_server.py\`
+
+```python
+#!/usr/bin/env python3
+"""
+Battery Service Server
+Provides battery runtime estimation service
+ROS 2 Humble | Python 3.10+
+"""
+import rclpy
+from rclpy.node import Node
+from example_interfaces.srv import AddTwoInts  # We'll use this as template
+from std_srvs.srv import Trigger
+
+# For real robot, create custom service type:
+# BatteryQuery.srv:
+#   float64 current_draw  # Amps
+#   ---
+#   float64 runtime       # Hours
+#   string status
+
+class BatteryMonitor(Node):
+    """
+    Service that estimates battery runtime.
+    Service: /battery/estimate_runtime
+    Type: Trigger (simplified for demo)
+    """
+    def __init__(self):
+        super().__init__('battery_monitor')
+        
+        # Create service
+        self.srv = self.create_service(
+            Trigger,                              # Service type
+            '/battery/get_status',                # Service name
+            self.battery_status_callback          # Callback function
+        )
+        
+        # Simulate battery state
+        self.battery_percent = 85.0  # 85% charged
+        
+        self.get_logger().info('Battery Monitor Service ready')
+    
+    def battery_status_callback(self, request, response):
         """
-        Compute control output.
-
+        Called when a client requests battery status.
+        
         Args:
-            setpoint: Desired value
-            measured_value: Current value
-
+            request (Trigger.Request): Empty request
+            response (Trigger.Response): Contains success (bool) and message (string)
+        
         Returns:
-            Control output
+            Trigger.Response: Battery status message
         """
-        # Error
-        error = setpoint - measured_value
+        # Simulate battery drain
+        self.battery_percent -= 0.5
+        if self.battery_percent < 0:
+            self.battery_percent = 100.0  # Reset for demo
+        
+        # Prepare response
+        response.success = True
+        response.message = f'Battery: {self.battery_percent:.1f}% remaining'
+        
+        self.get_logger().info(f'Service called. {response.message}')
+        
+        return response
 
-        # Proportional term
-        P = self.Kp * error
+def main(args=None):
+    rclpy.init(args=args)
+    node = BatteryMonitor()
+    
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    
+    node.destroy_node()
+    rclpy.shutdown()
 
-        # Integral term (accumulated error)
-        self.integral += error * self.dt
-        I = self.Ki * self.integral
-
-        # Derivative term (rate of change)
-        derivative = (error - self.prev_error) / self.dt
-        D = self.Kd * derivative
-
-        # Total control output
-        output = P + I + D
-
-        # Update state
-        self.prev_error = error
-
-        return output
-
-# Example: Control joint to 90°
-controller = PIDController(Kp=10.0, Ki=0.5, Kd=2.0, dt=0.01)
-
-current_angle = 0.0  # Starting at 0°
-target_angle = 90.0
-
-for step in range(100):
-    # Compute control command
-    torque = controller.compute(target_angle, current_angle)
-
-    # Simulate robot response (simplified)
-    current_angle += torque * 0.01  # Simple integration
-
-    if step % 20 == 0:
-        print(f"Step {step}: Angle = {current_angle:.2f}°, Torque = {torque:.2f}")
+if __name__ == '__main__':
+    main()
 ```
 
-### Challenges in Humanoid Robot Control
+#### Service Client (Mission Planner)
 
-1. **High Dimensionality**: 25+ DOF requires coordinated control
-2. **Underactuation**: Fewer actuators than DOF in some configurations (floating base)
-3. **Contact Dynamics**: Interaction with ground, objects (hybrid dynamics)
-4. **Balance**: Must maintain center of mass over support polygon
-5. **Compliance**: Too stiff → fragile, too soft → imprecise
+**File**: \`battery_service_client.py\`
 
-**Modern Approaches**:
-- **Model Predictive Control (MPC)**: Optimize over future horizon
-- **Whole-Body Control**: Coordinate all joints simultaneously
-- **Reinforcement Learning**: Learn control policies from data
-- **Impedance Control**: Control force vs. position tradeoff
+```python
+#!/usr/bin/env python3
+"""
+Battery Service Client
+Calls battery service to check status
+ROS 2 Humble | Python 3.10+
+"""
+import rclpy
+from rclpy.node import Node
+from std_srvs.srv import Trigger
 
-## Bipedal Locomotion: Walking on Two Legs
+class MissionPlanner(Node):
+    """
+    Client that queries battery status before starting missions.
+    """
+    def __init__(self):
+        super().__init__('mission_planner')
+        
+        # Create client
+        self.client = self.create_client(Trigger, '/battery/get_status')
+        
+        # Wait for service to become available
+        while not self.client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('Waiting for battery service...')
+        
+        self.get_logger().info('Mission Planner ready')
+    
+    def check_battery(self):
+        """
+        Calls the battery service and returns the response.
+        
+        Returns:
+            Trigger.Response: Battery status
+        """
+        request = Trigger.Request()  # Empty request for Trigger service
+        
+        # Call service (blocks until response)
+        future = self.client.call_async(request)
+        rclpy.spin_until_future_complete(self, future)
+        
+        if future.result() is not None:
+            response = future.result()
+            self.get_logger().info(f'Battery status: {response.message}')
+            return response
+        else:
+            self.get_logger().error('Service call failed')
+            return None
 
-Bipedal walking is one of the hardest problems in humanoid robotics.
+def main(args=None):
+    rclpy.init(args=args)
+    node = MissionPlanner()
+    
+    # Check battery 5 times
+    for i in range(5):
+        node.get_logger().info(f'--- Mission {i+1} ---')
+        response = node.check_battery()
+        
+        if response and response.success:
+            battery_percent = float(response.message.split(':')[1].split('%')[0])
+            
+            if battery_percent > 20.0:
+                node.get_logger().info('✓ Battery OK, starting mission')
+            else:
+                node.get_logger().warn('⚠ Low battery, aborting mission')
+        
+        # Wait 1 second between checks
+        import time
+        time.sleep(1)
+    
+    node.destroy_node()
+    rclpy.shutdown()
 
-### The Balance Challenge
+if __name__ == '__main__':
+    main()
+```
 
-**Static Stability**: Center of Mass (CoM) stays within support polygon
-- Slow, stable
-- Used by early robots (ASIMO)
+**Run service and client**:
+```bash
+# Terminal 1: Start service server
+python3 battery_service_server.py
 
-**Dynamic Stability**: CoM can move outside support polygon during motion
-- Fast, natural
-- Requires prediction and control (Boston Dynamics Atlas)
+# Terminal 2: Run client
+python3 battery_service_client.py
+```
 
-**Zero Moment Point (ZMP)**:
-- Point on ground where net moment from contact forces is zero
-- If ZMP stays inside support polygon → stable walking
-- Widely used stability criterion
+**Expected Output** (client terminal):
+```
+[INFO] [mission_planner]: Mission Planner ready
+[INFO] [mission_planner]: --- Mission 1 ---
+[INFO] [mission_planner]: Battery status: Battery: 84.5% remaining
+[INFO] [mission_planner]: ✓ Battery OK, starting mission
+[INFO] [mission_planner]: --- Mission 2 ---
+[INFO] [mission_planner]: Battery status: Battery: 84.0% remaining
+[INFO] [mission_planner]: ✓ Battery OK, starting mission
+```
 
-### Gait Phases
+---
 
-Humanoid walking involves cyclical phases:
+### Step 4: Debugging Common Issues
 
-1. **Double Support**: Both feet on ground
-2. **Single Support**: One foot on ground, other swinging
-3. **Heel Strike**: Swinging foot contacts ground
-4. **Toe Off**: Stance foot lifts off
+#### Issue 1: "ModuleNotFoundError: No module named 'rclpy'"
+**Cause**: ROS 2 environment not sourced
 
-### Walking Controllers
+**Solution**:
+```bash
+source /opt/ros/humble/setup.bash
+# Or add to ~/.bashrc
+```
 
-**Traditional Approach**:
-1. Plan footstep locations
-2. Generate CoM trajectory (ZMP-based)
-3. Inverse kinematics for joint trajectories
-4. PID tracking control
+#### Issue 2: Node runs but doesn't publish/subscribe
+**Cause**: Topic name mismatch (typo in topic name)
 
-**Modern Learning Approach**:
-1. Train in simulation with RL
-2. Learn robust policies that handle disturbances
-3. Transfer to real robot (sim-to-real)
+**Solution**:
+```bash
+# Check active topics
+ros2 topic list
+
+# Verify topic name matches exactly
+ros2 topic info /joint_commands
+```
+
+#### Issue 3: "Message type 'X' not found"
+**Cause**: Missing ROS 2 message package
+
+**Solution**:
+```bash
+# Install common message packages
+sudo apt install ros-humble-std-msgs ros-humble-sensor-msgs ros-humble-geometry-msgs
+```
+
+#### Issue 4: Subscriber callback never called
+**Cause**: QoS profile mismatch between publisher and subscriber
+
+**Solution**:
+```python
+# Use compatible QoS settings (more details in Chapter 1.5)
+from rclpy.qos import QoSProfile, ReliabilityPolicy
+
+qos = QoSProfile(depth=10, reliability=ReliabilityPolicy.RELIABLE)
+self.publisher_ = self.create_publisher(Float64, '/topic', qos)
+self.subscription = self.create_subscription(Float64, '/topic', callback, qos)
+```
+
+## Part 3: Advanced Topics (Optional)
+
+### Multi-threaded Execution
+
+For complex nodes with multiple callbacks, use executors:
+
+```python
+from rclpy.executors import MultiThreadedExecutor
+
+executor = MultiThreadedExecutor(num_threads=4)
+executor.add_node(node1)
+executor.add_node(node2)
+
+try:
+    executor.spin()
+finally:
+    executor.shutdown()
+```
+
+**Use case**: Process camera images in one thread while controlling motors in another.
+
+### Logging Levels
+
+ROS 2 supports 5 logging levels:
+
+```python
+self.get_logger().debug('Detailed diagnostic info')
+self.get_logger().info('Normal operation')
+self.get_logger().warn('Warning, degraded performance')
+self.get_logger().error('Error occurred, function failed')
+self.get_logger().fatal('Critical error, node shutting down')
+```
+
+**Set logging level**:
+```bash
+ros2 run my_package my_node --ros-args --log-level DEBUG
+```
+
+## Integration with Capstone
+
+**How this chapter contributes** to the Week 13 autonomous humanoid:
+
+- **Voice input node**: Subscriber to \`/audio\` topic, publishes transcribed text
+  ```python
+  self.subscription = self.create_subscription(Audio, '/audio', self.process_audio, 10)
+  self.text_pub = self.create_publisher(String, '/voice_command', 10)
+  ```
+
+- **LLM planning node**: Subscribes to \`/voice_command\`, publishes navigation goals
+  ```python
+  self.create_subscription(String, '/voice_command', self.plan_task, 10)
+  self.goal_pub = self.create_publisher(PoseStamped, '/nav2/goal', 10)
+  ```
+
+- **Service for object detection**: "Is the red ball visible?"
+  ```python
+  self.create_service(Trigger, '/vision/detect_object', self.detect_callback)
+  ```
+
+Understanding publishers, subscribers, and services is essential for orchestrating the capstone's multi-node architecture.
+
+## Summary
+
+You learned:
+- ✅ Created **publisher nodes** that send messages to topics at fixed rates
+- ✅ Implemented **subscriber nodes** with callbacks to process incoming data
+- ✅ Built **service servers** and **clients** for request/reply patterns
+- ✅ Used **timers** for periodic control loops (10 Hz, 50 Hz)
+- ✅ Debugged common \`rclpy\` issues with logging and introspection tools
+
+**Next steps**: In Chapter 1.3, you'll model humanoid robots using URDF, the standard format for robot descriptions.
 
 ---
 
 ## Exercises
 
-### 1. Degrees of Freedom
-Count the DOF for:
-- A simple gripper (2 fingers, 1 joint each)
-- A quadruped robot leg (4 legs, 3 joints per leg)
-- A humanoid torso (waist: 3 DOF, neck: 2 DOF)
+### Exercise 1: Velocity Command Publisher (Required)
 
-### 2. Forward Kinematics Calculation
-Using the 2-link planar arm formula, compute end-effector position for:
-- L₁ = 1.2m, L₂ = 0.9m
-- θ₁ = 60°, θ₂ = -30°
+**Objective**: Create a node that publishes velocity commands for a mobile robot.
 
-(Show your work step-by-step)
+**Tasks**:
+1. Create \`velocity_publisher.py\`
+2. Publish \`geometry_msgs/msg/Twist\` messages to \`/cmd_vel\`
+3. Linear velocity: 0.5 m/s forward
+4. Angular velocity: 0.1 rad/s (turning left)
+5. Publish at 20 Hz
 
-### 3. Inverse Kinematics Challenge
-Is the position (2.5m, 0.5m) reachable for a 2-link arm with L₁ = 1.0m, L₂ = 0.8m? Explain why or why not.
+**Starter code**:
+```python
+from geometry_msgs.msg import Twist
 
-### 4. PID Tuning
-Describe what happens in a PID controller if:
-- Kₚ is too high
-- Kᵢ is too high
-- Kₐ is too high
+msg = Twist()
+msg.linear.x = 0.5   # m/s forward
+msg.angular.z = 0.1  # rad/s counterclockwise
+```
 
-### 5. Code Challenge
-Modify the PID controller code to:
-1. Add **integral windup protection** (limit integral term to ±100)
-2. Add a `reset()` method to clear integral and derivative terms
-3. Test with a step response and plot angle vs. time
+**Acceptance Criteria**:
+- [ ] Node publishes at 20 Hz (verify with \`ros2 topic hz /cmd_vel\`)
+- [ ] Twist message has correct linear and angular values
+- [ ] Code includes logging statements
 
-### 6. Walking Stability
-Research the **inverted pendulum model** used in humanoid walking. Explain in 3-4 sentences how it relates to balance control.
+**Estimated Time**: 30 minutes
 
-### 7. Design Exercise
-You're designing a humanoid robot arm for assembly tasks. Decide:
-- How many DOF? (justify)
-- Joint types and locations
-- Expected payload (weight it can carry)
-- Workspace (reachable volume)
+### Exercise 2: Odometry Subscriber (Required)
+
+**Objective**: Subscribe to odometry data and extract robot position.
+
+**Tasks**:
+1. Create \`odom_subscriber.py\`
+2. Subscribe to \`/odom\` topic (type: \`nav_msgs/msg/Odometry\`)
+3. Extract robot's (x, y) position from \`msg.pose.pose.position\`
+4. Log position every 1 second
+
+**Install nav_msgs**:
+```bash
+sudo apt install ros-humble-nav-msgs
+```
+
+**Hint**:
+```python
+from nav_msgs.msg import Odometry
+
+def callback(self, msg):
+    x = msg.pose.pose.position.x
+    y = msg.pose.pose.position.y
+    self.get_logger().info(f'Position: x={x:.2f}, y={y:.2f}')
+```
+
+**Acceptance Criteria**:
+- [ ] Successfully subscribes to \`/odom\`
+- [ ] Logs (x, y) position
+- [ ] No errors when no publisher exists (node should wait gracefully)
+
+**Estimated Time**: 30 minutes
+
+### Exercise 3: Two-Node Communication (Challenge)
+
+**Objective**: Create two nodes that communicate bidirectionally.
+
+**Tasks**:
+1. **Node A** (\`temperature_sensor.py\`):
+   - Publishes random temperature (20 to 30°C) to \`/temperature\` at 5 Hz
+   - Subscribes to \`/fan_speed\` and logs received values
+
+2. **Node B** (\`fan_controller.py\`):
+   - Subscribes to \`/temperature\`
+   - If temperature > 25°C, publish fan_speed = 100 to \`/fan_speed\`
+   - If temperature ≤ 25°C, publish fan_speed = 0
+
+**Hints**:
+```python
+import random
+temp = random.uniform(20.0, 30.0)
+```
+
+**Acceptance Criteria**:
+- [ ] Both nodes run simultaneously
+- [ ] Fan speed changes based on temperature
+- [ ] Visualize with \`rqt_graph\` showing bidirectional communication
+
+**Estimated Time**: 60 minutes
 
 ---
 
-## Key Takeaways
+## Additional Resources
 
-✅ Robots consist of **links** connected by **joints**, with DOF determining motion capability
-✅ **Forward kinematics** computes end-effector position from joint angles (easy)
-✅ **Inverse kinematics** computes joint angles for desired position (hard, multiple solutions)
-✅ **Dynamics** models forces and torques required for motion
-✅ **PID control** is fundamental for tracking desired trajectories
-✅ **Bipedal walking** requires sophisticated balance and coordination strategies
-✅ Modern humanoid control combines **model-based** and **learning-based** approaches
+- [rclpy API Documentation](https://docs.ros2.org/latest/api/rclpy/) - Complete reference
+- [ROS 2 Python Examples](https://github.com/ros2/examples/tree/humble/rclpy) - Official example nodes
+- [Understanding Publishers and Subscribers](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Publisher-And-Subscriber.html) - Official tutorial
+- [Services Tutorial](https://docs.ros.org/en/humble/Tutorials/Beginner-Client-Libraries/Writing-A-Simple-Py-Service-And-Client.html) - Request/reply patterns
 
 ---
 
-## Further Reading
-
-- **Books**:
-  - *Introduction to Robotics: Mechanics and Control* by John J. Craig (classic kinematics/dynamics)
-  - *Modern Robotics* by Lynch and Park (geometric approach)
-  - *Humanoid Robots* by Kajita et al. (bipedal walking focus)
-
-- **Online Resources**:
-  - MIT OpenCourseWare: Robotics (6.832)
-  - Coursera: Robotics Specialization (UPenn)
-  - ROS (Robot Operating System) tutorials
-
-- **Papers**:
-  - "Biped Walking Pattern Generation by using Preview Control of ZMP" (Kajita, 2003)
-  - "Learning Agile and Dynamic Motor Skills for Legged Robots" (Hwangbo, 2019)
-
-- **Videos**:
-  - Boston Dynamics Atlas parkour demonstrations
-  - Honda ASIMO walking demos
-
----
-
-**Previous**: [← Chapter 1.1: AI Fundamentals](chapter-1-1.md) | **Next**: [Chapter 1.3: Sensors and Actuators →](chapter-1-3.md)
-
-Understanding kinematics and control is the foundation—next, we'll explore the sensors and actuators that enable robots to perceive and act!
+**Previous**: [← Chapter 1.1: ROS 2 Architecture](chapter-1 to 1.md) | **Next**: [Chapter 1.3: URDF for Humanoid Robots →](chapter-1 to 3.md)
