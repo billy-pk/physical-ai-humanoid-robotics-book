@@ -40,6 +40,10 @@ export default function ChatWidget(): React.JSX.Element {
     setIsLoading(true);
 
     try {
+      // Create AbortController for timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
       const response = await fetch(`${BACKEND_URL}/api/chat`, {
         method: 'POST',
         headers: {
@@ -48,10 +52,13 @@ export default function ChatWidget(): React.JSX.Element {
         body: JSON.stringify({
           query: userMessage.content,
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        throw new Error(`Server error: ${response.status}`);
       }
 
       const data = await response.json();
@@ -65,9 +72,17 @@ export default function ChatWidget(): React.JSX.Element {
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Chat error:', error);
+      let errorMsg = 'Sorry, I encountered an error. Please try again.';
+      
+      if (error.name === 'AbortError') {
+        errorMsg = 'Request timed out. The AI is taking longer than expected. Please try a simpler question or try again later.';
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMsg = 'Cannot connect to the backend. Please make sure the backend server is running on port 8000.';
+      }
+      
       const errorMessage: Message = {
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: errorMsg,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
