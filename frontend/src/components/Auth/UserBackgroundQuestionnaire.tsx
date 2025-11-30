@@ -1,76 +1,59 @@
-/**
- * User Background Questionnaire component.
- * 
- * Collects user's software/hardware background, experience level, and learning goals
- * to personalize content delivery.
- */
-
 import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import styles from "./Questionnaire.module.css";
-
-interface QuestionnaireData {
-  software_background: string[];
-  hardware_background: string[];
-  experience_level: "beginner" | "intermediate" | "advanced";
-  learning_goals: string;
-  has_robotics_projects: boolean;
-  robotics_projects_description?: string;
-  programming_years?: number;
-  learning_style?: "visual" | "hands-on" | "theoretical" | "mixed";
-}
 
 interface UserBackgroundQuestionnaireProps {
   onComplete?: () => void;
   onCancel?: () => void;
 }
 
-const SOFTWARE_OPTIONS = [
-  "Python",
-  "JavaScript/TypeScript",
-  "C++",
-  "C",
-  "Java",
-  "ROS (Robot Operating System)",
-  "MATLAB",
-  "Rust",
-  "Go",
-  "None",
-];
-
-const HARDWARE_OPTIONS = [
-  "Arduino",
-  "Raspberry Pi",
-  "ESP32/ESP8266",
-  "ROS-compatible robots",
-  "Sensors (camera, LiDAR, IMU, etc.)",
-  "Microcontrollers",
-  "3D Printing",
-  "CNC Machining",
-  "None",
-];
-
-export default function UserBackgroundQuestionnaire({
+const UserBackgroundQuestionnaire: React.FC<UserBackgroundQuestionnaireProps> = ({
   onComplete,
   onCancel,
-}: UserBackgroundQuestionnaireProps) {
-  const { user } = useAuth();
-  const [formData, setFormData] = useState<QuestionnaireData>({
-    software_background: [],
-    hardware_background: [],
-    experience_level: "beginner",
+}) => {
+  const { session } = useAuth();
+
+  const [formData, setFormData] = useState({
+    software_background: [] as string[],
+    hardware_background: [] as string[],
+    experience_level: "",
     learning_goals: "",
     has_robotics_projects: false,
     robotics_projects_description: "",
-    programming_years: undefined,
-    learning_style: undefined,
+    learning_style: undefined as string | undefined,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleSoftwareToggle = (option: string) => {
+  const softwareOptions = [
+    "Python",
+    "C++",
+    "JavaScript",
+    "Java",
+    "ROS",
+    "TensorFlow/PyTorch",
+    "OpenCV",
+    "None",
+  ];
+
+  const hardwareOptions = [
+    "Arduino",
+    "Raspberry Pi",
+    "NVIDIA Jetson",
+    "3D Printing",
+    "Sensors/Actuators",
+    "None",
+  ];
+
+  const experienceLevels = [
+    { value: "beginner", label: "Beginner - New to robotics" },
+    { value: "intermediate", label: "Intermediate - Some experience" },
+    { value: "advanced", label: "Advanced - Professional experience" },
+  ];
+
+  const handleSoftwareChange = (option: string) => {
     setFormData((prev) => {
       const current = prev.software_background;
       if (option === "None") {
@@ -84,7 +67,7 @@ export default function UserBackgroundQuestionnaire({
     });
   };
 
-  const handleHardwareToggle = (option: string) => {
+  const handleHardwareChange = (option: string) => {
     setFormData((prev) => {
       const current = prev.hardware_background;
       if (option === "None") {
@@ -99,28 +82,35 @@ export default function UserBackgroundQuestionnaire({
   };
 
   const validateForm = (): boolean => {
+    console.log("Validating form with data:", formData);
     const newErrors: Record<string, string> = {};
 
     if (formData.software_background.length === 0) {
       newErrors.software_background = "Please select at least one option or 'None'";
+      console.log("Validation error: software_background is empty");
     }
 
     if (formData.hardware_background.length === 0) {
       newErrors.hardware_background = "Please select at least one option or 'None'";
+      console.log("Validation error: hardware_background is empty");
     }
 
     if (!formData.experience_level) {
       newErrors.experience_level = "Please select your experience level";
+      console.log("Validation error: experience_level is empty or falsy:", formData.experience_level);
     }
 
     if (formData.has_robotics_projects && !formData.robotics_projects_description?.trim()) {
       newErrors.robotics_projects_description = "Please describe your robotics projects";
+      console.log("Validation error: robotics_projects_description is required but empty");
     }
 
     if (formData.learning_goals && formData.learning_goals.length > 500) {
       newErrors.learning_goals = "Learning goals must be 500 characters or less";
+      console.log("Validation error: learning_goals too long");
     }
 
+    console.log("Validation errors:", newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -136,44 +126,17 @@ export default function UserBackgroundQuestionnaire({
     setIsSubmitting(true);
 
     try {
-      // Get session token from Better Auth API
-      // Better Auth cookies are set for localhost:3001, so we can't read them from localhost:3000
-      // Instead, we fetch the session from Better Auth which will include the token in the response
-      console.log("Fetching session from Better Auth..."); // Debug
-      const sessionResponse = await fetch("http://localhost:3001/api/auth/get-session", {
-        credentials: "include", // Include cookies for Better Auth domain
-      });
-
-      console.log("Session response status:", sessionResponse.status); // Debug
-
-      if (!sessionResponse.ok) {
-        console.error("Failed to get session:", sessionResponse.status);
-        throw new Error("Not authenticated. Please sign in again.");
-      }
-
-      const sessionData = await sessionResponse.json();
-      console.log("Session data:", sessionData); // Debug
+      console.log("Submitting questionnaire to FastAPI...");
       
-      // Better Auth returns session token in session.token
-      let sessionToken = sessionData?.session?.token || sessionData?.session?.id;
-
-      console.log("Session token:", sessionToken ? `${sessionToken.substring(0, 20)}...` : "MISSING"); // Debug
-
-      if (!sessionToken) {
-        console.error("No session token found in response");
-        throw new Error("Not authenticated. Please sign in again.");
-      }
-
-      // Submit to backend API
-      // Send session token in Authorization header since cookies are domain-specific
-      console.log("Sending questionnaire data to FastAPI..."); // Debug
+      // Submit directly to FastAPI with credentials: 'include'
+      // The browser will automatically send the Better Auth cookies
+      // FastAPI will validate the session with Better Auth
       const response = await fetch("http://localhost:8000/api/auth/profile/background", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${sessionToken}`, // Send token in Authorization header
         },
-        credentials: "include",
+        credentials: "include", // This sends the httpOnly cookies automatically
         body: JSON.stringify({
           software_background: formData.software_background.filter((item) => item !== "None"),
           hardware_background: formData.hardware_background.filter((item) => item !== "None"),
@@ -183,57 +146,66 @@ export default function UserBackgroundQuestionnaire({
           robotics_projects_description: formData.has_robotics_projects
             ? formData.robotics_projects_description
             : undefined,
-          programming_years: formData.programming_years,
           learning_style: formData.learning_style,
         }),
       });
 
-      console.log("FastAPI response status:", response.status); // Debug
+      console.log("FastAPI response status:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error("FastAPI error:", errorData); // Debug
+        console.error("FastAPI error response:", errorData);
+        
+        // Handle validation errors (array of errors)
+        if (Array.isArray(errorData.detail)) {
+          const errorMessages = errorData.detail.map((err: any) => 
+            `${err.loc?.join(' → ') || 'Field'}: ${err.msg}`
+          ).join('\n');
+          throw new Error(errorMessages || "Validation failed");
+        }
+        
         throw new Error(errorData.detail || "Failed to save questionnaire");
       }
 
-      const responseData = await response.json();
-      console.log("Success! Response:", responseData); // Debug
+      const data = await response.json();
+      console.log("Success! Questionnaire saved:", data);
 
-      // Success
+      // Success - complete the onboarding
       onComplete?.();
-    } catch (error: any) {
-      console.error("Questionnaire submission error:", error); // Debug
-      setSubmitError(error.message || "An error occurred while saving your information");
+    } catch (error) {
+      console.error("Error submitting questionnaire:", error);
+      setSubmitError(
+        error instanceof Error ? error.message : "An unexpected error occurred. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className={styles.questionnaire}>
+    <div className={styles.container}>
       <div className={styles.header}>
-        <h2>Tell Us About Yourself</h2>
-        <p>Help us personalize your learning experience by sharing your background.</p>
+        <h2>Welcome! Let's personalize your learning experience</h2>
+        <p>Help us understand your background to provide tailored content and recommendations.</p>
       </div>
 
       <form onSubmit={handleSubmit} className={styles.form}>
-        {submitError && <div className={styles.error}>{submitError}</div>}
-
         {/* Software Background */}
         <div className={styles.section}>
           <label className={styles.label}>
-            Software Background <span className={styles.required}>*</span>
+            What programming languages or frameworks do you know?
+            <span className={styles.required}>*</span>
           </label>
-          <p className={styles.helpText}>Select all that apply</p>
           <div className={styles.checkboxGroup}>
-            {SOFTWARE_OPTIONS.map((option) => (
-              <label key={option} className={styles.checkbox}>
+            {softwareOptions.map((option) => (
+              <label key={option} className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   checked={formData.software_background.includes(option)}
-                  onChange={() => handleSoftwareToggle(option)}
+                  onChange={() => handleSoftwareChange(option)}
+                  className={styles.checkbox}
                 />
-                <span>{option}</span>
+                {option}
               </label>
             ))}
           </div>
@@ -245,18 +217,19 @@ export default function UserBackgroundQuestionnaire({
         {/* Hardware Background */}
         <div className={styles.section}>
           <label className={styles.label}>
-            Hardware Background <span className={styles.required}>*</span>
+            What hardware platforms have you worked with?
+            <span className={styles.required}>*</span>
           </label>
-          <p className={styles.helpText}>Select all that apply</p>
           <div className={styles.checkboxGroup}>
-            {HARDWARE_OPTIONS.map((option) => (
-              <label key={option} className={styles.checkbox}>
+            {hardwareOptions.map((option) => (
+              <label key={option} className={styles.checkboxLabel}>
                 <input
                   type="checkbox"
                   checked={formData.hardware_background.includes(option)}
-                  onChange={() => handleHardwareToggle(option)}
+                  onChange={() => handleHardwareChange(option)}
+                  className={styles.checkbox}
                 />
-                <span>{option}</span>
+                {option}
               </label>
             ))}
           </div>
@@ -268,151 +241,123 @@ export default function UserBackgroundQuestionnaire({
         {/* Experience Level */}
         <div className={styles.section}>
           <label className={styles.label}>
-            Experience Level <span className={styles.required}>*</span>
+            What's your overall experience level in robotics?
+            <span className={styles.required}>*</span>
           </label>
           <div className={styles.radioGroup}>
-            {(["beginner", "intermediate", "advanced"] as const).map((level) => (
-              <label key={level} className={styles.radio}>
+            {experienceLevels.map((level) => (
+              <label key={level.value} className={styles.radioLabel}>
                 <input
                   type="radio"
                   name="experience_level"
-                  value={level}
-                  checked={formData.experience_level === level}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      experience_level: e.target.value as "beginner" | "intermediate" | "advanced",
-                    }))
-                  }
+                  value={level.value}
+                  checked={formData.experience_level === level.value}
+                  onChange={(e) => {
+                    console.log("Experience level changed to:", e.target.value);
+                    setFormData({ ...formData, experience_level: e.target.value });
+                  }}
+                  className={styles.radio}
                 />
-                <span>{level.charAt(0).toUpperCase() + level.slice(1)}</span>
+                {level.label}
               </label>
             ))}
           </div>
-          {errors.experience_level && (
-            <span className={styles.fieldError}>{errors.experience_level}</span>
-          )}
+          {errors.experience_level && <span className={styles.fieldError}>{errors.experience_level}</span>}
         </div>
 
-        {/* Programming Years */}
+        {/* Robotics Projects */}
         <div className={styles.section}>
-          <label className={styles.label}>Years of Programming Experience</label>
-          <input
-            type="number"
-            min="0"
-            max="50"
-            value={formData.programming_years || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                programming_years: e.target.value ? parseInt(e.target.value, 10) : undefined,
-              }))
-            }
-            className={styles.input}
-            placeholder="e.g., 5"
-          />
-        </div>
-
-        {/* Learning Goals */}
-        <div className={styles.section}>
-          <label className={styles.label}>Learning Goals</label>
-          <p className={styles.helpText}>
-            What do you hope to achieve? (Optional, max 500 characters)
-          </p>
-          <textarea
-            value={formData.learning_goals}
-            onChange={(e) => setFormData((prev) => ({ ...prev, learning_goals: e.target.value }))}
-            className={styles.textarea}
-            rows={4}
-            maxLength={500}
-            placeholder="e.g., Build a humanoid robot that can navigate autonomously..."
-          />
-          <div className={styles.charCount}>
-            {formData.learning_goals.length}/500 characters
-          </div>
-          {errors.learning_goals && (
-            <span className={styles.fieldError}>{errors.learning_goals}</span>
-          )}
-        </div>
-
-        {/* Has Robotics Projects */}
-        <div className={styles.section}>
-          <label className={styles.checkbox}>
+          <label className={styles.checkboxLabel}>
             <input
               type="checkbox"
               checked={formData.has_robotics_projects}
               onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  has_robotics_projects: e.target.checked,
-                  robotics_projects_description: e.target.checked ? prev.robotics_projects_description : "",
-                }))
+                setFormData({ ...formData, has_robotics_projects: e.target.checked })
               }
+              className={styles.checkbox}
             />
-            <span>I have prior robotics projects</span>
+            I have worked on robotics projects
           </label>
+
+          {formData.has_robotics_projects && (
+            <div className={styles.subSection}>
+              <label className={styles.label}>
+                Please describe your projects
+                <span className={styles.required}>*</span>
+              </label>
+              <textarea
+                value={formData.robotics_projects_description}
+                onChange={(e) =>
+                  setFormData({ ...formData, robotics_projects_description: e.target.value })
+                }
+                className={styles.textarea}
+                rows={4}
+                placeholder="Tell us about the robotics projects you've worked on..."
+              />
+              {errors.robotics_projects_description && (
+                <span className={styles.fieldError}>{errors.robotics_projects_description}</span>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Robotics Projects Description */}
-        {formData.has_robotics_projects && (
-          <div className={styles.section}>
-            <label className={styles.label}>
-              Describe Your Robotics Projects <span className={styles.required}>*</span>
-            </label>
-            <textarea
-              value={formData.robotics_projects_description || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  robotics_projects_description: e.target.value,
-                }))
-              }
-              className={styles.textarea}
-              rows={3}
-              placeholder="Tell us about your robotics projects..."
-              required
-            />
-            {errors.robotics_projects_description && (
-              <span className={styles.fieldError}>{errors.robotics_projects_description}</span>
-            )}
-          </div>
-        )}
-
-        {/* Learning Style */}
+        {/* Learning Goals */}
         <div className={styles.section}>
-          <label className={styles.label}>Preferred Learning Style</label>
+          <label className={styles.label}>What are your learning goals? (Optional)</label>
+          <textarea
+            value={formData.learning_goals}
+            onChange={(e) => setFormData({ ...formData, learning_goals: e.target.value })}
+            className={styles.textarea}
+            rows={4}
+            maxLength={500}
+            placeholder="e.g., Build an autonomous robot, understand computer vision for robotics, learn ROS 2..."
+          />
+          <span className={styles.charCount}>{formData.learning_goals.length}/500</span>
+          {errors.learning_goals && <span className={styles.fieldError}>{errors.learning_goals}</span>}
+        </div>
+
+        {/* Learning Style (Optional) */}
+        <div className={styles.section}>
+          <label className={styles.label}>Preferred learning style (Optional)</label>
           <select
             value={formData.learning_style || ""}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                learning_style: e.target.value
-                  ? (e.target.value as "visual" | "hands-on" | "theoretical" | "mixed")
-                  : undefined,
-              }))
-            }
+            onChange={(e) => {
+              console.log("Learning style changed to:", e.target.value);
+              setFormData({
+                ...formData,
+                learning_style: e.target.value || undefined,
+              });
+            }}
             className={styles.select}
           >
-            <option value="">Select an option...</option>
-            <option value="visual">Visual (diagrams, videos, images)</option>
-            <option value="hands-on">Hands-on (practical exercises, building)</option>
-            <option value="theoretical">Theoretical (concepts, principles, theory)</option>
-            <option value="mixed">Mixed (combination of approaches)</option>
+            <option value="">Select a preference...</option>
+            <option value="hands-on">Hands-on / Learning by doing</option>
+            <option value="theory-first">Theory first, then practice</option>
+            <option value="project-based">Project-based learning</option>
+            <option value="mixed">Mixed approach</option>
           </select>
         </div>
 
-        {/* Actions */}
-        <div className={styles.actions}>
+        {submitError && <div className={styles.submitError}>{submitError}</div>}
+
+        <div className={styles.buttonGroup}>
           {onCancel && (
-            <button type="button" onClick={onCancel} className={styles.buttonSecondary} disabled={isSubmitting}>
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={isSubmitting}
+              className={styles.skipButton}
+            >
               Skip for Now
             </button>
           )}
-          <button type="submit" className={styles.buttonPrimary} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save & Continue"}
+          <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
+            {isSubmitting ? "Saving..." : "Complete Setup"}
           </button>
         </div>
       </form>
     </div>
   );
-}
+};
+
+export default UserBackgroundQuestionnaire;

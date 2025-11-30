@@ -9,6 +9,7 @@ import SignUpForm from "./SignUpForm";
 import UserBackgroundQuestionnaire from "./UserBackgroundQuestionnaire";
 import { useAuth } from "../../contexts/AuthContext";
 import { useHistory } from "@docusaurus/router";
+import Link from "@docusaurus/Link";
 import styles from "./SignUpFlow.module.css";
 
 type Step = "signup" | "questionnaire" | "complete";
@@ -31,10 +32,7 @@ export default function SignUpFlow({ onComplete }: { onComplete?: () => void }) 
 
   const handleQuestionnaireComplete = () => {
     setStep("complete");
-    // Wait a moment then call onComplete
-    setTimeout(() => {
-      onComplete?.();
-    }, 2000);
+    // Show success screen instead of immediate redirect
   };
 
   const handleQuestionnaireSkip = () => {
@@ -169,6 +167,24 @@ export default function SignUpFlow({ onComplete }: { onComplete?: () => void }) 
             <h2>🎉 Welcome!</h2>
             <p>Your account has been created successfully.</p>
             <p>You can now start exploring personalized content.</p>
+            <Link
+              to="/docs/intro"
+              style={{
+                display: "inline-block",
+                marginTop: "2rem",
+                padding: "0.75rem 2rem",
+                backgroundColor: "var(--ifm-color-primary)",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                fontSize: "1rem",
+                fontWeight: "500",
+                textDecoration: "none",
+                cursor: "pointer",
+              }}
+            >
+              Start Learning →
+            </Link>
           </div>
         )}
       </div>

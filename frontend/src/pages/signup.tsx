@@ -11,8 +11,10 @@ export default function SignupPage() {
   const history = useHistory();
 
   const handleComplete = () => {
-    // Redirect to home page after signup completion
-    history.push("/");
+    // Redirect to docs intro page after signup completion
+    console.log("Signup complete, redirecting to docs...");
+    // Use window.location for a full page reload to ensure the route exists
+    window.location.href = "/docs/intro";
   };
 
   return (

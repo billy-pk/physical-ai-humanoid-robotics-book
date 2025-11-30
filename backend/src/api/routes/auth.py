@@ -96,22 +96,39 @@ async def save_background_questionnaire(
     """
     try:
         # Get user ID from request
-        # Check both cookie header and FastAPI's cookies dict
-        cookie_header = request.headers.get("cookie", "")
-        authorization_header = request.headers.get("authorization")
+        # Try multiple authentication methods:
+        # 1. Better Auth cookie (if request came from same domain as Better Auth)
+        # 2. X-Session-Token header (for cross-origin requests where we manually pass the signed cookie)
+        # 3. Authorization Bearer header (for API tokens)
         
-        # Also check request.cookies dict (FastAPI's cookie parser)
-        if not cookie_header:
+        authorization_header = request.headers.get("authorization")
+        cookie_header = request.headers.get("cookie", "")
+        session_token_header = request.headers.get("x-session-token")  # For passing signed cookie value
+        
+        logger.info(f"Profile background request - Auth: {bool(authorization_header)}, Cookie: {bool(cookie_header)}, X-Session-Token: {bool(session_token_header)}")
+        
+        # If we have X-Session-Token header, use that (it contains the signed cookie value)
+        if session_token_header and not cookie_header:
+            cookie_header = f"better-auth.session_token={session_token_header}"
+            logger.info(f"Using X-Session-Token header as cookie: {session_token_header[:30]}...")
+        
+        # Check request.cookies dict as fallback
+        if not cookie_header and not authorization_header and not session_token_header:
             cookies_dict = dict(request.cookies)
+            logger.info(f"Request cookies dict: {list(cookies_dict.keys())}")
             if "better-auth.session_token" in cookies_dict:
                 cookie_header = f"better-auth.session_token={cookies_dict['better-auth.session_token']}"
+                logger.info("Using session token from request.cookies")
         
         user_id = await get_user_id_from_request(
             authorization=authorization_header,
             cookie=cookie_header
         )
         
+        logger.info(f"Retrieved user_id: {user_id}")
+        
         if not user_id:
+            logger.warning("Authentication failed - no valid user_id retrieved")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Authentication required"

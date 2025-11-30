@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .core.logging import configure_logging, logger
 from .core.monitoring import metrics
-from .api.routes import chat, auth
+from .api.routes import chat, auth, session_proxy
 
 # Configure structured logging at application startup
 configure_logging()
@@ -38,6 +38,7 @@ app.add_middleware(
 # Register API routers
 app.include_router(chat.router)
 app.include_router(auth.router)
+app.include_router(session_proxy.router)
 
 @app.get("/health")
 async def health_check():

@@ -23,7 +23,7 @@ class UserProfile(BaseModel):
     has_robotics_projects: Optional[bool] = Field(None, description="Whether user has prior robotics projects")
     robotics_projects_description: Optional[str] = Field(None, description="Description of robotics projects")
     programming_years: Optional[int] = Field(None, ge=0, le=50, description="Years of programming experience")
-    learning_style: Optional[str] = Field(None, description="visual/hands-on/theoretical/mixed")
+    learning_style: Optional[str] = Field(None, description="hands-on/theory-first/project-based/mixed")
     questionnaire_completed: bool = Field(default=False, description="Whether questionnaire is completed")
     questionnaire_completed_at: Optional[datetime] = Field(None, description="When questionnaire was completed")
     preferences: Optional[Dict[str, Any]] = Field(None, description="Additional user preferences")
@@ -55,7 +55,7 @@ class UserProfileCreate(BaseModel):
     has_robotics_projects: Optional[bool] = None
     robotics_projects_description: Optional[str] = None
     programming_years: Optional[int] = Field(None, ge=0, le=50)
-    learning_style: Optional[str] = Field(None, pattern="^(visual|hands-on|theoretical|mixed)$")
+    learning_style: Optional[str] = Field(None, pattern="^(hands-on|theory-first|project-based|mixed)$")
     preferences: Optional[Dict[str, Any]] = None
 
 
