@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-module-0/chapter-0-2" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">0.2 Humanoid Robotics Landscape &amp; Applications | Physical AI and Humanoid Robotics</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://billy-pk.github.io/physical-ai-humanoid-robotics-book/img/docusaurus-social-card.jpg"><meta data-rh="true" name="twitter:image" content="https://billy-pk.github.io/physical-ai-humanoid-robotics-book/img/docusaurus-social-card.jpg"><meta data-rh="true" property="og:url" content="https://billy-pk.github.io/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-2"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="0.2 Humanoid Robotics Landscape &amp; Applications | Physical AI and Humanoid Robotics"><meta data-rh="true" name="description" content="Humanoid robotics has evolved from research curiosities to commercial products. This chapter explores the current state of humanoid robotics, key players in the industry, real-world applications, and the path from research to deployment. Understanding this landscape provides context for why we&#x27;re learning ROS 2, Gazebo, and Isaac Sim."><meta data-rh="true" property="og:description" content="Humanoid robotics has evolved from research curiosities to commercial products. This chapter explores the current state of humanoid robotics, key players in the industry, real-world applications, and the path from research to deployment. Understanding this landscape provides context for why we&#x27;re learning ROS 2, Gazebo, and Isaac Sim."><link data-rh="true" rel="icon" href="/physical-ai-humanoid-robotics-book/img/favicon.ico"><link data-rh="true" rel="canonical" href="https://billy-pk.github.io/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-2"><link data-rh="true" rel="alternate" href="https://billy-pk.github.io/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-2" hreflang="en"><link data-rh="true" rel="alternate" href="https://billy-pk.github.io/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-2" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"0.2 Humanoid Robotics Landscape & Applications","item":"https://billy-pk.github.io/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-2"}]}</script><link rel="stylesheet" href="/physical-ai-humanoid-robotics-book/assets/css/styles.5bd17cce.css">
+<script src="/physical-ai-humanoid-robotics-book/assets/js/runtime~main.b29c4c8e.js" defer="defer"></script>
+<script src="/physical-ai-humanoid-robotics-book/assets/js/main.a246bccc.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>!function(){var t=function(){try{return new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}}()||function(){try{return window.localStorage.getItem("theme")}catch(t){}}();document.documentElement.setAttribute("data-theme",t||(window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")),document.documentElement.setAttribute("data-theme-choice",t||"system")}(),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><link rel="preload" as="image" href="/physical-ai-humanoid-robotics-book/img/logo.svg"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/physical-ai-humanoid-robotics-book/"><div class="navbar__logo"><img src="/physical-ai-humanoid-robotics-book/img/logo.svg" alt="Robot Logo" class="themedComponent_mlkZ themedComponent--light_NVdE"><img src="/physical-ai-humanoid-robotics-book/img/logo.svg" alt="Robot Logo" class="themedComponent_mlkZ themedComponent--dark_xIcU"></div><b class="navbar__title text--truncate">Physical AI Book</b></a><a aria-current="page" class="navbar__item navbar__link navbar__link--active" href="/physical-ai-humanoid-robotics-book/docs/intro">Read Book</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/billy-pk/physical-ai-humanoid-robotics-book" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="toggle_vylO colorModeToggle_DEke"><button class="clean-btn toggleButton_gllP toggleButtonDisabled_aARS" type="button" disabled="" title="system mode" aria-label="Switch between dark and light mode (currently system mode)"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP lightToggleIcon_pyhR"><path fill="currentColor" d="M12,9c1.65,0,3,1.35,3,3s-1.35,3-3,3s-3-1.35-3-3S10.35,9,12,9 M12,7c-2.76,0-5,2.24-5,5s2.24,5,5,5s5-2.24,5-5 S14.76,7,12,7L12,7z M2,13l2,0c0.55,0,1-0.45,1-1s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S1.45,13,2,13z M20,13l2,0c0.55,0,1-0.45,1-1 s-0.45-1-1-1l-2,0c-0.55,0-1,0.45-1,1S19.45,13,20,13z M11,2v2c0,0.55,0.45,1,1,1s1-0.45,1-1V2c0-0.55-0.45-1-1-1S11,1.45,11,2z M11,20v2c0,0.55,0.45,1,1,1s1-0.45,1-1v-2c0-0.55-0.45-1-1-1C11.45,19,11,19.45,11,20z M5.99,4.58c-0.39-0.39-1.03-0.39-1.41,0 c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0s0.39-1.03,0-1.41L5.99,4.58z M18.36,16.95 c-0.39-0.39-1.03-0.39-1.41,0c-0.39,0.39-0.39,1.03,0,1.41l1.06,1.06c0.39,0.39,1.03,0.39,1.41,0c0.39-0.39,0.39-1.03,0-1.41 L18.36,16.95z M19.42,5.99c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06c-0.39,0.39-0.39,1.03,0,1.41 s1.03,0.39,1.41,0L19.42,5.99z M7.05,18.36c0.39-0.39,0.39-1.03,0-1.41c-0.39-0.39-1.03-0.39-1.41,0l-1.06,1.06 c-0.39,0.39-0.39,1.03,0,1.41s1.03,0.39,1.41,0L7.05,18.36z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP darkToggleIcon_wfgR"><path fill="currentColor" d="M9.37,5.51C9.19,6.15,9.1,6.82,9.1,7.5c0,4.08,3.32,7.4,7.4,7.4c0.68,0,1.35-0.09,1.99-0.27C17.45,17.19,14.93,19,12,19 c-3.86,0-7-3.14-7-7C5,9.07,6.81,6.55,9.37,5.51z M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36 c-0.98,1.37-2.58,2.26-4.4,2.26c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"></path></svg><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" class="toggleIcon_g3eP systemToggleIcon_QzmC"><path fill="currentColor" d="m12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9zm4.95-13.95c1.313 1.313 2.05 3.093 2.05 4.95s-0.738 3.637-2.05 4.95c-1.313 1.313-3.093 2.05-4.95 2.05v-14c1.857 0 3.637 0.737 4.95 2.05z"></path></svg></button></div><div class="navbarSearchContainer_Bca1"></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/physical-ai-humanoid-robotics-book/docs/intro"><span title="Introduction" class="categoryLinkLabel_W154">Introduction</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/physical-ai-humanoid-robotics-book/docs/module-0/intro"><span title="Module 0: Foundations of Physical AI" class="categoryLinkLabel_W154">Module 0: Foundations of Physical AI</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/physical-ai-humanoid-robotics-book/docs/module-0/intro"><span title="Module 0 Introduction" class="linkLabel_WmDU">Module 0 Introduction</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-1"><span title="0.1 Introduction to Embodied Intelligence &amp; Physical AI" class="linkLabel_WmDU">0.1 Introduction to Embodied Intelligence &amp; Physical AI</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-2"><span title="0.2 Humanoid Robotics Landscape &amp; Applications" class="linkLabel_WmDU">0.2 Humanoid Robotics Landscape &amp; Applications</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-3"><span title="0.3 Sensor Systems for Humanoid Robots" class="linkLabel_WmDU">0.3 Sensor Systems for Humanoid Robots</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/physical-ai-humanoid-robotics-book/docs/module-1/intro"><span title="Module 1: The Robotic Nervous System (ROS 2)" class="categoryLinkLabel_W154">Module 1: The Robotic Nervous System (ROS 2)</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/physical-ai-humanoid-robotics-book/docs/module-2/intro"><span title="Module 2: The Digital Twin (Gazebo &amp; Unity)" class="categoryLinkLabel_W154">Module 2: The Digital Twin (Gazebo &amp; Unity)</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/physical-ai-humanoid-robotics-book/docs/module-3/intro"><span title="Module 3: The AI-Robot Brain (NVIDIA Isaac)" class="categoryLinkLabel_W154">Module 3: The AI-Robot Brain (NVIDIA Isaac)</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/physical-ai-humanoid-robotics-book/docs/module-4/intro"><span title="Module 4: Vision-Language-Action (VLA)" class="categoryLinkLabel_W154">Module 4: Vision-Language-Action (VLA)</span></a></div></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/physical-ai-humanoid-robotics-book/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">Module 0: Foundations of Physical AI</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">0.2 Humanoid Robotics Landscape &amp; Applications</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Chapter 0.2: Humanoid Robotics Landscape &amp; Applications</h1></header>
+<p>Humanoid robotics has evolved from research curiosities to commercial products. This chapter explores the current state of humanoid robotics, key players in the industry, real-world applications, and the path from research to deployment. Understanding this landscape provides context for why we&#x27;re learning ROS 2, Gazebo, and Isaac Sim.</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="learning-outcomes">Learning Outcomes<a href="#learning-outcomes" class="hash-link" aria-label="Direct link to Learning Outcomes" title="Direct link to Learning Outcomes" translate="no">​</a></h2>
+<p>By the end of this chapter, you will be able to:</p>
+<ul>
+<li class=""><strong>Identify</strong> major players in humanoid robotics (Boston Dynamics, Tesla, Figure AI, etc.)</li>
+<li class=""><strong>Understand</strong> current capabilities and limitations of humanoid robots</li>
+<li class=""><strong>Recognize</strong> real-world applications and use cases</li>
+<li class=""><strong>Appreciate</strong> the journey from research to commercial deployment</li>
+<li class=""><strong>See</strong> how simulation enables rapid development</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="prerequisites">Prerequisites<a href="#prerequisites" class="hash-link" aria-label="Direct link to Prerequisites" title="Direct link to Prerequisites" translate="no">​</a></h2>
+<ul>
+<li class=""><strong>Chapter 0.1</strong> completed (understanding of Physical AI)</li>
+<li class=""><strong>Basic awareness</strong> of robotics industry</li>
+<li class=""><strong>Curiosity</strong> about real-world applications</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="part-1-history-and-evolution">Part 1: History and Evolution<a href="#part-1-history-and-evolution" class="hash-link" aria-label="Direct link to Part 1: History and Evolution" title="Direct link to Part 1: History and Evolution" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="early-humanoid-robots-1960s-1990s">Early Humanoid Robots (1960s-1990s)<a href="#early-humanoid-robots-1960s-1990s" class="hash-link" aria-label="Direct link to Early Humanoid Robots (1960s-1990s)" title="Direct link to Early Humanoid Robots (1960s-1990s)" translate="no">​</a></h3>
+<p><strong>WABOT-1</strong> (1973):</p>
+<ul>
+<li class="">First full-scale humanoid robot</li>
+<li class="">Could walk, grasp objects, communicate</li>
+<li class=""><strong>Limitation</strong>: Very slow, limited autonomy</li>
+</ul>
+<p><strong>ASIMO</strong> (2000 to 2018):</p>
+<ul>
+<li class="">Honda&#x27;s flagship humanoid</li>
+<li class=""><strong>Achievements</strong>: Bipedal walking, running, stair climbing</li>
+<li class=""><strong>Impact</strong>: Demonstrated feasibility of humanoid locomotion</li>
+<li class=""><strong>Status</strong>: Discontinued (Honda shifted focus)</li>
+</ul>
+<p><strong>Key Insight</strong>: Early humanoids were <strong>research platforms</strong>, not commercial products.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="modern-era-2010s-present">Modern Era (2010s-Present)<a href="#modern-era-2010s-present" class="hash-link" aria-label="Direct link to Modern Era (2010s-Present)" title="Direct link to Modern Era (2010s-Present)" translate="no">​</a></h3>
+<p><strong>Boston Dynamics Atlas</strong> (2013-present):</p>
+<ul>
+<li class=""><strong>Breakthrough</strong>: Dynamic locomotion, parkour, acrobatics</li>
+<li class=""><strong>Technology</strong>: Hydraulic actuation, model-predictive control</li>
+<li class=""><strong>Status</strong>: Research platform (not commercially available)</li>
+<li class=""><strong>Impact</strong>: Set new standards for humanoid capabilities</li>
+</ul>
+<p><strong>Pepper</strong> (2014-present):</p>
+<ul>
+<li class=""><strong>Focus</strong>: Social interaction, customer service</li>
+<li class=""><strong>Deployment</strong>: Used in retail, healthcare, hospitality</li>
+<li class=""><strong>Status</strong>: Commercial product (SoftBank Robotics)</li>
+<li class=""><strong>Impact</strong>: Demonstrated humanoid robots in public spaces</li>
+</ul>
+<p><strong>Key Insight</strong>: Humanoids began transitioning from <strong>research</strong> to <strong>commercial applications</strong>.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="current-landscape-2020s">Current Landscape (2020s)<a href="#current-landscape-2020s" class="hash-link" aria-label="Direct link to Current Landscape (2020s)" title="Direct link to Current Landscape (2020s)" translate="no">​</a></h3>
+<p><strong>Three Categories</strong>:</p>
+<ol>
+<li class=""><strong>Research Platforms</strong>: Advanced capabilities, not commercially available</li>
+<li class=""><strong>Commercial Products</strong>: Available for purchase, specific use cases</li>
+<li class=""><strong>Startups</strong>: New companies targeting specific markets</li>
+</ol>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="part-2-key-players">Part 2: Key Players<a href="#part-2-key-players" class="hash-link" aria-label="Direct link to Part 2: Key Players" title="Direct link to Part 2: Key Players" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="boston-dynamics">Boston Dynamics<a href="#boston-dynamics" class="hash-link" aria-label="Direct link to Boston Dynamics" title="Direct link to Boston Dynamics" translate="no">​</a></h3>
+<p><strong>Products</strong>:</p>
+<ul>
+<li class=""><strong>Atlas</strong>: Advanced research humanoid</li>
+<li class=""><strong>Spot</strong>: Quadruped robot (commercial)</li>
+<li class=""><strong>Handle</strong>: Warehouse robot (discontinued)</li>
+</ul>
+<p><strong>Strengths</strong>:</p>
+<ul>
+<li class=""><strong>Dynamic locomotion</strong>: Best-in-class walking, running, jumping</li>
+<li class=""><strong>Control algorithms</strong>: Advanced balance and motion planning</li>
+<li class=""><strong>Research leadership</strong>: Pushing boundaries of what&#x27;s possible</li>
+</ul>
+<p><strong>Focus</strong>: Research and development, not mass production</p>
+<p><strong>Relevance to Course</strong>: Atlas uses ROS 2, demonstrates advanced control we&#x27;ll learn.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="tesla-optimus">Tesla Optimus<a href="#tesla-optimus" class="hash-link" aria-label="Direct link to Tesla Optimus" title="Direct link to Tesla Optimus" translate="no">​</a></h3>
+<p><strong>Announced</strong>: 2021 (Tesla AI Day)
+<strong>Status</strong>: In development
+<strong>Target</strong>: General-purpose humanoid for manufacturing and logistics</p>
+<p><strong>Approach</strong>:</p>
+<ul>
+<li class=""><strong>End-to-end learning</strong>: Neural networks for control</li>
+<li class=""><strong>Mass production</strong>: Leverage Tesla manufacturing expertise</li>
+<li class=""><strong>Cost target</strong>: Under $20,000 (ambitious)</li>
+</ul>
+<p><strong>Technology Stack</strong>:</p>
+<ul>
+<li class=""><strong>Perception</strong>: Tesla&#x27;s FSD (Full Self-Driving) vision stack</li>
+<li class=""><strong>Control</strong>: Learned policies, not hand-coded controllers</li>
+<li class=""><strong>Simulation</strong>: Likely using Isaac Sim or similar</li>
+</ul>
+<p><strong>Relevance to Course</strong>: Demonstrates VLA (Vision-Language-Action) approach we&#x27;ll build.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="figure-ai">Figure AI<a href="#figure-ai" class="hash-link" aria-label="Direct link to Figure AI" title="Direct link to Figure AI" translate="no">​</a></h3>
+<p><strong>Founded</strong>: 2022
+<strong>Focus</strong>: Humanoid robots for warehouse automation
+<strong>Partnership</strong>: BMW (manufacturing), OpenAI (AI)</p>
+<p><strong>Approach</strong>:</p>
+<ul>
+<li class=""><strong>Commercial focus</strong>: Specific use case (warehouses)</li>
+<li class=""><strong>AI integration</strong>: Large language models for task planning</li>
+<li class=""><strong>Rapid development</strong>: From startup to deployment in 2+ years</li>
+</ul>
+<p><strong>Relevance to Course</strong>: Uses LLM-based planning (Module 4), demonstrates commercial viability.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="unitree">Unitree<a href="#unitree" class="hash-link" aria-label="Direct link to Unitree" title="Direct link to Unitree" translate="no">​</a></h3>
+<p><strong>Products</strong>:</p>
+<ul>
+<li class=""><strong>Go2</strong>: Quadruped robot (commercial, ~$3,000)</li>
+<li class=""><strong>G1</strong>: Humanoid robot (commercial, ~$16,000)</li>
+<li class=""><strong>H1</strong>: Advanced humanoid (research/commercial)</li>
+</ul>
+<p><strong>Strengths</strong>:</p>
+<ul>
+<li class=""><strong>Affordable</strong>: Lower cost than competitors</li>
+<li class=""><strong>Open platform</strong>: ROS 2 compatible, developer-friendly</li>
+<li class=""><strong>Rapid iteration</strong>: Fast product development cycles</li>
+</ul>
+<p><strong>Relevance to Course</strong>: G1 uses ROS 2, good example of accessible humanoid platform.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="agility-robotics">Agility Robotics<a href="#agility-robotics" class="hash-link" aria-label="Direct link to Agility Robotics" title="Direct link to Agility Robotics" translate="no">​</a></h3>
+<p><strong>Products</strong>:</p>
+<ul>
+<li class=""><strong>Digit</strong>: Humanoid for logistics (commercial)</li>
+<li class=""><strong>Cassie</strong>: Bipedal research platform</li>
+</ul>
+<p><strong>Focus</strong>: Last-mile delivery, warehouse automation
+<strong>Partnership</strong>: Amazon (warehouse deployment)</p>
+<p><strong>Relevance to Course</strong>: Demonstrates real-world deployment, uses ROS 2.</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="other-notable-players">Other Notable Players<a href="#other-notable-players" class="hash-link" aria-label="Direct link to Other Notable Players" title="Direct link to Other Notable Players" translate="no">​</a></h3>
+<p><strong>Sanbot</strong>:</p>
+<ul>
+<li class="">Service robot for healthcare and hospitality</li>
+<li class=""><strong>Focus</strong>: Human-robot interaction</li>
+</ul>
+<p><strong>NAO</strong> (SoftBank Robotics):</p>
+<ul>
+<li class="">Educational and research platform</li>
+<li class=""><strong>Focus</strong>: Programming education, research</li>
+</ul>
+<p><strong>Sanctuary AI</strong>:</p>
+<ul>
+<li class="">General-purpose humanoid (Phoenix)</li>
+<li class=""><strong>Focus</strong>: Labor replacement in various industries</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="part-3-current-capabilities">Part 3: Current Capabilities<a href="#part-3-current-capabilities" class="hash-link" aria-label="Direct link to Part 3: Current Capabilities" title="Direct link to Part 3: Current Capabilities" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="what-humanoids-can-do-today">What Humanoids Can Do Today<a href="#what-humanoids-can-do-today" class="hash-link" aria-label="Direct link to What Humanoids Can Do Today" title="Direct link to What Humanoids Can Do Today" translate="no">​</a></h3>
+<p><strong>Locomotion</strong>:</p>
+<ul>
+<li class="">✅ <strong>Walking</strong>: Stable bipedal walking on flat surfaces</li>
+<li class="">✅ <strong>Stair climbing</strong>: Navigate stairs (some robots)</li>
+<li class="">✅ <strong>Running</strong>: Dynamic running (Atlas, advanced research)</li>
+<li class="">⚠️ <strong>Uneven terrain</strong>: Limited, requires careful planning</li>
+<li class="">❌ <strong>Jumping</strong>: Only Atlas (research)</li>
+</ul>
+<p><strong>Manipulation</strong>:</p>
+<ul>
+<li class="">✅ <strong>Grasping</strong>: Pick up objects of various sizes</li>
+<li class="">✅ <strong>Placing</strong>: Put objects in specific locations</li>
+<li class="">⚠️ <strong>Dexterous manipulation</strong>: Limited (fingers not as dexterous as human hands)</li>
+<li class="">❌ <strong>Complex tasks</strong>: Opening jars, tying knots (very limited)</li>
+</ul>
+<p><strong>Perception</strong>:</p>
+<ul>
+<li class="">✅ <strong>Object detection</strong>: Identify objects in environment</li>
+<li class="">✅ <strong>Navigation</strong>: VSLAM, path planning</li>
+<li class="">✅ <strong>Human detection</strong>: Recognize and track humans</li>
+<li class="">⚠️ <strong>Understanding</strong>: Limited semantic understanding</li>
+</ul>
+<p><strong>Interaction</strong>:</p>
+<ul>
+<li class="">✅ <strong>Voice commands</strong>: Speech recognition (some robots)</li>
+<li class="">✅ <strong>Gestures</strong>: Recognize pointing, waving</li>
+<li class="">⚠️ <strong>Natural language</strong>: Basic understanding, not conversational</li>
+<li class="">❌ <strong>Emotional intelligence</strong>: Very limited</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="current-limitations">Current Limitations<a href="#current-limitations" class="hash-link" aria-label="Direct link to Current Limitations" title="Direct link to Current Limitations" translate="no">​</a></h3>
+<p><strong>1. Cost</strong>:</p>
+<ul>
+<li class=""><strong>Research platforms</strong>: $100,000 - $1,000,000+</li>
+<li class=""><strong>Commercial</strong>: $16,000 - $100,000+</li>
+<li class=""><strong>Target</strong>: Under $20,000 (Tesla goal)</li>
+</ul>
+<p><strong>2. Reliability</strong>:</p>
+<ul>
+<li class=""><strong>Uptime</strong>: Hours, not days/weeks</li>
+<li class=""><strong>Failure modes</strong>: Falls, sensor failures, actuator issues</li>
+<li class=""><strong>Maintenance</strong>: Frequent calibration and repairs</li>
+</ul>
+<p><strong>3. Autonomy</strong>:</p>
+<ul>
+<li class=""><strong>Current</strong>: Teleoperation or scripted behaviors</li>
+<li class=""><strong>Goal</strong>: Fully autonomous operation</li>
+<li class=""><strong>Reality</strong>: Still requires human supervision</li>
+</ul>
+<p><strong>4. Generalization</strong>:</p>
+<ul>
+<li class=""><strong>Current</strong>: Trained for specific tasks/environments</li>
+<li class=""><strong>Goal</strong>: General-purpose, works anywhere</li>
+<li class=""><strong>Reality</strong>: Limited to controlled environments</li>
+</ul>
+<p><strong>5. Speed</strong>:</p>
+<ul>
+<li class=""><strong>Current</strong>: Slow compared to humans</li>
+<li class=""><strong>Walking speed</strong>: 1 to 2 km/h (humans: 5 km/h)</li>
+<li class=""><strong>Manipulation</strong>: Seconds per action (humans: milliseconds)</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="part-4-real-world-applications">Part 4: Real-World Applications<a href="#part-4-real-world-applications" class="hash-link" aria-label="Direct link to Part 4: Real-World Applications" title="Direct link to Part 4: Real-World Applications" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="manufacturing-and-logistics">Manufacturing and Logistics<a href="#manufacturing-and-logistics" class="hash-link" aria-label="Direct link to Manufacturing and Logistics" title="Direct link to Manufacturing and Logistics" translate="no">​</a></h3>
+<p><strong>Use Cases</strong>:</p>
+<ul>
+<li class=""><strong>Warehouse automation</strong>: Picking, packing, sorting</li>
+<li class=""><strong>Assembly line</strong>: Repetitive tasks alongside humans</li>
+<li class=""><strong>Quality inspection</strong>: Visual inspection of products</li>
+</ul>
+<p><strong>Examples</strong>:</p>
+<ul>
+<li class=""><strong>Figure AI + BMW</strong>: Humanoids in manufacturing</li>
+<li class=""><strong>Agility Robotics + Amazon</strong>: Warehouse automation</li>
+<li class=""><strong>Tesla Optimus</strong>: Target use case</li>
+</ul>
+<p><strong>Why Humanoids?</strong>:</p>
+<ul>
+<li class=""><strong>Human environments</strong>: Designed for human bodies</li>
+<li class=""><strong>Flexibility</strong>: Can adapt to different tasks</li>
+<li class=""><strong>Collaboration</strong>: Work alongside human workers</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="healthcare-and-assistance">Healthcare and Assistance<a href="#healthcare-and-assistance" class="hash-link" aria-label="Direct link to Healthcare and Assistance" title="Direct link to Healthcare and Assistance" translate="no">​</a></h3>
+<p><strong>Use Cases</strong>:</p>
+<ul>
+<li class=""><strong>Patient assistance</strong>: Help with daily tasks</li>
+<li class=""><strong>Rehabilitation</strong>: Physical therapy support</li>
+<li class=""><strong>Hospital logistics</strong>: Deliver supplies, transport equipment</li>
+</ul>
+<p><strong>Examples</strong>:</p>
+<ul>
+<li class=""><strong>Pepper</strong>: Patient interaction in hospitals</li>
+<li class=""><strong>Sanbot</strong>: Healthcare assistance</li>
+<li class=""><strong>Research</strong>: Exoskeletons for mobility assistance</li>
+</ul>
+<p><strong>Why Humanoids?</strong>:</p>
+<ul>
+<li class=""><strong>Empathy</strong>: Human-like form is more acceptable</li>
+<li class=""><strong>Accessibility</strong>: Can use human-designed tools and spaces</li>
+<li class=""><strong>Trust</strong>: Human-like appearance builds trust</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="service-and-hospitality">Service and Hospitality<a href="#service-and-hospitality" class="hash-link" aria-label="Direct link to Service and Hospitality" title="Direct link to Service and Hospitality" translate="no">​</a></h3>
+<p><strong>Use Cases</strong>:</p>
+<ul>
+<li class=""><strong>Customer service</strong>: Greet customers, answer questions</li>
+<li class=""><strong>Food service</strong>: Serve food, clear tables</li>
+<li class=""><strong>Retail</strong>: Assist shoppers, restock shelves</li>
+</ul>
+<p><strong>Examples</strong>:</p>
+<ul>
+<li class=""><strong>Pepper</strong>: Retail and hospitality</li>
+<li class=""><strong>NAO</strong>: Educational demonstrations</li>
+<li class=""><strong>Research</strong>: Restaurant service robots</li>
+</ul>
+<p><strong>Why Humanoids?</strong>:</p>
+<ul>
+<li class=""><strong>Social interaction</strong>: Human-like form facilitates interaction</li>
+<li class=""><strong>Public spaces</strong>: Designed for human presence</li>
+<li class=""><strong>Versatility</strong>: Can perform multiple service tasks</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="research-and-education">Research and Education<a href="#research-and-education" class="hash-link" aria-label="Direct link to Research and Education" title="Direct link to Research and Education" translate="no">​</a></h3>
+<p><strong>Use Cases</strong>:</p>
+<ul>
+<li class=""><strong>Research platform</strong>: Test algorithms, study human-robot interaction</li>
+<li class=""><strong>Education</strong>: Teach robotics, programming, AI</li>
+<li class=""><strong>Demonstration</strong>: Show capabilities to public</li>
+</ul>
+<p><strong>Examples</strong>:</p>
+<ul>
+<li class=""><strong>Boston Dynamics Atlas</strong>: Advanced research</li>
+<li class=""><strong>NAO</strong>: Educational platform</li>
+<li class=""><strong>Unitree G1</strong>: Research and development</li>
+</ul>
+<p><strong>Why Humanoids?</strong>:</p>
+<ul>
+<li class=""><strong>Complexity</strong>: Most challenging form of robotics</li>
+<li class=""><strong>Learning</strong>: Teaches advanced concepts</li>
+<li class=""><strong>Inspiration</strong>: Motivates students and researchers</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="part-5-the-path-from-research-to-deployment">Part 5: The Path from Research to Deployment<a href="#part-5-the-path-from-research-to-deployment" class="hash-link" aria-label="Direct link to Part 5: The Path from Research to Deployment" title="Direct link to Part 5: The Path from Research to Deployment" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="stage-1-research-years-1-to-5">Stage 1: Research (Years 1 to 5)<a href="#stage-1-research-years-1-to-5" class="hash-link" aria-label="Direct link to Stage 1: Research (Years 1 to 5)" title="Direct link to Stage 1: Research (Years 1 to 5)" translate="no">​</a></h3>
+<p><strong>Focus</strong>: Prove feasibility, develop core capabilities
+<strong>Output</strong>: Research papers, prototype demonstrations
+<strong>Example</strong>: Early Atlas demonstrations (parkour, acrobatics)</p>
+<p><strong>Key Activities</strong>:</p>
+<ul>
+<li class="">Algorithm development</li>
+<li class="">Simulation testing</li>
+<li class="">Prototype construction</li>
+<li class="">Proof-of-concept demonstrations</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="stage-2-commercialization-years-3-to-7">Stage 2: Commercialization (Years 3 to 7)<a href="#stage-2-commercialization-years-3-to-7" class="hash-link" aria-label="Direct link to Stage 2: Commercialization (Years 3 to 7)" title="Direct link to Stage 2: Commercialization (Years 3 to 7)" translate="no">​</a></h3>
+<p><strong>Focus</strong>: Make technology reliable and cost-effective
+<strong>Output</strong>: Commercial products, pilot deployments
+<strong>Example</strong>: Unitree G1, Agility Robotics Digit</p>
+<p><strong>Key Activities</strong>:</p>
+<ul>
+<li class="">Cost reduction</li>
+<li class="">Reliability improvement</li>
+<li class="">User testing</li>
+<li class="">Pilot deployments</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="stage-3-scale-years-5-to-10">Stage 3: Scale (Years 5 to 10)<a href="#stage-3-scale-years-5-to-10" class="hash-link" aria-label="Direct link to Stage 3: Scale (Years 5 to 10)" title="Direct link to Stage 3: Scale (Years 5 to 10)" translate="no">​</a></h3>
+<p><strong>Focus</strong>: Mass production, widespread deployment
+<strong>Output</strong>: Thousands of robots in the field
+<strong>Example</strong>: (Future) Tesla Optimus, Figure AI at scale</p>
+<p><strong>Key Activities</strong>:</p>
+<ul>
+<li class="">Manufacturing scale-up</li>
+<li class="">Software platform development</li>
+<li class="">Service and support infrastructure</li>
+<li class="">Market expansion</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="current-state-2024">Current State (2024)<a href="#current-state-2024" class="hash-link" aria-label="Direct link to Current State (2024)" title="Direct link to Current State (2024)" translate="no">​</a></h3>
+<p><strong>Most humanoids</strong>: Between Stage 1 and Stage 2</p>
+<ul>
+<li class=""><strong>Research</strong>: Advanced capabilities demonstrated</li>
+<li class=""><strong>Commercial</strong>: Early products available, limited deployment</li>
+<li class=""><strong>Scale</strong>: Not yet achieved</li>
+</ul>
+<p><strong>Exception</strong>: <strong>Pepper</strong> (Stage 3, but limited capabilities)</p>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="part-6-why-simulation-matters">Part 6: Why Simulation Matters<a href="#part-6-why-simulation-matters" class="hash-link" aria-label="Direct link to Part 6: Why Simulation Matters" title="Direct link to Part 6: Why Simulation Matters" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="simulation-accelerates-development">Simulation Accelerates Development<a href="#simulation-accelerates-development" class="hash-link" aria-label="Direct link to Simulation Accelerates Development" title="Direct link to Simulation Accelerates Development" translate="no">​</a></h3>
+<p><strong>Without Simulation</strong>:</p>
+<ul>
+<li class=""><strong>Cost</strong>: $100,000+ per robot</li>
+<li class=""><strong>Time</strong>: Days/weeks per experiment</li>
+<li class=""><strong>Risk</strong>: Physical damage, safety issues</li>
+<li class=""><strong>Limitation</strong>: Can&#x27;t test all scenarios</li>
+</ul>
+<p><strong>With Simulation</strong>:</p>
+<ul>
+<li class=""><strong>Cost</strong>: Cloud GPU ($1 to 5/hour)</li>
+<li class=""><strong>Time</strong>: Minutes/hours per experiment</li>
+<li class=""><strong>Risk</strong>: None (virtual robots)</li>
+<li class=""><strong>Capability</strong>: Test thousands of scenarios</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="real-examples">Real Examples<a href="#real-examples" class="hash-link" aria-label="Direct link to Real Examples" title="Direct link to Real Examples" translate="no">​</a></h3>
+<p><strong>Boston Dynamics</strong>:</p>
+<ul>
+<li class="">Uses simulation for algorithm development</li>
+<li class="">Tests behaviors in simulation before real robot</li>
+<li class=""><strong>Result</strong>: Faster iteration, safer development</li>
+</ul>
+<p><strong>Tesla</strong>:</p>
+<ul>
+<li class="">Uses simulation for FSD (Full Self-Driving) training</li>
+<li class="">Billions of miles driven in simulation</li>
+<li class=""><strong>Result</strong>: Rapid improvement without real-world risk</li>
+</ul>
+<p><strong>Figure AI</strong>:</p>
+<ul>
+<li class="">Trains manipulation policies in simulation</li>
+<li class="">Transfers to real robot</li>
+<li class=""><strong>Result</strong>: Faster development, lower cost</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="the-simulation-to-real-pipeline">The Simulation-to-Real Pipeline<a href="#the-simulation-to-real-pipeline" class="hash-link" aria-label="Direct link to The Simulation-to-Real Pipeline" title="Direct link to The Simulation-to-Real Pipeline" translate="no">​</a></h3>
+<p><strong>1. Develop in Simulation</strong>:</p>
+<ul>
+<li class="">Create robot model</li>
+<li class="">Test algorithms</li>
+<li class="">Generate training data</li>
+<li class="">Iterate rapidly</li>
+</ul>
+<p><strong>2. Validate in Simulation</strong>:</p>
+<ul>
+<li class="">Test edge cases</li>
+<li class="">Stress test systems</li>
+<li class="">Verify safety</li>
+<li class="">Optimize performance</li>
+</ul>
+<p><strong>3. Transfer to Real Robot</strong>:</p>
+<ul>
+<li class="">Deploy to hardware</li>
+<li class="">Fine-tune parameters</li>
+<li class="">Handle reality gap</li>
+<li class="">Validate performance</li>
+</ul>
+<p><strong>4. Deploy at Scale</strong>:</p>
+<ul>
+<li class="">Roll out to multiple robots</li>
+<li class="">Monitor performance</li>
+<li class="">Collect real-world data</li>
+<li class="">Improve simulation models</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="part-7-what-this-means-for-you">Part 7: What This Means for You<a href="#part-7-what-this-means-for-you" class="hash-link" aria-label="Direct link to Part 7: What This Means for You" title="Direct link to Part 7: What This Means for You" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-learn-ros-2">Why Learn ROS 2?<a href="#why-learn-ros-2" class="hash-link" aria-label="Direct link to Why Learn ROS 2?" title="Direct link to Why Learn ROS 2?" translate="no">​</a></h3>
+<p><strong>Industry Standard</strong>:</p>
+<ul>
+<li class="">Used by 90%+ of robotics companies</li>
+<li class="">Boston Dynamics, Agility Robotics, Unitree all use ROS 2</li>
+<li class=""><strong>Job market</strong>: ROS 2 skills are in high demand</li>
+</ul>
+<p><strong>Unified Platform</strong>:</p>
+<ul>
+<li class="">One framework for perception, planning, control</li>
+<li class="">Extensive libraries and tools</li>
+<li class=""><strong>Efficiency</strong>: Don&#x27;t reinvent the wheel</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-learn-gazebo">Why Learn Gazebo?<a href="#why-learn-gazebo" class="hash-link" aria-label="Direct link to Why Learn Gazebo?" title="Direct link to Why Learn Gazebo?" translate="no">​</a></h3>
+<p><strong>Realistic Simulation</strong>:</p>
+<ul>
+<li class="">Industry-standard physics engine</li>
+<li class="">Extensive sensor models</li>
+<li class=""><strong>Reality</strong>: Close to real-world physics</li>
+</ul>
+<p><strong>ROS Integration</strong>:</p>
+<ul>
+<li class="">Seamless integration with ROS 2</li>
+<li class="">Test ROS 2 code before hardware</li>
+<li class=""><strong>Workflow</strong>: Develop → Simulate → Deploy</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-learn-isaac-sim">Why Learn Isaac Sim?<a href="#why-learn-isaac-sim" class="hash-link" aria-label="Direct link to Why Learn Isaac Sim?" title="Direct link to Why Learn Isaac Sim?" translate="no">​</a></h3>
+<p><strong>AI Training</strong>:</p>
+<ul>
+<li class="">Photorealistic rendering</li>
+<li class="">Synthetic data generation</li>
+<li class=""><strong>Scale</strong>: Generate millions of training images</li>
+</ul>
+<p><strong>GPU Acceleration</strong>:</p>
+<ul>
+<li class="">Fast simulation (real-time or faster)</li>
+<li class="">Parallel environments</li>
+<li class=""><strong>Efficiency</strong>: Train models quickly</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="why-learn-vla">Why Learn VLA?<a href="#why-learn-vla" class="hash-link" aria-label="Direct link to Why Learn VLA?" title="Direct link to Why Learn VLA?" translate="no">​</a></h3>
+<p><strong>Future of Robotics</strong>:</p>
+<ul>
+<li class="">Natural language control</li>
+<li class="">LLM-based planning</li>
+<li class=""><strong>Trend</strong>: All major companies moving this direction</li>
+</ul>
+<p><strong>Career Relevance</strong>:</p>
+<ul>
+<li class="">Cutting-edge technology</li>
+<li class="">High demand skills</li>
+<li class=""><strong>Impact</strong>: Shape the future of robotics</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="summary">Summary<a href="#summary" class="hash-link" aria-label="Direct link to Summary" title="Direct link to Summary" translate="no">​</a></h2>
+<p>You learned:</p>
+<ul>
+<li class="">✅ <strong>History</strong>: Humanoid robotics evolved from research to commercial products</li>
+<li class="">✅ <strong>Key Players</strong>: Boston Dynamics, Tesla, Figure AI, Unitree, Agility Robotics</li>
+<li class="">✅ <strong>Capabilities</strong>: Current strengths (walking, manipulation) and limitations (cost, reliability)</li>
+<li class="">✅ <strong>Applications</strong>: Manufacturing, healthcare, service, research</li>
+<li class="">✅ <strong>Path Forward</strong>: Simulation accelerates development from research to deployment</li>
+<li class="">✅ <strong>Relevance</strong>: Why ROS 2, Gazebo, and Isaac Sim matter for your career</li>
+</ul>
+<p><strong>Next steps</strong>: In Chapter 0.3, you&#x27;ll dive into sensor systems—the &quot;senses&quot; that enable humanoid robots to perceive the world.</p>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="exercises">Exercises<a href="#exercises" class="hash-link" aria-label="Direct link to Exercises" title="Direct link to Exercises" translate="no">​</a></h2>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="exercise-1-research-a-humanoid-robot-required">Exercise 1: Research a Humanoid Robot (Required)<a href="#exercise-1-research-a-humanoid-robot-required" class="hash-link" aria-label="Direct link to Exercise 1: Research a Humanoid Robot (Required)" title="Direct link to Exercise 1: Research a Humanoid Robot (Required)" translate="no">​</a></h3>
+<p><strong>Objective</strong>: Deep dive into one humanoid robot platform.</p>
+<p><strong>Tasks</strong>:</p>
+<ol>
+<li class="">Choose one humanoid robot (Atlas, Optimus, G1, Digit, etc.)</li>
+<li class="">Research:<!-- -->
+<ul>
+<li class="">Technical specifications</li>
+<li class="">Current capabilities</li>
+<li class="">Use cases and deployments</li>
+<li class="">Technology stack (ROS 2? Simulation tools?)</li>
+</ul>
+</li>
+<li class="">Write 1-page summary</li>
+<li class="">Present findings (or document in README)</li>
+</ol>
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul class="contains-task-list containsTaskList_mC6p">
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Robot chosen and researched</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Technical specs documented</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Capabilities and limitations identified</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Technology stack identified</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Summary written</li>
+</ul>
+<p><strong>Estimated Time</strong>: 90 minutes</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="exercise-2-compare-two-platforms-required">Exercise 2: Compare Two Platforms (Required)<a href="#exercise-2-compare-two-platforms-required" class="hash-link" aria-label="Direct link to Exercise 2: Compare Two Platforms (Required)" title="Direct link to Exercise 2: Compare Two Platforms (Required)" translate="no">​</a></h3>
+<p><strong>Objective</strong>: Understand trade-offs between different humanoid approaches.</p>
+<p><strong>Tasks</strong>:</p>
+<ol>
+<li class="">Compare two humanoid robots (e.g., Atlas vs. G1, Optimus vs. Figure AI)</li>
+<li class="">Compare:<!-- -->
+<ul>
+<li class="">Capabilities</li>
+<li class="">Cost</li>
+<li class="">Target applications</li>
+<li class="">Technology approach</li>
+</ul>
+</li>
+<li class="">Identify strengths and weaknesses of each</li>
+<li class="">Write comparison document</li>
+</ol>
+<p><strong>Acceptance Criteria</strong>:</p>
+<ul class="contains-task-list containsTaskList_mC6p">
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Two robots compared</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Key differences identified</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Trade-offs analyzed</li>
+<li class="task-list-item"><input type="checkbox" disabled=""> <!-- -->Comparison documented</li>
+</ul>
+<p><strong>Estimated Time</strong>: 60 minutes</p>
+<h3 class="anchor anchorTargetStickyNavbar_Vzrq" id="exercise-3-application-analysis-challenge">Exercise 3: Application Analysis (Challenge)<a href="#exercise-3-application-analysis-challenge" class="hash-link" aria-label="Direct link to Exercise 3: Application Analysis (Challenge)" title="Direct link to Exercise 3: Application Analysis (Challenge)" translate="no">​</a></h3>
+<p><strong>Objective</strong>: Analyze a specific application for humanoid robots.</p>
+<p><strong>Tasks</strong>:</p>
+<ol>
+<li class="">Choose an application (warehouse automation, healthcare, etc.)</li>
+<li class="">Research:<!-- -->
+<ul>
+<li class="">Current state (are humanoids deployed?)</li>
+<li class="">Challenges and requirements</li>
+<li class="">Why humanoids vs. other solutions?</li>
+<li class="">Future potential</li>
+</ul>
+</li>
+<li class="">Write analysis document</li>
+<li class="">Propose how simulation could help development</li>
+</ol>
+<p><strong>Requirements</strong>:</p>
+<ul>
+<li class="">Application chosen and researched</li>
+<li class="">Challenges identified</li>
+<li class="">Justification for humanoids</li>
+<li class="">Simulation proposal</li>
+</ul>
+<p><strong>Estimated Time</strong>: 120 minutes</p>
+<hr>
+<h2 class="anchor anchorTargetStickyNavbar_Vzrq" id="additional-resources">Additional Resources<a href="#additional-resources" class="hash-link" aria-label="Direct link to Additional Resources" title="Direct link to Additional Resources" translate="no">​</a></h2>
+<ul>
+<li class=""><a href="https://www.bostondynamics.com/products/atlas" target="_blank" rel="noopener noreferrer" class="">Boston Dynamics Atlas</a> - Official site</li>
+<li class=""><a href="https://www.tesla.com/ai" target="_blank" rel="noopener noreferrer" class="">Tesla Optimus</a> - Tesla AI Day videos</li>
+<li class=""><a href="https://www.figure.ai/" target="_blank" rel="noopener noreferrer" class="">Figure AI</a> - Company website</li>
+<li class=""><a href="https://www.unitree.com/" target="_blank" rel="noopener noreferrer" class="">Unitree Robotics</a> - Products and specs</li>
+<li class=""><a href="https://www.agilityrobotics.com/" target="_blank" rel="noopener noreferrer" class="">Agility Robotics</a> - Digit robot</li>
+<li class=""><a href="https://spectrum.ieee.org/topic/robotics/" target="_blank" rel="noopener noreferrer" class="">Humanoid Robotics News</a> - IEEE Spectrum</li>
+</ul>
+<hr>
+<p><strong>Next</strong>: [Chapter 0.3: Sensor Systems for Humanoid Robots →](chapter-0 to 3.md)</p></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/billy-pk/physical-ai-humanoid-robotics-book/tree/main/frontend/docs/module-0/chapter-0-2.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-1"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">0.1 Introduction to Embodied Intelligence &amp; Physical AI</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/physical-ai-humanoid-robotics-book/docs/module-0/chapter-0-3"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">0.3 Sensor Systems for Humanoid Robots</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#learning-outcomes" class="table-of-contents__link toc-highlight">Learning Outcomes</a></li><li><a href="#prerequisites" class="table-of-contents__link toc-highlight">Prerequisites</a></li><li><a href="#part-1-history-and-evolution" class="table-of-contents__link toc-highlight">Part 1: History and Evolution</a><ul><li><a href="#early-humanoid-robots-1960s-1990s" class="table-of-contents__link toc-highlight">Early Humanoid Robots (1960s-1990s)</a></li><li><a href="#modern-era-2010s-present" class="table-of-contents__link toc-highlight">Modern Era (2010s-Present)</a></li><li><a href="#current-landscape-2020s" class="table-of-contents__link toc-highlight">Current Landscape (2020s)</a></li></ul></li><li><a href="#part-2-key-players" class="table-of-contents__link toc-highlight">Part 2: Key Players</a><ul><li><a href="#boston-dynamics" class="table-of-contents__link toc-highlight">Boston Dynamics</a></li><li><a href="#tesla-optimus" class="table-of-contents__link toc-highlight">Tesla Optimus</a></li><li><a href="#figure-ai" class="table-of-contents__link toc-highlight">Figure AI</a></li><li><a href="#unitree" class="table-of-contents__link toc-highlight">Unitree</a></li><li><a href="#agility-robotics" class="table-of-contents__link toc-highlight">Agility Robotics</a></li><li><a href="#other-notable-players" class="table-of-contents__link toc-highlight">Other Notable Players</a></li></ul></li><li><a href="#part-3-current-capabilities" class="table-of-contents__link toc-highlight">Part 3: Current Capabilities</a><ul><li><a href="#what-humanoids-can-do-today" class="table-of-contents__link toc-highlight">What Humanoids Can Do Today</a></li><li><a href="#current-limitations" class="table-of-contents__link toc-highlight">Current Limitations</a></li></ul></li><li><a href="#part-4-real-world-applications" class="table-of-contents__link toc-highlight">Part 4: Real-World Applications</a><ul><li><a href="#manufacturing-and-logistics" class="table-of-contents__link toc-highlight">Manufacturing and Logistics</a></li><li><a href="#healthcare-and-assistance" class="table-of-contents__link toc-highlight">Healthcare and Assistance</a></li><li><a href="#service-and-hospitality" class="table-of-contents__link toc-highlight">Service and Hospitality</a></li><li><a href="#research-and-education" class="table-of-contents__link toc-highlight">Research and Education</a></li></ul></li><li><a href="#part-5-the-path-from-research-to-deployment" class="table-of-contents__link toc-highlight">Part 5: The Path from Research to Deployment</a><ul><li><a href="#stage-1-research-years-1-to-5" class="table-of-contents__link toc-highlight">Stage 1: Research (Years 1 to 5)</a></li><li><a href="#stage-2-commercialization-years-3-to-7" class="table-of-contents__link toc-highlight">Stage 2: Commercialization (Years 3 to 7)</a></li><li><a href="#stage-3-scale-years-5-to-10" class="table-of-contents__link toc-highlight">Stage 3: Scale (Years 5 to 10)</a></li><li><a href="#current-state-2024" class="table-of-contents__link toc-highlight">Current State (2024)</a></li></ul></li><li><a href="#part-6-why-simulation-matters" class="table-of-contents__link toc-highlight">Part 6: Why Simulation Matters</a><ul><li><a href="#simulation-accelerates-development" class="table-of-contents__link toc-highlight">Simulation Accelerates Development</a></li><li><a href="#real-examples" class="table-of-contents__link toc-highlight">Real Examples</a></li><li><a href="#the-simulation-to-real-pipeline" class="table-of-contents__link toc-highlight">The Simulation-to-Real Pipeline</a></li></ul></li><li><a href="#part-7-what-this-means-for-you" class="table-of-contents__link toc-highlight">Part 7: What This Means for You</a><ul><li><a href="#why-learn-ros-2" class="table-of-contents__link toc-highlight">Why Learn ROS 2?</a></li><li><a href="#why-learn-gazebo" class="table-of-contents__link toc-highlight">Why Learn Gazebo?</a></li><li><a href="#why-learn-isaac-sim" class="table-of-contents__link toc-highlight">Why Learn Isaac Sim?</a></li><li><a href="#why-learn-vla" class="table-of-contents__link toc-highlight">Why Learn VLA?</a></li></ul></li><li><a href="#summary" class="table-of-contents__link toc-highlight">Summary</a></li><li><a href="#exercises" class="table-of-contents__link toc-highlight">Exercises</a><ul><li><a href="#exercise-1-research-a-humanoid-robot-required" class="table-of-contents__link toc-highlight">Exercise 1: Research a Humanoid Robot (Required)</a></li><li><a href="#exercise-2-compare-two-platforms-required" class="table-of-contents__link toc-highlight">Exercise 2: Compare Two Platforms (Required)</a></li><li><a href="#exercise-3-application-analysis-challenge" class="table-of-contents__link toc-highlight">Exercise 3: Application Analysis (Challenge)</a></li></ul></li><li><a href="#additional-resources" class="table-of-contents__link toc-highlight">Additional Resources</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer footer--dark"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Learn</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/physical-ai-humanoid-robotics-book/docs/intro">Introduction</a></li><li class="footer__item"><a class="footer__link-item" href="/physical-ai-humanoid-robotics-book/docs/module-0/intro">Module 0: Foundations of Physical AI</a></li><li class="footer__item"><a class="footer__link-item" href="/physical-ai-humanoid-robotics-book/docs/module-1/intro">Module 1: ROS 2</a></li><li class="footer__item"><a class="footer__link-item" href="/physical-ai-humanoid-robotics-book/docs/module-2/intro">Module 2: Gazebo &amp; Unity</a></li><li class="footer__item"><a class="footer__link-item" href="/physical-ai-humanoid-robotics-book/docs/module-3/intro">Module 3: NVIDIA Isaac</a></li><li class="footer__item"><a class="footer__link-item" href="/physical-ai-humanoid-robotics-book/docs/module-4/intro">Module 4: VLA</a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Resources</div><ul class="footer__items clean-list"><li class="footer__item"><a href="https://github.com/billy-pk/physical-ai-humanoid-robotics-book" target="_blank" rel="noopener noreferrer" class="footer__link-item">GitHub Repository<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Copyright © 2025 Physical AI and Humanoid Robotics Book.</div></div></div></footer><button class="floatingButton_PnVV" aria-label="Open chat assistant" title="Chat with AI Assistant"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12C2 13.54 2.36 15 3 16.32V21L7.68 19C9 19.64 10.46 20 12 20C17.52 20 22 15.52 22 10C22 4.48 17.52 0 12 0C12 0.67 12 1.34 12 2Z" fill="currentColor"></path><circle cx="8" cy="12" r="1.5" fill="white"></circle><circle cx="12" cy="12" r="1.5" fill="white"></circle><circle cx="16" cy="12" r="1.5" fill="white"></circle></svg></button></div>
+</body>
+</html>
