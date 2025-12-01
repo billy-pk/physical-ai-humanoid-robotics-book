@@ -53,12 +53,104 @@
 }
 
 [data-theme='dark'] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  /* Dark mode background colors */
+  --ifm-background-color: #1a1a1a;
+  --ifm-background-surface-color: #242526;
+  
+  /* Dark mode primary colors - using a vibrant teal/cyan that works well in dark mode */
+  --ifm-color-primary: #4dd0e1;
+  --ifm-color-primary-dark: #26c6da;
+  --ifm-color-primary-darker: #00bcd4;
+  --ifm-color-primary-darkest: #0097a7;
+  --ifm-color-primary-light: #80deea;
+  --ifm-color-primary-lighter: #b2ebf2;
+  --ifm-color-primary-lightest: #e0f7fa;
+  
+  /* Dark mode text colors */
+  --ifm-font-color-base: #e4e4e4;
+  --ifm-font-color-base-inverse: #1a1a1a;
+  --ifm-heading-color: #ffffff;
+  --ifm-color-content: #e4e4e4;
+  --ifm-color-content-secondary: #b0b0b0;
+  
+  /* Dark mode navbar */
+  --ifm-navbar-background-color: #242526;
+  --ifm-navbar-link-color: #e4e4e4;
+  --ifm-navbar-link-hover-color: #4dd0e1;
+  
+  /* Dark mode footer */
+  --ifm-footer-background-color: #1a1a1a;
+  --ifm-footer-color: #b0b0b0;
+  --ifm-footer-link-color: #e4e4e4;
+  --ifm-footer-link-hover-color: #4dd0e1;
+  
+  /* Dark mode hero section */
+  --ifm-hero-background-color: #242526;
+  --ifm-hero-text-color: #ffffff;
+  
+  /* Dark mode code blocks */
+  --ifm-code-background: #2d2d2d;
+  --ifm-code-color: #f8f8f2;
+  --docusaurus-highlighted-code-line-bg: rgba(77, 208, 225, 0.2);
+  
+  /* Dark mode borders */
+  --ifm-color-emphasis-200: #3a3a3a;
+  --ifm-color-emphasis-300: #4a4a4a;
+  --ifm-border-color: #3a3a3a;
+  
+  /* Dark mode table */
+  --ifm-table-border-color: #3a3a3a;
+  --ifm-table-stripe-background: #242526;
+  
+  /* Dark mode card */
+  --ifm-card-background-color: #242526;
+  
+  /* Dark mode button */
+  --ifm-button-background-color: #4dd0e1;
+  --ifm-button-color: #1a1a1a;
+}
+
+/* Force dark mode hero section styling */
+[data-theme='dark'] .hero--primary {
+  background: linear-gradient(135deg, #242526 0%, #1a1a1a 100%);
+  color: #ffffff;
+}
+
+[data-theme='dark'] .hero__title {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .hero__subtitle {
+  color: #e4e4e4;
+}
+
+[data-theme='dark'] .button--secondary {
+  background-color: #4dd0e1;
+  color: #1a1a1a;
+  border-color: #4dd0e1;
+}
+
+[data-theme='dark'] .button--secondary:hover {
+  background-color: #26c6da;
+  border-color: #26c6da;
+  color: #1a1a1a;
+}
+
+/* Dark mode main content area */
+[data-theme='dark'] main {
+  background-color: #1a1a1a;
+  color: #e4e4e4;
+}
+
+/* Dark mode features section */
+[data-theme='dark'] .features {
+  background-color: #1a1a1a;
+}
+
+[data-theme='dark'] .features h3 {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .features p {
+  color: #e4e4e4;
 }
