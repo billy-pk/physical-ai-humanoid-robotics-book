@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from "react";
-import { signUp } from "../../lib/auth";
+import { signUp, storeSessionToken } from "../../lib/auth";
 import styles from "./Auth.module.css";
 
 interface SignUpFormProps {
@@ -19,29 +19,80 @@ export default function SignUpForm({ onSuccess, onError }: SignUpFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Client-side validation before submission
+    const trimmedEmail = email.trim();
+    const trimmedName = name.trim();
+    
+    if (!trimmedEmail) {
+      onError?.("Email is required");
+      return;
+    }
+    
+    if (!trimmedName) {
+      onError?.("Name is required");
+      return;
+    }
+    
+    if (!password) {
+      onError?.("Password is required");
+      return;
+    }
+    
+    if (password.length < 8) {
+      onError?.("Password must be at least 8 characters long");
+      return;
+    }
+    
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      onError?.("Please enter a valid email address");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
-      const result = await signUp.email({
-        email,
+      // Log the exact data being sent
+      const signupData = {
+        email: trimmedEmail,
         password,
-        name,
-      });
+        name: trimmedName,
+      };
+      console.log("SignUp request data:", JSON.stringify(signupData, null, 2));
+      
+      const result = await signUp.email(signupData);
 
-      console.log("SignUp result:", result); // Debug log
+      console.log("SignUp result:", JSON.stringify(result, null, 2)); // Debug log
 
       if (result.error) {
-        console.error("SignUp error:", result.error); // Debug log
+        console.error("SignUp error:", JSON.stringify(result.error, null, 2)); // Debug log
         // Handle specific error codes
-        if (result.error.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL") {
+        if (result.error.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" || 
+            result.error.code === "USER_ALREADY_EXISTS" ||
+            result.error.message?.includes("already exists") ||
+            result.error.message?.includes("already registered")) {
           onError?.("This email is already registered. Please sign in instead or use a different email.");
         } else {
-          onError?.(result.error.message || "Sign up failed");
+          const errorMsg = result.error.message || result.error.code || JSON.stringify(result.error);
+          console.error("SignUp error details:", errorMsg);
+          onError?.(errorMsg || "Sign up failed. Please try again.");
         }
       } else {
         console.log("SignUp successful, calling onSuccess"); // Debug log
-        // Wait a moment for session to be established
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        
+        // Store the session token for use with FastAPI IMMEDIATELY
+        const token = result.data?.token;
+        if (token) {
+          storeSessionToken(token);
+          console.log("Session token stored for FastAPI requests:", token.substring(0, 20) + "...");
+        } else {
+          console.warn("No token in sign-up response!");
+        }
+        
+        // Call onSuccess immediately - don't wait
+        // The token is already stored, so preferences fetch can use it
         onSuccess?.();
       }
     } catch (error: any) {

@@ -7,11 +7,11 @@ Endpoints:
 - PUT /api/auth/profile - Update user profile
 """
 
-from fastapi import APIRouter, HTTPException, status, Request
-from typing import Optional
+from fastapi import APIRouter, HTTPException, status, Request, Depends
+from typing import Dict, Any, List
 from ...core.logging import logger
-from ...core.auth import get_user_id_from_request
-from ...models.user import UserProfileResponse, UserProfileCreate
+from ...core.auth import get_user_id_from_request, get_current_active_user, User
+from ...models.user import UserProfileResponse, UserProfileCreate, PersonalizationPreferences
 from ...services.user_profile import UserProfileService
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
@@ -81,6 +81,48 @@ async def get_profile(request: Request):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve profile"
         )
+
+
+@router.get("/profile/preferences", response_model=PersonalizationPreferences, summary="Get user personalization preferences")
+async def get_user_preferences(
+    user: User = Depends(get_current_active_user),
+) -> PersonalizationPreferences:
+    """
+    Retrieve the current user's personalization preferences.
+    """
+    preferences = await UserProfileService.get_personalization_preferences(user["id"])
+    if not preferences:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Personalization preferences not found for this user."
+        )
+    return preferences
+
+
+@router.post("/profile/preferences", response_model=PersonalizationPreferences, summary="Update user personalization preferences")
+async def update_user_preferences(
+    preferences: PersonalizationPreferences,
+    user: User = Depends(get_current_active_user),
+) -> PersonalizationPreferences:
+    """
+    Update the current user's personalization preferences.
+    """
+    try:
+        updated_profile = await UserProfileService.update_personalization_preferences(user["id"], preferences)
+        if not updated_profile.preferences:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to retrieve updated preferences after update."
+            )
+        # Re-validate the stored preferences against the Pydantic model to ensure consistency
+        return PersonalizationPreferences.model_validate(updated_profile.preferences)
+    except Exception as e:
+        logger.error(f"Error updating personalization preferences for user {user['id']}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update personalization preferences: {e}"
+        )
+
 
 
 @router.post("/profile/background", response_model=UserProfileResponse, status_code=status.HTTP_200_OK)

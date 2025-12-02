@@ -6,7 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from .core.config import settings
 from .core.logging import configure_logging, logger
 from .core.monitoring import metrics
-from .api.routes import chat, auth, session_proxy
+from .api.routes import chat, auth, session_proxy, content
+from .database import async_engine # Import async_engine
 
 # Configure structured logging at application startup
 configure_logging()
@@ -15,10 +16,11 @@ configure_logging()
 async def lifespan(app: FastAPI):
     # Startup logic
     logger.info("Application starting up")
-    # In a real application, connect to DBs here
+    # Initialize database connections
     yield
     # Shutdown logic
     logger.info("Application shutting down")
+    await async_engine.dispose() # Dispose of the async engine pool
 
 app = FastAPI(lifespan=lifespan,
               title="AI-Course-Book Backend",
@@ -39,6 +41,7 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(auth.router)
 app.include_router(session_proxy.router)
+app.include_router(content.router) # Include the new content router
 
 @app.get("/health")
 async def health_check():

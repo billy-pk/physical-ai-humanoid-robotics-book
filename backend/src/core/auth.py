@@ -7,16 +7,26 @@ This module provides functions to:
 - Query user data from the shared database
 """
 
-from typing import Optional
+from typing import Optional, TypedDict
+from fastapi import HTTPException, status, Header, Request, Depends
 import httpx
-from fastapi import HTTPException, status, Header
 from ..core.config import settings
 from ..core.logging import logger
+
+
+class User(TypedDict):
+    """User type from Better Auth session."""
+    id: str
+    email: str
+    name: Optional[str]
 
 
 async def get_user_from_session(session_token: Optional[str] = None) -> Optional[dict]:
     """
     Validate Better Auth session and return user information.
+    
+    This function queries the session table directly from the shared database
+    instead of calling Better Auth's API, which is more reliable for server-to-server requests.
     
     Args:
         session_token: Better Auth session token from cookie or Authorization header
@@ -30,18 +40,90 @@ async def get_user_from_session(session_token: Optional[str] = None) -> Optional
         logger.warning("No session token provided")
         return None
     
+    try:
+        # Query the session table directly from the shared database
+        from datetime import datetime, timezone
+        from sqlalchemy import text
+        from ..database import async_session_maker
+        
+        now = datetime.now(timezone.utc)
+        logger.info(f"Validating session token: {session_token[:20]}..., current time: {now}")
+        
+        async with async_session_maker() as session:
+            # Query session table to validate token and get user
+            # Use simple parameter binding
+            query = text("""
+                SELECT 
+                    s."userId",
+                    s."expiresAt",
+                    u.id,
+                    u.email,
+                    u.name,
+                    u."emailVerified",
+                    u.image,
+                    u."createdAt",
+                    u."updatedAt"
+                FROM session s
+                INNER JOIN "user" u ON u.id = s."userId"
+                WHERE s.token = :token
+                AND s."expiresAt" > :now
+            """)
+            
+            logger.debug(f"Executing session query with token: {session_token[:20]}...")
+            result = await session.execute(
+                query,
+                {"token": session_token, "now": now}
+            )
+            row = result.fetchone()
+            
+            if row:
+                logger.info(f"Session validated for user: {row.id}, email: {row.email}")
+                return {
+                    "id": row.id,
+                    "email": row.email,
+                    "name": row.name,
+                    "emailVerified": row.emailVerified,
+                    "image": row.image,
+                    "createdAt": row.createdAt.isoformat() if row.createdAt else None,
+                    "updatedAt": row.updatedAt.isoformat() if row.updatedAt else None,
+                }
+            else:
+                logger.warning(f"Session not found or expired for token: {session_token[:20]}...")
+                # Try to see if session exists but expired
+                check_query = text("""
+                    SELECT s.token, s."expiresAt", s."userId"
+                    FROM session s
+                    WHERE s.token = :token
+                """)
+                check_result = await session.execute(check_query, {"token": session_token})
+                check_row = check_result.fetchone()
+                if check_row:
+                    logger.warning(f"Session exists but expired. ExpiresAt: {check_row.expiresAt}, Now: {now}")
+                else:
+                    logger.warning("Session token not found in database")
+                return None
+                
+    except Exception as e:
+        logger.error(f"Error validating session from database: {e}", exc_info=True)
+        # Fallback to Better Auth API if database query fails
+        logger.info("Falling back to Better Auth API validation")
+        return await _get_user_from_better_auth_api(session_token)
+
+
+async def _get_user_from_better_auth_api(session_token: Optional[str] = None) -> Optional[dict]:
+    """
+    Fallback: Validate session via Better Auth API.
+    
+    This is used as a fallback if direct database query fails.
+    """
     if not settings.BETTER_AUTH_SERVICE_URL:
-        logger.warning("BETTER_AUTH_SERVICE_URL not configured, skipping auth validation")
+        logger.warning("BETTER_AUTH_SERVICE_URL not configured")
         return None
     
     try:
-        # Call Better Auth's get-session endpoint
         async with httpx.AsyncClient() as client:
-            # Better Auth expects the cookie in a specific format
             cookie_header = f"better-auth.session_token={session_token}"
             url = f"{settings.BETTER_AUTH_SERVICE_URL}/api/auth/get-session"
-            logger.info(f"Calling Better Auth get-session: {url}")
-            logger.debug(f"Cookie header: {cookie_header[:50]}...")
             
             response = await client.get(
                 url,
@@ -50,32 +132,14 @@ async def get_user_from_session(session_token: Optional[str] = None) -> Optional
                 follow_redirects=True
             )
             
-            logger.info(f"Better Auth response status: {response.status_code}")
-            
             if response.status_code == 200:
-                try:
-                    data = response.json()
-                    logger.debug(f"Better Auth response data: {data}")
-                    if data and isinstance(data, dict) and data.get("user"):
-                        logger.info(f"User validated: {data['user'].get('id')}")
-                        return data["user"]
-                    else:
-                        logger.warning(f"Invalid session response format: {data}")
-                        return None
-                except Exception as json_error:
-                    logger.error(f"Error parsing JSON response from Better Auth: {json_error}")
-                    logger.debug(f"Response text: {response.text[:200]}")
-                    return None
-            elif response.status_code == 401:
-                logger.warning("Better Auth returned 401 - session invalid")
-                return None
-            else:
-                logger.warning(f"Unexpected response from Better Auth: {response.status_code}")
-                logger.debug(f"Response text: {response.text[:200]}")
-                return None
+                data = response.json()
+                if data and isinstance(data, dict) and data.get("user"):
+                    return data["user"]
+            return None
                 
     except Exception as e:
-        logger.error(f"Error validating session with Better Auth: {e}", exc_info=True)
+        logger.error(f"Error validating session with Better Auth API: {e}", exc_info=True)
         return None
 
 
@@ -152,3 +216,76 @@ def require_auth(user_id: Optional[str]) -> str:
             detail="Authentication required"
         )
     return user_id
+
+
+async def get_current_active_user(request: Request) -> User:
+    """
+    FastAPI dependency to get the current authenticated user.
+    
+    Args:
+        request: FastAPI Request object
+        
+    Returns:
+        User dict with id, email, name, etc.
+        
+    Raises:
+        HTTPException: 401 if not authenticated
+    """
+    # Get session token from request
+    cookie_header = request.headers.get("cookie", "")
+    # Try both lowercase and original case for authorization header
+    authorization_header = request.headers.get("authorization") or request.headers.get("Authorization")
+    
+    logger.info(f"get_current_active_user - Authorization header: {authorization_header[:50] if authorization_header else 'None'}...")
+    logger.info(f"get_current_active_user - Cookie header: {cookie_header[:100] if cookie_header else 'None'}...")
+    
+    # Also check request.cookies dict (FastAPI's cookie parser)
+    if not cookie_header:
+        cookies_dict = dict(request.cookies)
+        logger.info(f"get_current_active_user - Request cookies dict: {list(cookies_dict.keys())}")
+        if "better-auth.session_token" in cookies_dict:
+            cookie_header = f"better-auth.session_token={cookies_dict['better-auth.session_token']}"
+    
+    # Extract session token
+    session_token = None
+    if authorization_header:
+        if authorization_header.startswith("Bearer "):
+            session_token = authorization_header[7:]
+            logger.info(f"get_current_active_user - Extracted Bearer token: {session_token[:20]}...")
+        elif authorization_header.startswith("Session "):
+            session_token = authorization_header[8:]
+            logger.info(f"get_current_active_user - Extracted Session token: {session_token[:20]}...")
+    
+    if not session_token and cookie_header:
+        import urllib.parse
+        for part in cookie_header.split(";"):
+            part = part.strip()
+            if part.startswith("better-auth.session_token="):
+                session_token = part.split("=", 1)[1]
+                session_token = urllib.parse.unquote(session_token)
+                logger.info(f"get_current_active_user - Extracted token from cookie: {session_token[:20]}...")
+                break
+    
+    if not session_token:
+        logger.warning("get_current_active_user - No session token found in request")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required"
+        )
+    
+    logger.info(f"get_current_active_user - Validating session token with Better Auth...")
+    user = await get_user_from_session(session_token)
+    if not user:
+        logger.warning("get_current_active_user - Session validation failed")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session"
+        )
+    
+    logger.info(f"get_current_active_user - User authenticated: {user.get('id')}")
+    # Return user dict (TypedDict is just for type checking)
+    return {
+        "id": user.get("id", ""),
+        "email": user.get("email", ""),
+        "name": user.get("name")
+    }

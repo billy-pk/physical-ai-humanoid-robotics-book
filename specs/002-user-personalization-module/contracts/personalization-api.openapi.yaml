@@ -1,0 +1,546 @@
+openapi: 3.0.3
+info:
+  title: User Personalization API
+  description: |
+    API for managing user personalization preferences and generating personalized/translated content.
+    Extends the existing FastAPI backend with new endpoints for preference management and content generation.
+  version: 1.0.0
+  contact:
+    name: Physical AI & Humanoid Robotics Book - Backend Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.example.com
+    description: Production server (TBD)
+
+security:
+  - BetterAuthSession: []
+
+tags:
+  - name: Preferences
+    description: User personalization preference management
+  - name: Content
+    description: Personalized and translated content generation
+
+paths:
+  /api/auth/profile/preferences:
+    get:
+      tags:
+        - Preferences
+      summary: Get user personalization preferences
+      description: Retrieve the authenticated user's personalization preferences
+      operationId: getPersonalizationPreferences
+      security:
+        - BetterAuthSession: []
+      responses:
+        '200':
+          description: Successfully retrieved preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalizationPreferencesResponse'
+        '401':
+          description: Unauthorized - user not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Preferences not found (user hasn't submitted preferences yet)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Preferences
+      summary: Create or update personalization preferences
+      description: Submit or update the authenticated user's personalization preferences. Creates preferences if they don't exist, updates if they do.
+      operationId: upsertPersonalizationPreferences
+      security:
+        - BetterAuthSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalizationPreferencesInput'
+      responses:
+        '200':
+          description: Preferences successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalizationPreferencesResponse'
+        '201':
+          description: Preferences successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalizationPreferencesResponse'
+        '400':
+          description: Bad request - invalid preference data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Unauthorized - user not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/content/personalize:
+    post:
+      tags:
+        - Content
+      summary: Generate personalized content for a chapter
+      description: |
+        Generate personalized content for a specific chapter based on user preferences.
+        Returns cached content if available, otherwise generates new content via OpenAI Agents SDK.
+        Content is automatically cached for future requests.
+      operationId: generatePersonalizedContent
+      security:
+        - BetterAuthSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalizeContentRequest'
+      responses:
+        '200':
+          description: Personalized content successfully generated or retrieved from cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalizedContentResponse'
+        '400':
+          description: Bad request - invalid chapter ID or missing preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Unauthorized - user not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Chapter not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests - OpenAI rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error or OpenAI API failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable - OpenAI API down
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/content/translate:
+    post:
+      tags:
+        - Content
+      summary: Translate chapter to target language
+      description: |
+        Translate a chapter to the specified target language (currently supports Urdu).
+        Code blocks are preserved in their original language. Returns cached translation if available.
+      operationId: translateContent
+      security:
+        - BetterAuthSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslateContentRequest'
+      responses:
+        '200':
+          description: Translation successfully generated or retrieved from cache
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslatedContentResponse'
+        '400':
+          description: Bad request - invalid chapter ID or unsupported language
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '401':
+          description: Unauthorized - user not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Chapter not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests - OpenAI rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error or OpenAI API failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Service unavailable - OpenAI API down
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/content/chapters/{chapter_id}:
+    get:
+      tags:
+        - Content
+      summary: Get chapter content in user's preferred mode
+      description: |
+        Get chapter content automatically adapted to user's content mode preference.
+        If user has 'personalized' mode enabled, returns personalized content.
+        If user has 'full' mode enabled, returns original content.
+        If user has Urdu translation enabled, applies translation.
+      operationId: getChapterContent
+      security:
+        - BetterAuthSession: []
+      parameters:
+        - name: chapter_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the chapter (e.g., "module-1/chapter-3")
+          example: "module-1/chapter-3"
+      responses:
+        '200':
+          description: Chapter content retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChapterContentResponse'
+        '401':
+          description: Unauthorized - user not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Chapter not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BetterAuthSession:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+      description: Better Auth session token stored in httpOnly cookie
+
+  schemas:
+    PersonalizationPreferencesInput:
+      type: object
+      required:
+        - experience_level
+        - learning_topics
+        - learning_goals
+        - content_mode
+      properties:
+        experience_level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          description: User's experience level in robotics/programming
+          example: "intermediate"
+        learning_topics:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+          minItems: 1
+          maxItems: 10
+          description: Topics the user wants to focus on
+          example: ["ROS 2", "Computer Vision", "Path Planning"]
+        learning_goals:
+          type: string
+          maxLength: 500
+          description: User's learning goals (free text)
+          example: "I want to build autonomous navigation systems for mobile robots"
+        content_mode:
+          type: string
+          enum: [full, personalized]
+          description: Preferred content delivery mode
+          example: "personalized"
+        urdu_translation_enabled:
+          type: boolean
+          default: false
+          description: Whether to enable Urdu translation
+          example: false
+
+    PersonalizationPreferencesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        preferences:
+          type: object
+          properties:
+            experience_level:
+              type: string
+              enum: [beginner, intermediate, advanced]
+              example: "intermediate"
+            learning_topics:
+              type: array
+              items:
+                type: string
+              example: ["ROS 2", "Computer Vision", "Path Planning"]
+            learning_goals:
+              type: string
+              example: "I want to build autonomous navigation systems for mobile robots"
+            content_mode:
+              type: string
+              enum: [full, personalized]
+              example: "personalized"
+            urdu_translation_enabled:
+              type: boolean
+              example: false
+            preferences_submitted_at:
+              type: string
+              format: date-time
+              example: "2025-12-01T10:30:00Z"
+            preferences_last_updated_at:
+              type: string
+              format: date-time
+              example: "2025-12-01T10:30:00Z"
+            preferences_version:
+              type: integer
+              minimum: 1
+              example: 1
+
+    PersonalizeContentRequest:
+      type: object
+      required:
+        - chapter_id
+      properties:
+        chapter_id:
+          type: string
+          description: Unique identifier for the chapter
+          example: "module-1/chapter-3"
+        force_regenerate:
+          type: boolean
+          default: false
+          description: Force regeneration even if cached content exists
+          example: false
+
+    PersonalizedContentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        chapter_id:
+          type: string
+          example: "module-1/chapter-3"
+        content:
+          type: string
+          description: Personalized content in markdown format
+          example: "# Introduction to ROS 2 Navigation\\n\\nFor intermediate learners focusing on path planning..."
+        content_type:
+          type: string
+          enum: [personalized]
+          example: "personalized"
+        cached:
+          type: boolean
+          description: Whether content was retrieved from cache
+          example: true
+        generation_metadata:
+          type: object
+          properties:
+            model:
+              type: string
+              example: "gpt-4o-mini"
+            tokens_used:
+              type: integer
+              example: 4500
+            generation_time_ms:
+              type: integer
+              description: Time taken to generate content in milliseconds
+              example: 8234
+            generated_at:
+              type: string
+              format: date-time
+              example: "2025-12-01T10:30:00Z"
+
+    TranslateContentRequest:
+      type: object
+      required:
+        - chapter_id
+        - target_language
+      properties:
+        chapter_id:
+          type: string
+          description: Unique identifier for the chapter
+          example: "module-1/chapter-3"
+        target_language:
+          type: string
+          enum: [ur]
+          description: Target language code (currently only Urdu supported)
+          example: "ur"
+        force_regenerate:
+          type: boolean
+          default: false
+          description: Force re-translation even if cached translation exists
+          example: false
+
+    TranslatedContentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        chapter_id:
+          type: string
+          example: "module-1/chapter-3"
+        content:
+          type: string
+          description: Translated content in markdown format with preserved code blocks
+          example: "# ROS 2 نیویگیشن کا تعارف\\n\\n```python\\n# Code remains in English\\n```"
+        content_type:
+          type: string
+          enum: [translated]
+          example: "translated"
+        target_language:
+          type: string
+          example: "ur"
+        cached:
+          type: boolean
+          description: Whether translation was retrieved from cache
+          example: false
+        generation_metadata:
+          type: object
+          properties:
+            model:
+              type: string
+              example: "gpt-4o-mini"
+            tokens_used:
+              type: integer
+              example: 3200
+            generation_time_ms:
+              type: integer
+              example: 12456
+            generated_at:
+              type: string
+              format: date-time
+              example: "2025-12-01T10:35:00Z"
+
+    ChapterContentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        chapter_id:
+          type: string
+          example: "module-1/chapter-3"
+        content:
+          type: string
+          description: Chapter content adapted to user preferences
+          example: "# Introduction to ROS 2 Navigation..."
+        content_mode:
+          type: string
+          enum: [full, personalized, translated]
+          description: Mode in which content was delivered
+          example: "personalized"
+        language:
+          type: string
+          description: Language of the content
+          example: "en"
+        cached:
+          type: boolean
+          example: true
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+          example: "Unauthorized: Please log in to access this resource"
+        error_code:
+          type: string
+          description: Machine-readable error code
+          example: "UNAUTHORIZED"
+
+    ValidationError:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Validation failed"
+        error_code:
+          type: string
+          example: "VALIDATION_ERROR"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "experience_level"
+              message:
+                type: string
+                example: "Must be one of: beginner, intermediate, advanced"

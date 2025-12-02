@@ -55,6 +55,9 @@ const config: Config = {
     ],
   ],
 
+  customFields: {
+    backendUrl: process.env.BACKEND_URL || 'http://localhost:8000',
+  },
   themeConfig: {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
@@ -75,6 +78,11 @@ const config: Config = {
           sidebarId: 'defaultSidebar',
           position: 'left',
           label: 'Read Book',
+        },
+        {
+          to: '/settings',
+          label: 'Settings',
+          position: 'right',
         },
         {
           href: 'https://github.com/billy-pk/physical-ai-humanoid-robotics-book',

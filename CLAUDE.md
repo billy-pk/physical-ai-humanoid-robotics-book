@@ -208,3 +208,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- Python 3.12+ (backend), TypeScript/React 19 (frontend), Node.js 20+ (Better Auth service) + FastAPI 0.122.0, OpenAI Agents SDK 0.6.1, Better Auth 1.3.10, Docusaurus 3.9.2, Pydantic 2.12+, psycopg3 3.2.13+, Alembic 1.17.2+ (002-user-personalization-module)
+- Neon Serverless Postgres (user profiles, preferences, cached personalized content), Qdrant Cloud (vector embeddings for RAG) (002-user-personalization-module)
+
+## Recent Changes
+- 002-user-personalization-module: Added Python 3.12+ (backend), TypeScript/React 19 (frontend), Node.js 20+ (Better Auth service) + FastAPI 0.122.0, OpenAI Agents SDK 0.6.1, Better Auth 1.3.10, Docusaurus 3.9.2, Pydantic 2.12+, psycopg3 3.2.13+, Alembic 1.17.2+

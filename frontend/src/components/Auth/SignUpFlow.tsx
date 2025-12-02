@@ -100,8 +100,9 @@ export default function SignUpFlow({ onComplete }: { onComplete?: () => void }) 
                   </button>
                   <button
                     onClick={async () => {
-                      const { signOut } = await import("../../lib/auth");
+                      const { signOut, clearSessionToken } = await import("../../lib/auth");
                       await signOut();
+                      clearSessionToken(); // Clear stored session token
                       window.location.reload();
                     }}
                     style={{

@@ -154,3 +154,113 @@
 [data-theme='dark'] .features p {
   color: #e4e4e4;
 }
+
+/* Preference Form Styling */
+.preference-form {
+  max-width: 600px;
+  width: 100%;
+  padding: 2rem;
+  background-color: var(--ifm-background-surface-color);
+  border-radius: 8px;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  margin: 2rem auto;
+}
+
+.preference-form h2 {
+  margin-bottom: 1.5rem;
+  color: var(--ifm-heading-color);
+}
+
+.preference-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.preference-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--ifm-font-color-base);
+  font-weight: 500;
+}
+
+.preference-form input[type="text"],
+.preference-form textarea,
+.preference-form select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+  background-color: var(--ifm-background-color);
+  color: var(--ifm-font-color-base);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.preference-form input[type="text"]:focus,
+.preference-form textarea:focus,
+.preference-form select:focus {
+  outline: none;
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 3px rgba(77, 208, 225, 0.1);
+}
+
+.preference-form textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.preference-form .checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.preference-form input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.preference-form .error-message,
+.preference-form .error-text {
+  color: #ff6b6b;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.preference-form button[type="submit"] {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--ifm-color-primary);
+  color: var(--ifm-color-primary-contrast-background);
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 1rem;
+}
+
+.preference-form button[type="submit"]:hover:not(:disabled) {
+  background-color: var(--ifm-color-primary-dark);
+}
+
+.preference-form button[type="submit"]:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Light mode preference form */
+[data-theme='light'] .preference-form {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+}
+
+[data-theme='light'] .preference-form input[type="text"],
+[data-theme='light'] .preference-form textarea,
+[data-theme='light'] .preference-form select {
+  background-color: #ffffff;
+  border-color: #e0e0e0;
+  color: #1a1a1a;
+}

@@ -14,7 +14,7 @@ import json
 import asyncio
 from ..core.config import settings
 from ..core.logging import logger
-from ..models.user import UserProfile, UserProfileCreate, UserBackgroundQuestionnaire
+from ..models.user import UserProfile, UserProfileCreate, UserBackgroundQuestionnaire, PersonalizationPreferences
 
 
 class UserProfileService:
@@ -179,3 +179,114 @@ class UserProfileService:
         except Exception as e:
             logger.error(f"Error creating/updating user profile: {e}", user_id=user_id)
             raise
+
+    @staticmethod
+    async def get_personalization_preferences(user_id: str) -> Optional[PersonalizationPreferences]:
+        """
+        Get user's personalization preferences by user ID.
+        
+        If preferences JSONB column is null but profile has questionnaire data,
+        creates basic preferences from questionnaire data.
+
+        Args:
+            user_id: User ID from Better Auth
+
+        Returns:
+            PersonalizationPreferences if found or can be created from questionnaire, None otherwise
+        """
+        profile = await UserProfileService.get_profile(user_id)
+        if not profile:
+            return None
+            
+        # If preferences JSONB column exists and is valid, use it
+        if profile.preferences:
+            try:
+                return PersonalizationPreferences.model_validate(profile.preferences)
+            except Exception as e:
+                logger.error(f"Error validating personalization preferences for user {user_id}: {e}")
+                # Fall through to create from questionnaire data
+        
+        # If preferences JSONB is null but we have questionnaire data, create basic preferences
+        if profile.experience_level and profile.learning_goals:
+            logger.info(f"Creating preferences from questionnaire data for user {user_id}")
+            try:
+                # Create basic preferences from questionnaire data
+                # Use default values for missing fields
+                basic_preferences = PersonalizationPreferences(
+                    experience_level=profile.experience_level,
+                    learning_topics=["Physical AI", "Humanoid Robotics"],  # Default topics
+                    learning_goals=profile.learning_goals,
+                    content_mode="full",  # Default to full content
+                    urdu_translation_enabled=False,
+                    preferences_version=1
+                )
+                
+                # Save these preferences back to the database
+                await UserProfileService.update_personalization_preferences(user_id, basic_preferences)
+                
+                return basic_preferences
+            except Exception as e:
+                logger.error(f"Error creating preferences from questionnaire data for user {user_id}: {e}")
+                return None
+        
+        return None
+
+    @staticmethod
+    async def update_personalization_preferences(user_id: str,
+                                                 preferences: PersonalizationPreferences) -> UserProfile:
+        """
+        Update user's personalization preferences.
+
+        Args:
+            user_id: User ID from Better Auth
+            preferences: PersonalizationPreferences object with updated data
+
+        Returns:
+            Updated UserProfile
+        """
+        profile = await UserProfileService.get_profile(user_id)
+        if not profile:
+            # If no profile exists, create a basic one before updating preferences
+            # This handles cases where a user might directly hit the preference update
+            # without a full profile existing yet (e.g., first login experience)
+            profile_data = UserProfileCreate(
+                experience_level=preferences.experience_level,
+                learning_goals=preferences.learning_goals,
+                preferences=preferences.model_dump(mode='json')
+            )
+            profile = await UserProfileService.create_or_update_profile(user_id, profile_data)
+            # Fetch again to ensure all fields are loaded
+            profile = await UserProfileService.get_profile(user_id)
+            if not profile:
+                raise ValueError("Failed to create or retrieve user profile.")
+
+
+        # Update preferences with version increment and timestamp
+        current_preferences_dict = preferences.model_dump(mode='json')
+        # Increment version: if profile.preferences exists and has a version, use it; otherwise, start at 1
+        current_preferences_dict['preferences_version'] = (profile.preferences.get('preferences_version', 0) if profile.preferences else 0) + 1
+        current_preferences_dict['preferences_last_updated_at'] = datetime.utcnow().isoformat()
+        
+        # Set preferences_submitted_at only if it's the first submission
+        if not profile.preferences or 'preferences_submitted_at' not in profile.preferences or not profile.preferences['preferences_submitted_at']:
+            current_preferences_dict['preferences_submitted_at'] = datetime.utcnow().isoformat()
+
+
+        profile_update_data = UserProfileCreate(
+            software_background=profile.software_background,
+            hardware_background=profile.hardware_background,
+            experience_level=current_preferences_dict.get('experience_level'), # Use new experience level
+            learning_goals=current_preferences_dict.get('learning_goals'), # Use new learning goals
+            has_robotics_projects=profile.has_robotics_projects,
+            robotics_projects_description=profile.robotics_projects_description,
+            programming_years=profile.programming_years,
+            learning_style=profile.learning_style,
+            preferences=current_preferences_dict # Assign the updated preferences dict here
+        )
+        
+        # Note: questionnaire_completed and questionnaire_completed_at are automatically
+        # set by create_or_update_profile based on experience_level, so we don't need to set them here
+
+        updated_profile = await UserProfileService.create_or_update_profile(user_id, profile_update_data)
+        return updated_profile
+

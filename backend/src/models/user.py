@@ -7,10 +7,46 @@ These models represent user data stored in the database:
 - UserBackgroundQuestionnaire (from user_background_questionnaire table)
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import uuid
+
+
+class PersonalizationPreferences(BaseModel):
+    experience_level: str = Field(..., pattern="^(beginner|intermediate|advanced)$")
+    learning_topics: List[str] = Field(..., min_length=1, max_length=10)
+    learning_goals: str = Field(..., max_length=500)
+    content_mode: str = Field(..., pattern="^(full|personalized)$")
+    urdu_translation_enabled: bool = False
+    preferences_submitted_at: Optional[datetime] = None
+    preferences_last_updated_at: Optional[datetime] = None
+    preferences_version: int = Field(default=1, ge=1)
+
+    @field_validator('learning_topics')
+    @classmethod
+    def validate_topics(cls, v: List[str]) -> List[str]:
+        if not all(1 <= len(topic) <= 50 for topic in v):
+            raise ValueError('Each topic must be 1-50 characters')
+        return v
+
+
+class PersonalizedContentCacheEntry(BaseModel):
+    cache_id: uuid.UUID
+    user_id: str
+    chapter_id: str
+    content_type: str
+    user_preferences_hash: str
+    chapter_content_hash: str
+    target_language: Optional[str] = None
+    generated_content: str
+    generation_metadata: Optional[Dict[str, Any]] = None
+    created_at: datetime
+    last_accessed_at: datetime
+    access_count: int = 1
+
+    class Config:
+        from_attributes = True
 
 
 class UserProfile(BaseModel):
