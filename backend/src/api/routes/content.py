@@ -39,7 +39,7 @@ async def get_personalization_cache(db_session: AsyncSession = Depends(get_db_se
 
 router = APIRouter()
 
-@router.get("/chapters/{chapter_id}", summary="Get chapter content based on user preferences")
+@router.get("/chapters/{chapter_id:path}", summary="Get chapter content based on user preferences")
 async def get_chapter(
     chapter_id: str,
     user: User = Depends(get_current_active_user),
@@ -50,6 +50,10 @@ async def get_chapter(
     Also applies Urdu translation if enabled in preferences.
     """
     preferences: Optional[PersonalizationPreferences] = await UserProfileService.get_personalization_preferences(user["id"])
+    
+    # Debug logging for preferences
+    logger.info(f"User {user['id']} preferences: {preferences.model_dump() if preferences else None}")
+    logger.info(f"Urdu translation enabled: {preferences.urdu_translation_enabled if preferences else None}")
 
     async def generate_response_stream(content_iterator: AsyncIterator[str]):
         async for chunk in content_iterator:
@@ -91,7 +95,9 @@ async def get_chapter(
 
 
     # Now handle translation if enabled
+    logger.info(f"[TRANSLATION CHECK] preferences exists: {preferences is not None}, urdu_translation_enabled: {preferences.urdu_translation_enabled if preferences else 'N/A'}")
     if preferences and preferences.urdu_translation_enabled:
+        logger.info(f"[TRANSLATION] Translation enabled for user {user['id']}, chapter {chapter_id}")
         chapter_content_hash = personalization_cache._compute_content_hash(full_base_content)
         translation_cache_key_data = {
             "user_id": user["id"],
@@ -161,6 +167,7 @@ async def get_chapter(
             return StreamingResponse(generate_response_stream(async_iterator([full_base_content])), media_type="text/markdown")
     else:
         # If translation not enabled, just return the base content stream
+        logger.info(f"[TRANSLATION] Translation NOT enabled, returning base content for user {user['id']}, chapter {chapter_id}")
         return StreamingResponse(generate_response_stream(base_content_stream), media_type="text/markdown")
 
 

@@ -31,12 +31,15 @@ const ChapterPage: React.FC = () => {
   const [contentError, setContentError] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState<boolean>(false);
 
+  // Debug: Log when component renders
+  console.log('[ChapterPage] Component render - preferences:', preferences);
+  console.log('[ChapterPage] urdu_translation_enabled:', preferences?.urdu_translation_enabled);
+
 
   const fetchChapterContent = async () => {
     setIsLoadingContent(true);
     setContentError(null);
-    setOriginalChapterContent(null);
-    setTranslatedChapterContent(null);
+    // Don't clear existing content - we want to preserve it for toggling
 
     if (isPreferencesLoading) {
       // Still loading preferences, wait for next render cycle
@@ -69,17 +72,21 @@ const ChapterPage: React.FC = () => {
         throw new Error(`Failed to fetch chapter content: ${response.statusText}`);
       }
       const textContent = await response.text();
-      setOriginalChapterContent(textContent);
       
-      // If urduTranslationEnabled, default to displaying translated content
-      // and fetch translated content if not already fetched or if original content changed
+      console.log('[ChapterPage] Fetched content, urdu_translation_enabled:', preferences?.urdu_translation_enabled);
+      console.log('[ChapterPage] Content preview (first 200 chars):', textContent.substring(0, 200));
+      
+      // Backend already returns translated content when urdu_translation_enabled is true
       if (preferences?.urdu_translation_enabled) {
-        if (!translatedChapterContent || textContent !== originalChapterContent) { // Fetch if translated content is stale or non-existent
-          await fetchTranslatedContent(textContent); 
-        }
+        // Backend returned translated content, store it as translated
+        setTranslatedChapterContent(textContent);
         setDisplayingTranslated(true);
+        console.log('[ChapterPage] Stored as translated content, displaying translated');
       } else {
+        // Backend returned original content
+        setOriginalChapterContent(textContent);
         setDisplayingTranslated(false);
+        console.log('[ChapterPage] Stored as original content, displaying original');
       }
 
     } catch (err: any) {
@@ -132,9 +139,30 @@ const ChapterPage: React.FC = () => {
   useEffect(() => {
     // Only fetch chapter content once preferences are loaded
     if (!isPreferencesLoading) {
+      console.log('[ChapterPage] useEffect triggered - fetching content, urdu_translation_enabled:', preferences?.urdu_translation_enabled);
       fetchChapterContent();
     }
-  }, [chapter_id, preferences, isPreferencesLoading, preferencesError, backendUrl]);
+  }, [chapter_id, preferences?.urdu_translation_enabled, preferences?.content_mode, isPreferencesLoading, preferencesError, backendUrl]);
+
+  // Listen for preferences update events (from navbar toggle)
+  useEffect(() => {
+    const handlePreferencesUpdated = (e: Event) => {
+      console.log('[ChapterPage] Preferences updated event received!', e);
+      console.log('[ChapterPage] Event detail:', (e as CustomEvent).detail);
+      console.log('[ChapterPage] Refetching content...');
+      // Always refetch when preferences are updated
+      fetchChapterContent();
+    };
+
+    console.log('[ChapterPage] Setting up preferencesUpdated event listener');
+    window.addEventListener('preferencesUpdated', handlePreferencesUpdated as EventListener);
+    console.log('[ChapterPage] Event listener added to window');
+
+    return () => {
+      console.log('[ChapterPage] Cleaning up preferencesUpdated event listener');
+      window.removeEventListener('preferencesUpdated', handlePreferencesUpdated as EventListener);
+    };
+  }, []);
 
   const handleModeChange = async (newMode: PersonalizationPreferences['content_mode']) => {
     if (!preferences) return;
@@ -150,33 +178,31 @@ const ChapterPage: React.FC = () => {
 
   const handleTranslationToggle = async (enabled: boolean) => {
     try {
-      // If preferences exist, update them
+      // Update preferences - this will trigger useEffect to refetch content
       if (preferences) {
         const updatedPreferences = { ...preferences, urdu_translation_enabled: enabled };
         await updatePreferences(updatedPreferences);
-      }
-      
-      // Always allow translation toggle to work, even if preferences aren't loaded
-      if (enabled && originalChapterContent) {
-        await fetchTranslatedContent(originalChapterContent);
-        setDisplayingTranslated(true);
-      } else {
-        setDisplayingTranslated(false);
+        // Refetch content immediately - backend will return translated/original based on preference
+        await fetchChapterContent();
       }
     } catch (err) {
       console.error("Failed to update translation preference:", err);
-      // Still allow toggling display even if preference update fails
-      if (enabled && originalChapterContent) {
-        await fetchTranslatedContent(originalChapterContent);
-        setDisplayingTranslated(true);
-      } else {
-        setDisplayingTranslated(false);
-      }
     }
   };
 
 
   const currentContent = displayingTranslated ? translatedChapterContent : originalChapterContent;
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('[ChapterPage] Display state:', {
+      displayingTranslated,
+      hasTranslated: !!translatedChapterContent,
+      hasOriginal: !!originalChapterContent,
+      currentContentLength: currentContent?.length || 0,
+      urduTranslationEnabled: preferences?.urdu_translation_enabled
+    });
+  }, [displayingTranslated, translatedChapterContent, originalChapterContent, currentContent, preferences]);
 
 
   return (

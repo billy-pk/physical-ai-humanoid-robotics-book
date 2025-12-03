@@ -4,6 +4,8 @@ from typing import Optional, AsyncIterator, Tuple, List, Dict
 import json
 
 from openai import AsyncOpenAI
+from ...core.config import settings
+from ...core.logging import logger
 
 
 CODE_BLOCK_REGEX = re.compile(r"(```.*?```)", re.DOTALL)
@@ -20,7 +22,7 @@ async def translate_to_urdu(chapter_content: str) -> Tuple[AsyncIterator[str], D
         - An AsyncIterator of translated content chunks (with placeholders).
         - A dictionary mapping placeholder IDs to original code blocks.
     """
-    client = AsyncOpenAI() # Assumes API key is in environment variables
+    client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
 
     # Step 1: Extract code blocks and replace with placeholders
     extracted_code_blocks: Dict[str, str] = {}
@@ -57,10 +59,18 @@ async def translate_to_urdu(chapter_content: str) -> Tuple[AsyncIterator[str], D
         {"role": "user", "content": f"Translate the following chapter content to Urdu:\n\n{content_with_block_placeholders}"}
     ]
 
-    response_stream = client.chat.completions.create(
+    response_stream = await client.chat.completions.create(
         model="gpt-4o-mini",
         messages=messages,
         stream=True
     )
 
-    return response_stream, extracted_code_blocks
+    # Create async generator to process stream and yield text chunks
+    async def process_stream():
+        async for chunk in response_stream:
+            # Extract text content from each chunk
+            content = chunk.choices[0].delta.content
+            if content:
+                yield content
+
+    return process_stream(), extracted_code_blocks
