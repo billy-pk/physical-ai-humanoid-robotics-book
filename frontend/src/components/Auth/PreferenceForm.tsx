@@ -26,9 +26,6 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({
   const [contentMode, setContentMode] = useState(
     initialPreferences?.content_mode || '' // Changed to empty string for validation
   );
-  const [urduTranslationEnabled, setUrduTranslationEnabled] = useState(
-    initialPreferences?.urdu_translation_enabled || false
-  );
   const [validationErrors, setValidationErrors] = useState<Record<string, string | null>>({});
 
   const validateForm = () => {
@@ -79,7 +76,7 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({
       learning_topics: learningTopics,
       learning_goals: learningGoals,
       content_mode: contentMode as 'full' | 'personalized',
-      urdu_translation_enabled: urduTranslationEnabled,
+      urdu_translation_enabled: initialPreferences?.urdu_translation_enabled || false, // Keep existing value, don't allow editing in form
       // These will be set by the backend
       preferences_submitted_at: initialPreferences?.preferences_submitted_at,
       preferences_last_updated_at: initialPreferences?.preferences_last_updated_at,
@@ -152,17 +149,6 @@ const PreferenceForm: React.FC<PreferenceFormProps> = ({
           <option value="personalized">Personalized Content (AI-adapted)</option>
         </select>
         {validationErrors.contentMode && <p className="error-text">{validationErrors.contentMode}</p>}
-      </div>
-
-      <div className="form-group checkbox-group">
-        <input
-          id="urduTranslationEnabled"
-          type="checkbox"
-          checked={urduTranslationEnabled}
-          onChange={(e) => setUrduTranslationEnabled(e.target.checked)}
-          disabled={isLoading}
-        />
-        <label htmlFor="urduTranslationEnabled">Enable Urdu Translation</label>
       </div>
 
       <button type="submit" disabled={isLoading}>

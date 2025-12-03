@@ -5,14 +5,18 @@ import type {WrapperProps} from '@docusaurus/types';
 import { usePersonalization } from '../../../contexts/PersonalizationContext';
 import TranslationToggle from '../../../components/Content/TranslationToggle';
 import {useLocation} from '@docusaurus/router';
+import Link from '@docusaurus/Link';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 type Props = WrapperProps<typeof ContentType>;
 
 export default function ContentWrapper(props: Props): ReactNode {
   const location = useLocation(); // Track location to force updates
-  
+  const { siteConfig } = useDocusaurusContext();
+  const baseUrl = siteConfig.baseUrl || '/';
+
   let preferences, isLoading, updatePreferences;
-  
+
   try {
     const personalization = usePersonalization();
     preferences = personalization.preferences;
@@ -36,7 +40,7 @@ export default function ContentWrapper(props: Props): ReactNode {
     }
   };
 
-  // Always render the toggle - navbar should persist across navigation
+  // Always render the toggle and signup link - navbar should persist across navigation
   return (
     <>
       <Content {...props} />
@@ -46,6 +50,30 @@ export default function ContentWrapper(props: Props): ReactNode {
           onToggle={handleTranslationToggle}
           isLoading={isLoading || false}
         />
+      </div>
+      <div className="navbar-signup-link-item" style={{ marginLeft: '12px' }}>
+        <Link
+          to={`${baseUrl}signup`}
+          style={{
+            padding: '8px 16px',
+            borderRadius: '6px',
+            backgroundColor: 'var(--ifm-color-primary)',
+            color: '#fff',
+            fontWeight: '600',
+            fontSize: '14px',
+            textDecoration: 'none',
+            display: 'inline-block',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--ifm-color-primary-dark)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'var(--ifm-color-primary)';
+          }}
+        >
+          Sign Up
+        </Link>
       </div>
     </>
   );
