@@ -61,7 +61,6 @@ physical-ai-humanoid-robotics-book/
 ### Specialized Guides
 - **[VECTOR-DB-GUIDE.md](VECTOR-DB-GUIDE.md)** - Vector database management
 - **[FRONTEND-URLS.md](FRONTEND-URLS.md)** - URL structure and routing
-- **[DEBUG-CONSOLE.md](DEBUG-CONSOLE.md)** - Debugging tips
 
 ### Component READMEs
 - **[backend/README.md](backend/README.md)** - Backend setup and RAG system
