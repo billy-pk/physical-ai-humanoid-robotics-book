@@ -1,4 +1,5 @@
 import os
+import re
 from pathlib import Path
 from typing import Optional
 from ..core.logging import logger
@@ -47,7 +48,16 @@ async def get_chapter_content(chapter_id: str) -> Optional[str]:
         # Read the file content
         content = chapter_file_path.read_text(encoding='utf-8')
         logger.info(f"[ContentLoader] Successfully read {len(content)} characters from {chapter_file_path}")
-        return content
+
+        # Strip YAML frontmatter (metadata between --- delimiters)
+        # Frontmatter pattern: starts with ---, contains metadata, ends with ---
+        frontmatter_pattern = r'^---\s*\n.*?\n---\s*\n'
+        content_without_frontmatter = re.sub(frontmatter_pattern, '', content, flags=re.DOTALL)
+
+        if len(content_without_frontmatter) < len(content):
+            logger.info(f"[ContentLoader] Stripped frontmatter, new length: {len(content_without_frontmatter)} characters")
+
+        return content_without_frontmatter
     except Exception as e:
         logger.error(f"[ContentLoader] Error reading chapter file {chapter_file_path}: {e}")
         return None
