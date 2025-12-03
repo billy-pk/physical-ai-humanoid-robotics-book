@@ -86,6 +86,12 @@ physical-ai-humanoid-robotics-book/
 - User background questionnaire
 - Personalized content recommendations
 - Optional authentication (anonymous access supported)
+- User preference for content language (e.g., Urdu translation)
+
+### 4. Live Translation
+- AI-powered, on-the-fly translation of book content to Urdu
+- Preserves code blocks, ensuring technical accuracy
+- User-configurable via a toggle in the navigation bar
 
 ## 🎯 Common Tasks
 
