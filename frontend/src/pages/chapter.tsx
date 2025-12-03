@@ -7,6 +7,7 @@ import FullView from '../components/Content/FullView'; // Assuming this path
 import ContentModeSwitch from '../components/Content/ContentModeSwitch'; // Import ContentModeSwitch
 import TranslationToggle from '../components/Content/TranslationToggle'; // Import TranslationToggle
 import { PersonalizationPreferences } from '../types/personalization';
+import { getSessionToken } from '../lib/auth'; // Import getSessionToken
 
 
 const ChapterPage: React.FC = () => {
@@ -48,7 +49,22 @@ const ChapterPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${backendUrl}/api/content/chapters/${chapter_id}`);
+      // Get session token for authentication
+      const sessionToken = await getSessionToken();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Accept': 'text/markdown',
+      };
+      
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
+      const response = await fetch(`${backendUrl}/api/content/chapters/${chapter_id}`, {
+        headers,
+        credentials: 'include',
+      });
+      
       if (!response.ok) {
         throw new Error(`Failed to fetch chapter content: ${response.statusText}`);
       }
@@ -78,11 +94,21 @@ const ChapterPage: React.FC = () => {
     setIsTranslating(true);
     setContentError(null);
     try {
+      // Get session token for authentication
+      const sessionToken = await getSessionToken();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Accept': 'text/markdown',
+      };
+      
+      if (sessionToken) {
+        headers['Authorization'] = `Bearer ${sessionToken}`;
+      }
+      
       const response = await fetch(`${backendUrl}/api/content/translate`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({
           chapter_id: chapter_id,
           target_language: 'ur',
@@ -123,10 +149,14 @@ const ChapterPage: React.FC = () => {
   };
 
   const handleTranslationToggle = async (enabled: boolean) => {
-    if (!preferences) return;
-    const updatedPreferences = { ...preferences, urdu_translation_enabled: enabled };
     try {
-      await updatePreferences(updatedPreferences);
+      // If preferences exist, update them
+      if (preferences) {
+        const updatedPreferences = { ...preferences, urdu_translation_enabled: enabled };
+        await updatePreferences(updatedPreferences);
+      }
+      
+      // Always allow translation toggle to work, even if preferences aren't loaded
       if (enabled && originalChapterContent) {
         await fetchTranslatedContent(originalChapterContent);
         setDisplayingTranslated(true);
@@ -135,64 +165,56 @@ const ChapterPage: React.FC = () => {
       }
     } catch (err) {
       console.error("Failed to update translation preference:", err);
+      // Still allow toggling display even if preference update fails
+      if (enabled && originalChapterContent) {
+        await fetchTranslatedContent(originalChapterContent);
+        setDisplayingTranslated(true);
+      } else {
+        setDisplayingTranslated(false);
+      }
     }
   };
 
 
   const currentContent = displayingTranslated ? translatedChapterContent : originalChapterContent;
 
-  if (isLoadingContent || isPreferencesLoading) {
-    return (
-      <Layout title="Loading..." description="Loading chapter content.">
-        <main style={{ padding: '2rem' }}>
-          <div>Loading chapter...</div>
-        </main>
-      </Layout>
-    );
-  }
-
-  if (contentError) {
-    return (
-      <Layout title="Error" description="Error loading chapter content.">
-        <main style={{ padding: '2rem' }}>
-          <div style={{ color: 'red' }}>Error: {contentError}</div>
-        </main>
-      </Layout>
-    );
-  }
-
-  if (!currentContent) {
-    return (
-      <Layout title="Not Found" description="Chapter content not found.">
-        <main style={{ padding: '2rem' }}>
-          <div>Chapter content not found.</div>
-        </main>
-      </Layout>
-    );
-  }
 
   return (
     <Layout title={chapter_id} description={`Chapter: ${chapter_id}`}>
       <main>
         <div style={{ padding: '2rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            {preferences && (
+          {preferences && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'flex-start', 
+              marginBottom: '1rem', 
+              alignItems: 'center',
+              width: '100%',
+              minHeight: '50px',
+              padding: '10px',
+              backgroundColor: 'var(--ifm-background-surface-color)',
+              borderRadius: '8px',
+              border: '1px solid var(--ifm-color-emphasis-300)'
+            }}>
               <ContentModeSwitch
                 currentMode={preferences.content_mode}
                 onModeChange={handleModeChange}
                 isLoading={isPreferencesLoading}
               />
-            )}
-            {preferences && (
-                <TranslationToggle
-                    urduTranslationEnabled={preferences.urdu_translation_enabled}
-                    onToggle={handleTranslationToggle}
-                    isLoading={isPreferencesLoading || isTranslating}
-                />
-            )}
-          </div>
+            </div>
+          )}
+          
           <h1>{chapter_id}</h1>
-          <FullView content={currentContent} />
+          
+          {isLoadingContent || isPreferencesLoading ? (
+            <div>Loading chapter...</div>
+          ) : contentError ? (
+            <div style={{ color: 'red' }}>Error: {contentError}</div>
+          ) : !currentContent ? (
+            <div>Chapter content not found.</div>
+          ) : (
+            <FullView content={currentContent} />
+          )}
         </div>
       </main>
     </Layout>
