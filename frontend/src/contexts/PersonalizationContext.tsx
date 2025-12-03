@@ -118,6 +118,18 @@ export const PersonalizationProvider: React.FC<PersonalizationProviderProps> = (
       }
       const data: PersonalizationPreferences = await response.json();
       setPreferences(data);
+
+      // Dispatch custom event to notify other components (like chapter page) that preferences changed
+      console.log('[PersonalizationContext] About to dispatch preferencesUpdated event, canUseDOM:', ExecutionEnvironment.canUseDOM);
+      console.log('[PersonalizationContext] Updated preferences:', data);
+      if (ExecutionEnvironment.canUseDOM) {
+        const event = new CustomEvent('preferencesUpdated', { detail: data });
+        window.dispatchEvent(event);
+        console.log('[PersonalizationContext] preferencesUpdated event dispatched!', event);
+      } else {
+        console.warn('[PersonalizationContext] Cannot dispatch event - not in DOM environment');
+      }
+
       return data; // Return updated preferences
     } catch (err: any) {
       console.error('Error updating personalization preferences:', err);

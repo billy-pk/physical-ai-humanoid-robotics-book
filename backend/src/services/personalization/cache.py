@@ -90,6 +90,6 @@ class PersonalizationCache:
             "chapter_content_hash": chapter_content_hash,
             "target_language": target_language,
             "generated_content": generated_content,
-            "generation_metadata": generation_metadata
+            "generation_metadata": json.dumps(generation_metadata)  # Convert dict to JSON string
         })
         await self.db_session.commit()

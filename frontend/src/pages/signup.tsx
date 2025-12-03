@@ -6,15 +6,18 @@ import React from "react";
 import Layout from "@theme/Layout";
 import SignUpFlow from "../components/Auth/SignUpFlow";
 import { useHistory } from "@docusaurus/router";
+import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 
 export default function SignupPage() {
   const history = useHistory();
+  const { siteConfig } = useDocusaurusContext();
+  const baseUrl = siteConfig.baseUrl || '/';
 
   const handleComplete = () => {
     // Redirect to docs intro page after signup completion
     console.log("Signup complete, redirecting to docs...");
-    // Use window.location for a full page reload to ensure the route exists
-    window.location.href = "/docs/intro";
+    // Use window.location with proper baseUrl for a full page reload to ensure the route exists
+    window.location.href = `${baseUrl}docs/intro`;
   };
 
   return (

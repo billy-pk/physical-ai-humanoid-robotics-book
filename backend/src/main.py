@@ -41,7 +41,7 @@ app.add_middleware(
 app.include_router(chat.router)
 app.include_router(auth.router)
 app.include_router(session_proxy.router)
-app.include_router(content.router) # Include the new content router
+app.include_router(content.router, prefix="/api/content", tags=["content"]) # Include the new content router with prefix
 
 @app.get("/health")
 async def health_check():
